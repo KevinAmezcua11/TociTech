@@ -3,6 +3,7 @@ import 'ajustes_page.dart';
 import 'notificaciones_page.dart';
 import 'products_page.dart';
 import 'reparaciones_page.dart';
+import 'busqueda_page.dart';
 
 class TociTechApp extends StatefulWidget {
   const TociTechApp({super.key});
@@ -154,26 +155,33 @@ class _TociTechAppState extends State<TociTechApp> {
         Container(
           height: 60,
           padding: const EdgeInsets.all(10),
-          child: Container(
-            padding: const EdgeInsets.only(left: 20),
-            decoration: BoxDecoration(
-              color: Colors.black12,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.search, color: Color(0xFFD6D6D7)),
-                SizedBox(width: 8),
-                Text("Buscar", style: TextStyle(color: Color(0xFFD6D6D7))),
-              ],
+          decoration: const BoxDecoration(color: Color(0xFF1A1A22)),
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => BusquedaPage()),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.only(left: 20),
+              decoration: BoxDecoration(
+                color: Colors.black12,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.search, color: Color(0xFFD6D6D7)),
+                  SizedBox(width: 8),
+                  Text("Buscar", style: TextStyle(color: Color(0xFFD6D6D7))),
+                ],
+              ),
             ),
           ),
-
-          decoration: BoxDecoration(color: Color(0xFF1A1A22)),
         ),
 
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -197,7 +205,7 @@ class _TociTechAppState extends State<TociTechApp> {
                 ],
               ),
               SizedBox(height: 12),
-              Text("Venta de hardware, reparación especializada y atención clara para que tu equipo rinda al máximo.",
+              Text("Venta de hardware, reparación especializada y atención para que tu equipo rinda al máximo.",
                 style: TextStyle(
                     color: Colors.white70,
                     height: 1.4
@@ -276,6 +284,8 @@ class _TociTechAppState extends State<TociTechApp> {
             ),
           ),
         ),
+
+        SizedBox(height: 20,),
 
         // Servicios
         Padding(
