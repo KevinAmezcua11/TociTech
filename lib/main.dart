@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
+import 'package:tocitech/pages/login_page.dart';
+import 'pages/home_page.dart';
 
 void main() {
-  runApp(MaterialApp(
-    home: TociTechApp(),
+  runApp(const MaterialApp(
+    home: LoginPage(),
     debugShowCheckedModeBanner: false,
   ));
 }

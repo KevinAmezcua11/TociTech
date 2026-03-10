@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class NotificacionesPage extends StatefulWidget {
   const NotificacionesPage({super.key});
@@ -13,15 +14,9 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0B0F1A),
       appBar: AppBar(
-        // 👇 Flecha blanca
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          "Notificaciones",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-          ),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        title: const Text("Notificaciones",
+          style: TextStyle(color: AppColors.textPrimary, fontSize: 30, fontWeight: FontWeight.bold),
         ),
         backgroundColor: const Color(0xFF0B0F1A),
       ),
@@ -53,35 +48,28 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF6C63FF).withOpacity(0.15),
+              color: AppColors.primary.withOpacity(0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.notifications, color: Color(0xFF6C63FF), size: 24),
+            child: const Icon(Icons.notifications, color: AppColors.primary, size: 24),
           ),
           const SizedBox(width: 14),
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Título de la notificación",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
+                Text("Título de la notificación",
+                  style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
                 ),
                 SizedBox(height: 4),
-                Text(
-                  "Descripción breve de la notificación.",
+                Text("Descripción breve de la notificación.",
                   style: TextStyle(color: Colors.white60, fontSize: 13),
                 ),
                 SizedBox(height: 8),
                 Align(
                   alignment: Alignment.bottomRight,
-                  child: Text(
-                    "Hace 1 min",
-                    style: TextStyle(color: Colors.white38, fontSize: 11),
+                  child: Text("Hace 1 min",
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 11),
                   ),
                 ),
               ],
