@@ -13,6 +13,18 @@ class _ReparacionesPageState extends State<ReparacionesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        iconTheme: IconThemeData(
+          color: Colors.white,
+        ),
+        title: Text("Reparaciones", style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 24
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [

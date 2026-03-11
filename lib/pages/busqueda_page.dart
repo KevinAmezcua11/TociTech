@@ -11,16 +11,16 @@ class BusquedaPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
-        title: const Text("Buscar",
+        title: Text("Buscar",
           style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 30),
-            const Text("¿En qué te podemos ayudar?",
+            SizedBox(height: 30),
+            Text("¿En qué te podemos ayudar?",
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 22,
@@ -28,11 +28,11 @@ class BusquedaPage extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
 
             // Barra de búsqueda
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
+              padding: EdgeInsets.symmetric(horizontal: 30),
               child: Container(
                 height: 55,
                 decoration: BoxDecoration(
@@ -42,7 +42,7 @@ class BusquedaPage extends StatelessWidget {
                     BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 8),
                   ],
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     SizedBox(width: 15),
                     Icon(Icons.search, color: Colors.grey),
@@ -53,9 +53,9 @@ class BusquedaPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 40),
+            SizedBox(height: 40),
 
-            const Text("TENDENCIA EN VENTAS",
+            Text("TENDENCIA EN VENTAS",
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 18,
@@ -64,25 +64,25 @@ class BusquedaPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
 
             // Productos en tendencia
             SizedBox(
               height: 260,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: 20),
                 children: [
                   _cardProducto(
                     imagen: "assets/asusdual.png",
                     titulo: "Asus DUAL-RTX3050-06G GeForce 6GB GDDR6/PCI-E 4.0/HDMI/DP/Negro",
                   ),
-                  const SizedBox(width: 20),
+                  SizedBox(width: 20),
                   _cardProducto(
                     imagen: "assets/amdradeon.png",
                     titulo: "AMD RADEON PRO W7900",
                   ),
-                  const SizedBox(width: 20),
+                  SizedBox(width: 20),
                   _cardProducto(
                     imagen: "assets/mouseacteck.png",
                     titulo: "Mouse Inalambrico Acteck Optimize MI240 / USB / Optico / 1600 DPI",
@@ -91,12 +91,11 @@ class BusquedaPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 30),
+            SizedBox(height: 30),
 
             // Categorías
             Wrap(
-              spacing: 15,
-              runSpacing: 15,
+              spacing: 15, runSpacing: 15,
               alignment: WrapAlignment.center,
               children: [
                 _categoriaButton("Teclado"),
@@ -108,7 +107,7 @@ class BusquedaPage extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 40),
+            SizedBox(height: 40),
           ],
         ),
       ),
@@ -118,7 +117,7 @@ class BusquedaPage extends StatelessWidget {
   Widget _cardProducto({required String imagen, required String titulo}) {
     return Container(
       width: 200,
-      padding: const EdgeInsets.all(15),
+      padding: EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(25),
@@ -126,10 +125,10 @@ class BusquedaPage extends StatelessWidget {
       child: Column(
         children: [
           Expanded(child: Image.asset(imagen, fit: BoxFit.contain)),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(
             titulo,
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+            style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
@@ -141,14 +140,14 @@ class BusquedaPage extends StatelessWidget {
 
   Widget _categoriaButton(String texto) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 25, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.grey.shade300,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Text(
         texto,
-        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
       ),
     );
   }

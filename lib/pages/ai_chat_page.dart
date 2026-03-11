@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-// Modelo para mensaje
+// Modelo msj
 class _Mensaje {
   final String texto;
   final bool esUsuario;
@@ -113,7 +113,6 @@ class _AiChatPageState extends State<AiChatPage> {
   }
 
   // Burbuja de Mensaje
-
   Widget _buildMensaje(_Mensaje mensaje) {
     final esUsuario = mensaje.esUsuario;
 
@@ -174,7 +173,6 @@ class _AiChatPageState extends State<AiChatPage> {
   }
 
   // Sugerencias Rapidas
-
   Widget _buildSugerencias() {
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -188,8 +186,7 @@ class _AiChatPageState extends State<AiChatPage> {
             ),
           ),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 8, runSpacing: 8,
             children: _sugerencias.map((s) {
               return GestureDetector(
                 onTap: () {},
@@ -217,7 +214,6 @@ class _AiChatPageState extends State<AiChatPage> {
   }
 
   // Input
-
   Widget _buildInput() {
     return Container(
       padding: EdgeInsets.fromLTRB(16, 10, 16, 20),

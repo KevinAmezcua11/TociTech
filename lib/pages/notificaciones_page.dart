@@ -12,13 +12,13 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0F1A),
+      backgroundColor: Color(0xFF0B0F1A),
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        title: const Text("Notificaciones",
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
+        title: Text("Notificaciones",
           style: TextStyle(color: AppColors.textPrimary, fontSize: 30, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF0B0F1A),
+        backgroundColor: Color(0xFF0B0F1A),
       ),
       body: SafeArea(
         child: Padding(
@@ -35,9 +35,9 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
 
   static Widget _notificationCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [Color(0xFF1E293B), Color(0xFF111827)],
         ),
         borderRadius: BorderRadius.circular(16),
@@ -46,15 +46,15 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.notifications, color: AppColors.primary, size: 24),
+            child: Icon(Icons.notifications, color: AppColors.primary, size: 24),
           ),
-          const SizedBox(width: 14),
-          const Expanded(
+          SizedBox(width: 14),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

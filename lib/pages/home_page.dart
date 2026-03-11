@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:tocitech/pages/servicios_page.dart';
 import '../theme/app_theme.dart';
 import '../widgets/service_card.dart';
 import 'ajustes_page.dart';
 import 'notificaciones_page.dart';
 import 'products_page.dart';
-import 'reparaciones_page.dart';
 import 'busqueda_page.dart';
 import 'ai_chat_page.dart';
 
@@ -21,7 +21,7 @@ class _TociTechAppState extends State<TociTechApp> {
   final List _titulosAppBar = [
     "TociTech",
     "Productos",
-    "Reparaciones",
+    "Servicios",
     "Ajustes"
   ];
 
@@ -74,7 +74,7 @@ class _TociTechAppState extends State<TociTechApp> {
             items: [
               BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: "Inicio"),
               BottomNavigationBarItem(icon: Icon(Icons.category_outlined), label: "Productos"),
-              BottomNavigationBarItem(icon: Icon(Icons.build_outlined), label: "Reparaciones"),
+              BottomNavigationBarItem(icon: Icon(Icons.handyman), label: "Servicios"),
               BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: "Ajustes"),
             ],
             iconSize: 24,
@@ -106,7 +106,7 @@ class _TociTechAppState extends State<TociTechApp> {
     switch (_index) {
       case 0:  return _buildHome();
       case 1:  return const ProductsPage();
-      case 2:  return const ReparacionesPage();
+      case 2:  return const ServiciosPage();
       case 3:  return const AjustesPage();
       default: return const Center(child: Text("Página no existe"));
     }
