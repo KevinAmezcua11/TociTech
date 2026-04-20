@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tocitech/pages/mis_pedidos_page.dart';
 import 'package:tocitech/pages/reparaciones_page.dart';
 import '../theme/app_theme.dart';
 import 'login_page.dart';
@@ -24,7 +25,7 @@ class _AjustesPageState extends State<AjustesPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Center(
-              child: Text("AJUSTES",
+              child: Text("Ajustes",
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 28,
@@ -77,7 +78,7 @@ class _AjustesPageState extends State<AjustesPage> {
                         width: 140, height: 32,
                         child: OutlinedButton.icon(
                           onPressed: (){
-                            Navigator.push(context, MaterialPageRoute(builder: (x) => ReparacionesPage()));
+                            Navigator.push(context, MaterialPageRoute(builder: (x) => MisPedidosPage()));
                           },
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(color: AppColors.textMuted),
