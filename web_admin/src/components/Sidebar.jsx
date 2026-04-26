@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { LayoutGrid, Package, Wrench, ShoppingCart, Users, Settings, ChevronDown, User, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { signOut } from "firebase/auth";
-import { auth } from "../firebase/config";
 
 // Logo TociTech
 function TociTechLogo({ size = 34 }) {
@@ -20,10 +18,17 @@ function TociTechLogo({ size = 34 }) {
 }
 
 // Usuario loggeado
+const storedUser = JSON.parse(localStorage.getItem("user"));
+
+const firstName = storedUser?.names?.split(" ")[0] || "";
+const firstLastname = storedUser?.lastnames?.split(" ")[0] || "";
+
 const USER = {
-    name: "Said Encarnación",
-    role: "Admin",
-    avatar: null,
+    name: storedUser
+        ? `${firstName} ${firstLastname}`
+        : "Usuario",
+    role: storedUser?.role || "Admin",
+    avatar: null
 };
 
 function Avatar({ name }) {
@@ -42,10 +47,12 @@ function UserDropdown() {
     const ref = useRef(null);
     const navigate = useNavigate();
 
-    const handleLogout = async () => {
+    const handleLogout = () => {
         setOpen(false);
-        await signOut(auth);
-        navigate("/");
+
+        localStorage.removeItem("token");
+
+        navigate("/", { replace: true });
     };
 
     // Cierra al hacer click fuera
@@ -87,8 +94,8 @@ function UserDropdown() {
                             to="/profile"
                             onClick={() => setOpen(false)}
                             className="flex items-center gap-3 px-3 py-2.5 rounded-xl
-                                       text-secondary text-sm hover:bg-white/6 hover:text-white
-                                       transition-colors duration-150"
+                                        text-secondary text-sm hover:bg-white/6 hover:text-white
+                                        transition-colors duration-150"
                         >
                             <User size={15} strokeWidth={1.8} />
                             Perfil
@@ -98,8 +105,8 @@ function UserDropdown() {
                             to="/settings"
                             onClick={() => setOpen(false)}
                             className="flex items-center gap-3 px-3 py-2.5 rounded-xl
-                                       text-secondary text-sm hover:bg-white/6 hover:text-white
-                                       transition-colors duration-150"
+                                        text-secondary text-sm hover:bg-white/6 hover:text-white
+                                        transition-colors duration-150"
                         >
                             <Settings size={15} strokeWidth={1.8} />
                             Configuración
@@ -114,8 +121,8 @@ function UserDropdown() {
                         <button
                             onClick={handleLogout}
                             className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full
-                                       text-red-400 text-sm hover:bg-red-500/10
-                                       transition-colors duration-150"
+                                        text-red-400 text-sm hover:bg-red-500/10
+                                        transition-colors duration-150"
                         >
                             <LogOut size={15} strokeWidth={1.8} />
                             Cerrar sesión
@@ -184,7 +191,7 @@ export default function Sidebar() {
 
     return (
         <aside className="w-72 min-h-screen bg-surfaceDark flex flex-col p-5
-                          border-r border-white/5 box-border">
+                            border-r border-white/5 box-border">
 
             {/* Logo + nombre */}
             <div className="flex items-center gap-3 mb-5">

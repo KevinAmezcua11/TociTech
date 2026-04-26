@@ -7,12 +7,17 @@ function getGreeting() {
     return "Buenas noches";
 }
 
-const USER_NAME = "Said";
+const storedUser = JSON.parse(localStorage.getItem("user"));
+const firstName = storedUser?.names?.split(" ")[0] || "";
+
+const USER_NAME = storedUser
+    ? firstName
+    : "Usuario";
 
 export default function Header() {
     return (
         <header className="w-full bg-surfaceDark/80 backdrop-blur-md border-b border-white/5
-                           px-8 py-3.5 flex items-center justify-between gap-4 sticky top-0 z-10">
+                            px-8 py-3.5 flex items-center justify-between gap-4 sticky top-0 z-10">
 
             {/* Buscador */}
             <div className="flex items-center gap-3 bg-surface border border-white/6
@@ -43,9 +48,9 @@ export default function Header() {
 
                 {/* Notificaciones */}
                 <button className="relative w-10 h-10 flex items-center justify-center
-                                   rounded-xl bg-surface border border-white/5
-                                   text-muted hover:text-white hover:border-white/15
-                                   transition-all duration-200 group">
+                                    rounded-xl bg-surface border border-white/5
+                                    text-muted hover:text-white hover:border-white/15
+                                    transition-all duration-200 group">
 
                     <Bell size={15} className="group-hover:scale-110 transition-transform duration-200" />
 
