@@ -15,7 +15,7 @@ async function getAllOrders(req, res) {
 // Obtener pedido por ID
 async function getById(req, res) {
     try {
-        const order =  Order.getById(req.params.id);
+        const order = await Order.getById(req.params.id);
 
         if(!order) return res.status(404).json({ message: "Order not found" });
 
