@@ -13,7 +13,7 @@ function isValidEmail(email) {
 }
 
 async function registerClient(req, res) {
-    const { username, password, names, lastnames, email } = req.body;
+    const { username, password, names, lastnames, email, phone } = req.body;
 
     if (!username?.trim() || !password?.trim()) {
         return res.status(400).json({ message: "Username and password are required" });
@@ -32,6 +32,7 @@ async function registerClient(req, res) {
             names,
             lastnames,
             email,
+            phone,
             role: "client"
         });
 
@@ -48,7 +49,7 @@ async function registerClient(req, res) {
 }
 
 async function registerAdmin(req, res) {
-    const { username, password, names, lastnames, email, role } = req.body;
+    const { username, password, names, lastnames, email, phone, role } = req.body;
 
     if (req.userRole !== "admin") {
         return res.status(403).json({ message: "Forbidden" });
@@ -77,6 +78,7 @@ async function registerAdmin(req, res) {
             names,
             lastnames,
             email,
+            phone,
             role
         });
 
@@ -119,6 +121,7 @@ async function login(req, res) {
                 id: user.id,
                 username: user.username,
                 email: user.email,
+                phone: user.phone,
                 role: user.role,
                 names: user.names,
                 lastnames: user.lastnames

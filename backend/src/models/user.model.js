@@ -58,11 +58,13 @@ async function findByUsername(username) {
 }
 
 // Crear usuario
-async function createUser({ username, password, names, lastnames, email, role }) {
+async function createUser({ username, password, names, lastnames, email, phone, role }) {
     try {
         if(!username?.trim() || !password?.trim()) throw new Error("Invalid data");
 
         if (!email?.trim()) throw new Error("Email required");
+
+        if (!phone?.trim()) throw new Error("Phone required");
 
         if (!names?.trim() || !lastnames?.trim()) throw new Error("Names required");
 
@@ -79,11 +81,12 @@ async function createUser({ username, password, names, lastnames, email, role })
             names,
             lastnames,
             email,
+            phone,
             role: role || "client",
             createdAt: serverTimestamp()
         });
 
-        return { id: docRef.id, username: usernameClean, names, lastnames, email, role: role || "client" };
+        return { id: docRef.id, username: usernameClean, names, lastnames, email, phone, role: role || "client" };
 
     } catch (err) {
         console.error("Error creating user:", err);

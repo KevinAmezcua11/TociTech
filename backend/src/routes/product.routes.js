@@ -1,7 +1,7 @@
 const express = require("express");
 const controller = require('../controllers/product.controller');
 const { authenticate } = require('../middleware/auth.middleware');
-const roleAuth = require('../middleware/roleAuth'); // ✅
+const roleAuth = require('../middleware/roleAuth');
 
 const router = express.Router();
 
