@@ -49,21 +49,21 @@ export default function Router() {
             <Route path="/customers"
             element={
                 <PrivateRoute>
-                <Orders />
+                <Customers />
                 </PrivateRoute>
             }/>
 
             <Route path="/profile"
             element={
                 <PrivateRoute>
-                <Orders />
+                <Profile />
                 </PrivateRoute>
             }/>
 
             <Route path="/settings"
             element={
                 <PrivateRoute>
-                <Orders />
+                <Settings />
                 </PrivateRoute>
             }/>
 

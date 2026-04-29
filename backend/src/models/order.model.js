@@ -41,24 +41,34 @@ async function getById(id) {
 }
 
 // Insertar nuevo pedido
-async function createOrder({ type, customerId, items, serviceId, problem, equipment, priority, scheduledDate, notes }) {
+async function createOrder({ type, customerId, customer: manualCustomer, items, serviceId, problem, equipment, priority, scheduledDate, notes }) {
     try {
-        // Validar tipo
         if (!["product", "service"].includes(type)) {
             throw new Error("Invalid order type");
         }
 
-        // Obtener usuario
-        const user = await User.getById(customerId);
-        if (!user) throw new Error("Customer not found");
+        // Obtener cliente
+        let customer;
 
-        const customer = {
-            name: `${user.names} ${user.lastnames}`,
-            email: user.email,
-            phone: user.phone
-        };
+        if (customerId) {
+            const user = await User.getById(customerId);
+            if (!user) throw new Error("Customer not found");
 
-        // Base del pedido
+            customer = {
+                name: `${user.names} ${user.lastnames}`,
+                email: user.email,
+                phone: user.phone
+            };
+        } else if (manualCustomer) {
+            if (!manualCustomer.name || !manualCustomer.phone) {
+                throw new Error("Customer data required");
+            }
+
+            customer = manualCustomer;
+        } else {
+            throw new Error("Customer required");
+        }
+
         let orderData = {
             type,
             customer,
@@ -70,6 +80,10 @@ async function createOrder({ type, customerId, items, serviceId, problem, equipm
             updatedAt: serverTimestamp()
         };
 
+        if (customerId) {
+            orderData.customerId = customerId;
+        }
+
         // PRODUCTOS
         if (type === "product") {
             if (!items || !Array.isArray(items) || items.length === 0) {
@@ -78,17 +92,15 @@ async function createOrder({ type, customerId, items, serviceId, problem, equipm
 
             let total = 0;
             const itemsFormatted = [];
-
-            // Validar productos 
             const productsMap = [];
 
+            // 🔹 Validar productos
             for (const item of items) {
                 if (!item.productId || !item.quantity) {
                     throw new Error("Invalid item data");
                 }
 
                 const product = await Product.getById(item.productId);
-
                 if (!product) throw new Error("Product not found");
 
                 if (product.stock < item.quantity) {
@@ -98,7 +110,6 @@ async function createOrder({ type, customerId, items, serviceId, problem, equipm
                 productsMap.push({ item, product });
             }
 
-            // Procesar y descontar stock
             for (const { item, product } of productsMap) {
                 const price = product.price;
                 const subtotal = price * item.quantity;

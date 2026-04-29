@@ -29,10 +29,7 @@ async function getById(req, res) {
 // Crear pedido
 async function createOrder(req, res) {
     try {
-        const created = await Order.createOrder({
-            ...req.body,
-            customerId: req.user.id
-        });
+        const created = await Order.createOrder(req.body);
 
         res.status(201).json(created);
 
