@@ -40,7 +40,7 @@ async function getById(id) {
 async function findByName(name) {
     const nameClean = name.trim().toLowerCase();
 
-    const q = query(serviceCollection, where("name", "==", nameClean));
+    const q = query(serviceCollection, where("nameKey", "==", nameClean));
     const snapshot = await getDocs(q);
 
     if(snapshot.empty) return null;
@@ -56,28 +56,52 @@ async function findByName(name) {
     };
 }
 
+function normalizeServiceData(data) {
+    const normalized = { ...data };
+
+    if (normalized.duration == null && normalized.days != null) {
+        normalized.duration = `${normalized.days} días`;
+    }
+
+    if (normalized.active == null && normalized.state != null) {
+        normalized.active = normalized.state === true || normalized.state === "active";
+    }
+
+    delete normalized.days;
+    delete normalized.state;
+
+    return normalized;
+}
+
 // Insertar nuevo servicio
-async function createService({name, description, price, days, state}) {
+async function createService(data) {
     try {
-        if(!name?.trim() || price == null || price < 0) throw new Error("Invalid data");
+        const service = normalizeServiceData(data);
+        const price = Number(service.price);
 
-        if (days != null && days < 0) throw new Error("Invalid days");
+        if(!service.name?.trim() || price < 0 || Number.isNaN(price)) throw new Error("Invalid data");
 
-        const nameClean = name.trim().toLowerCase();
+        if (!service.description?.trim()) throw new Error("Invalid description");
+        if (!service.duration?.trim()) throw new Error("Invalid duration");
 
-        const existing = await findByName(nameClean);
+        const nameClean = service.name.trim();
+        const nameKey = nameClean.toLowerCase();
+
+        const existing = await findByName(nameKey);
         if(existing) return null;
 
         const docRef = await addDoc(serviceCollection, {
-            name: nameClean, 
-            description, 
-            price, 
-            days, 
-            state,
-            createdAt: serverTimestamp()
+            name: nameClean,
+            nameKey,
+            description: service.description.trim(),
+            price,
+            duration: service.duration.trim(),
+            active: service.active !== false,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
         });
 
-        return { id: docRef.id, name:nameClean, description, price, days, state }
+        return getById(docRef.id);
     } catch(err) {
         console.error("Error creating service:", err);
         throw err;
@@ -89,23 +113,33 @@ async function updateService(id, data) {
     const existing = await getById(id);
     if (!existing) return null;
 
-    if (data.name) {
-        data.name = data.name.trim().toLowerCase();
+    const service = normalizeServiceData(data);
 
-        const existingService = await findByName(data.name);
+    if (service.name) {
+        service.name = service.name.trim();
+        service.nameKey = service.name.toLowerCase();
+
+        const existingService = await findByName(service.nameKey);
         if (existingService && existingService.id !== id) return null;
     }
 
-    if (data.price != null && data.price < 0) {
+    if (service.price != null) {
+        service.price = Number(service.price);
+    }
+
+    if (service.price != null && (service.price < 0 || Number.isNaN(service.price))) {
         throw new Error("Invalid price");
     }
 
-    delete data.createdAt;
-    delete data.updatedAt;
-    delete data.id;
+    if (service.description != null) service.description = service.description.trim();
+    if (service.duration != null) service.duration = service.duration.trim();
+
+    delete service.createdAt;
+    delete service.updatedAt;
+    delete service.id;
 
     await updateDoc(doc(db, "services", id), {
-        ...data,
+        ...service,
         updatedAt: serverTimestamp()
     });
 
