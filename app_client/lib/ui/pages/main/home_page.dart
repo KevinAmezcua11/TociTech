@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:tocitech/pages/servicios_page.dart';
-import '../theme/app_theme.dart';
-import '../widgets/service_card.dart';
+import 'package:tocitech/ui/pages/services/servicios_page.dart';
+import '../../../theme/app_theme.dart';
+import '../../widgets/service_card.dart';
 import 'ajustes_page.dart';
 import 'notificaciones_page.dart';
-import 'products_page.dart';
+import '../products/products_page.dart';
 import 'busqueda_page.dart';
-import 'ai_chat_page.dart';
+import '../ai/ai_chat_page.dart';
 
 class TociTechApp extends StatefulWidget {
   const TociTechApp({super.key});

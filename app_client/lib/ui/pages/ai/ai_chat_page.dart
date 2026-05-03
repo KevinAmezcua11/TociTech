@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../../../theme/app_theme.dart';
 
 // Modelo msj
 class _Mensaje {

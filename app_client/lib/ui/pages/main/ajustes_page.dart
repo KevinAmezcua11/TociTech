@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:tocitech/pages/mis_pedidos_page.dart';
-import 'package:tocitech/pages/reparaciones_page.dart';
-import '../theme/app_theme.dart';
-import 'login_page.dart';
+import 'package:tocitech/ui/pages/products/mis_pedidos_page.dart';
+import 'package:tocitech/ui/pages/services/reparaciones_page.dart';
+import '../../../theme/app_theme.dart';
+import '../auth/login_page.dart';
 
 class AjustesPage extends StatefulWidget {
   const AjustesPage({super.key});
