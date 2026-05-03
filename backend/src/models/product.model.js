@@ -1,4 +1,5 @@
 const { collection, addDoc, getDocs, deleteDoc, updateDoc, query, where, getDoc, doc, serverTimestamp } = require("firebase/firestore");
+
 const { db } = require('../config/firebase');
 
 const productCollection = collection(db, "products");
@@ -19,12 +20,12 @@ async function getAllProducts() {
     });
 }
 
-// Obtener productos por id
+// Obtener producto por ID
 async function getById(id) {
     const productRef = doc(db, "products", id);
     const productSnap = await getDoc(productRef);
 
-    if(!productSnap.exists()) return null;
+    if (!productSnap.exists()) return null;
 
     const product = productSnap.data();
 
@@ -40,10 +41,10 @@ async function getById(id) {
 async function findByName(name) {
     const nameClean = name.trim().toLowerCase();
 
-    const q = query(productCollection, where("name", "==", nameClean));
+    const q = query(productCollection, where("nameSearch", "==", nameClean));
     const snapshot = await getDocs(q);
 
-    if(snapshot.empty) return null;
+    if (snapshot.empty) return null;
 
     const docData = snapshot.docs[0];
     const data = docData.data();
@@ -56,30 +57,45 @@ async function findByName(name) {
     };
 }
 
-// Insertar nuevo producto
-async function createProduct({name, description, price, category, image, state, stock, minStock}) {
+// Crear producto
+async function createProduct({ name, description, price, category, image, state, stock, minStock }) {
     try {
-        if(!name?.trim() || price == null || price < 0) throw new Error("Invalid data");
+        if (!name?.trim() || price == null || price < 0) {
+            throw new Error("Invalid data");
+        }
 
         const nameClean = name.trim().toLowerCase();
 
         const existing = await findByName(nameClean);
-        if(existing) return null;
+        if (existing) return null;
 
-        const docRef = await addDoc(productCollection, {
-            name: nameClean, 
-            description, 
-            price, 
-            category, 
-            image, 
-            state, 
-            stock, 
-            minStock,
+        const data = {
+            name: name.trim(),
+            nameSearch: nameClean, 
+            description: description || "",
+            price,
+            category,
+            image,
+            state: state ?? true,
+            stock: stock ?? 0,
+            minStock: minStock ?? 0,
             createdAt: serverTimestamp()
+        };
+
+        Object.keys(data).forEach(key => {
+            if (data[key] === undefined) {
+                delete data[key];
+            }
         });
 
-        return { id: docRef.id, name:nameClean, description, price, category, image, state, stock, minStock }
-    } catch(err) {
+        const docRef = await addDoc(productCollection, data);
+
+        return {
+            id: docRef.id,
+            ...data
+        };
+
+    } catch (err) {
         console.error("Error creating product:", err);
         throw err;
     }
@@ -91,10 +107,13 @@ async function updateProduct(id, data) {
     if (!existing) return null;
 
     if (data.name) {
-        data.name = data.name.trim().toLowerCase();
+        const nameClean = data.name.trim().toLowerCase();
 
-        const existingProduct = await findByName(data.name);
+        const existingProduct = await findByName(nameClean);
         if (existingProduct && existingProduct.id !== id) return null;
+
+        data.name = data.name.trim();  
+        data.nameSearch = nameClean;    
     }
 
     if (data.price != null && data.price < 0) {
@@ -104,6 +123,12 @@ async function updateProduct(id, data) {
     delete data.createdAt;
     delete data.updatedAt;
     delete data.id;
+
+    Object.keys(data).forEach(key => {
+        if (data[key] === undefined) {
+            delete data[key];
+        }
+    });
 
     await updateDoc(doc(db, "products", id), {
         ...data,
@@ -118,11 +143,11 @@ async function deleteProduct(id) {
     const productRef = doc(db, "products", id);
     const productSnap = await getDoc(productRef);
 
-    if(!productSnap.exists()) return null;
+    if (!productSnap.exists()) return null;
 
     await deleteDoc(productRef);
 
-    return { id }
+    return { id };
 }
 
 module.exports = { getAllProducts, getById, findByName, createProduct, updateProduct, deleteProduct };

@@ -1,4 +1,5 @@
 const { collection, addDoc, getDocs, deleteDoc, updateDoc, query, where, getDoc, doc, serverTimestamp } = require("firebase/firestore");
+
 const { db } = require('../config/firebase');
 
 const serviceCollection = collection(db, "services");
@@ -19,12 +20,12 @@ async function getAllServices() {
     });
 }
 
-// Obtener servicios por id
+// Obtener servicio por ID
 async function getById(id) {
     const serviceRef = doc(db, "services", id);
     const serviceSnap = await getDoc(serviceRef);
 
-    if(!serviceSnap.exists()) return null;
+    if (!serviceSnap.exists()) return null;
 
     const service = serviceSnap.data();
 
@@ -33,17 +34,17 @@ async function getById(id) {
         ...service,
         createdAt: service.createdAt?.toDate(),
         updatedAt: service.updatedAt?.toDate()
-    };
+        };
 }
 
 // Buscar servicio por nombre
 async function findByName(name) {
     const nameClean = name.trim().toLowerCase();
 
-    const q = query(serviceCollection, where("name", "==", nameClean));
+    const q = query(serviceCollection, where("nameSearch", "==", nameClean));
     const snapshot = await getDocs(q);
 
-    if(snapshot.empty) return null;
+    if (snapshot.empty) return null;
 
     const docData = snapshot.docs[0];
     const data = docData.data();
@@ -56,29 +57,46 @@ async function findByName(name) {
     };
 }
 
-// Insertar nuevo servicio
-async function createService({name, description, price, days, state}) {
+// Crear servicio
+async function createService({ name, description, price, duration, state }) {
     try {
-        if(!name?.trim() || price == null || price < 0) throw new Error("Invalid data");
+        if (!name?.trim() || price == null || price < 0) {
+            throw new Error("Invalid data");
+        }
 
-        if (days != null && days < 0) throw new Error("Invalid days");
+        if (!duration?.trim()) {
+            throw new Error("Duration is required");
+        }
 
         const nameClean = name.trim().toLowerCase();
 
         const existing = await findByName(nameClean);
-        if(existing) return null;
+        if (existing) return null;
 
-        const docRef = await addDoc(serviceCollection, {
-            name: nameClean, 
-            description, 
-            price, 
-            days, 
-            state,
+        const data = {
+            name: name.trim(),    
+            nameSearch: nameClean,        
+            description: description || "",
+            price,
+            duration: duration.trim().toLowerCase(),
+            state: state ?? true,
             createdAt: serverTimestamp()
+        };
+
+        Object.keys(data).forEach(key => {
+            if (data[key] === undefined) {
+                delete data[key];
+            }
         });
 
-        return { id: docRef.id, name:nameClean, description, price, days, state }
-    } catch(err) {
+        const docRef = await addDoc(serviceCollection, data);
+
+        return {
+            id: docRef.id,
+            ...data
+        };
+
+    } catch (err) {
         console.error("Error creating service:", err);
         throw err;
     }
@@ -90,19 +108,32 @@ async function updateService(id, data) {
     if (!existing) return null;
 
     if (data.name) {
-        data.name = data.name.trim().toLowerCase();
+        const nameClean = data.name.trim().toLowerCase();
 
-        const existingService = await findByName(data.name);
+        const existingService = await findByName(nameClean);
         if (existingService && existingService.id !== id) return null;
+
+        data.name = data.name.trim();     
+        data.nameSearch = nameClean;   
     }
 
     if (data.price != null && data.price < 0) {
         throw new Error("Invalid price");
     }
 
+    if (data.duration) {
+        data.duration = data.duration.trim().toLowerCase();
+    }
+
     delete data.createdAt;
     delete data.updatedAt;
     delete data.id;
+
+    Object.keys(data).forEach(key => {
+        if (data[key] === undefined) {
+            delete data[key];
+        }
+    });
 
     await updateDoc(doc(db, "services", id), {
         ...data,
@@ -117,11 +148,11 @@ async function deleteService(id) {
     const serviceRef = doc(db, "services", id);
     const serviceSnap = await getDoc(serviceRef);
 
-    if(!serviceSnap.exists()) return null;
+    if (!serviceSnap.exists()) return null;
 
     await deleteDoc(serviceRef);
 
-    return { id }
+    return { id };
 }
 
 module.exports = { getAllServices, getById, findByName, createService, updateService, deleteService };
