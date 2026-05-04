@@ -371,7 +371,7 @@ export default function Services() {
                                 <table className="w-full text-sm">
                                     <thead className="bg-white/5 border-b border-white/10">
                                         <tr>
-                                            <th className="px-4 py-3 w-10"></th>
+                                            <th className="px-4 py-3 w-10 text-center"></th>
                                             
                                             <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">
                                                 Servicio
@@ -394,7 +394,7 @@ export default function Services() {
                                     <tbody className="divide-y divide-white/5">
                                         {filteredServices.map((service, index) => (
                                             <tr key={service.id} className="hover:bg-white/[0.02] transition align-middle">
-                                                <td className="px-4 py-3 text-center align-middle text-muted text-xs font-medium">
+                                                <td className="px-4 py-3 text-center align-middle text-muted text-xs font-medium tabular-nums">
                                                     {index + 1}
                                                 </td>
                                                 

@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import { getOrders, updateOrder } from "../api/orderService";
 import OrderSidebar from "../components/orders/OrderSidebar";
 import CustomSelect from "../components/CustomSelect";
+import OrderDetailsSidebar from "../components/orders/OrderDetailsSidebar";
 import {
     ShoppingBag,
     Clock,
@@ -36,6 +37,12 @@ const STATUS_CONFIG = {
     in_progress: { label: "En progreso", color: "bg-orange-500/15 text-orange-400 border border-orange-500/25", dot: "bg-orange-400" },
     completed:   { label: "Completado",  color: "bg-green-500/15  text-green-400  border border-green-500/25",  dot: "bg-green-400"  },
     cancelled:   { label: "Cancelado",   color: "bg-red-500/15    text-red-400    border border-red-500/25",    dot: "bg-red-400"    },
+};
+
+const PRIORITY_CONFIG = {
+    high:   { label: "Alta",  color: "bg-red-500/15 text-red-400 border border-red-500/25" },
+    medium: { label: "Media", color: "bg-yellow-500/15 text-yellow-400 border border-yellow-500/25" },
+    low:    { label: "Baja",  color: "bg-green-500/15 text-green-400 border border-green-500/25" },
 };
 
 const FILTER_STATUS_OPTIONS = [
@@ -77,6 +84,8 @@ export default function Orders() {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [pendingStatus, setPendingStatus] = useState("");
+    const [showDetails, setShowDetails] = useState(false);
+    const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
 
     const fetchOrders = async () => {
         try {
@@ -171,6 +180,13 @@ export default function Orders() {
 
         // Ordenamiento
         result.sort((a, b) => {
+            const priorityOrder = { high: 3, medium: 2, low: 1 };
+
+            const pa = priorityOrder[a.priority] || 0;
+            const pb = priorityOrder[b.priority] || 0;
+
+            if (pb !== pa) return pb - pa;
+
             switch (filters.sort) {
                 case "date_asc":
                     return new Date(a.createdAt) - new Date(b.createdAt);
@@ -501,6 +517,8 @@ export default function Orders() {
                             <table className="w-full text-sm">
                                 <thead className="bg-white/5 border-b border-white/10">
                                     <tr>
+                                        <th className="px-4 py-3 w-10 text-center"></th>
+
                                         <th className="px-4 py-3 text-left">
                                             <span className="flex items-center gap-1.5 text-xs font-medium text-muted uppercase tracking-wider">
                                                 <User size={12} /> Cliente
@@ -521,6 +539,16 @@ export default function Orders() {
                                                 <DollarSign size={12} /> Total
                                             </span>
                                         </th>
+                                        <th className="px-4 py-3 text-center">
+                                            <span className="text-xs font-medium text-muted uppercase tracking-wider">
+                                                Prioridad
+                                            </span>
+                                        </th>
+                                        <th className="px-4 py-3 text-center">
+                                            <span className="text-xs font-medium text-muted uppercase tracking-wider">
+                                                Detalle
+                                            </span>
+                                        </th>
                                         <th className="px-4 py-3 text-left">
                                             <span className="flex items-center gap-1.5 text-xs font-medium text-muted uppercase tracking-wider">
                                                 <Calendar size={12} /> Fecha
@@ -530,10 +558,14 @@ export default function Orders() {
                                 </thead>
 
                                 <tbody className="divide-y divide-white/5">
-                                    {filteredOrders.map(order => {
+                                    {filteredOrders.map((order, index) => {
                                         const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
                                         return (
                                             <tr key={order.id} className="hover:bg-white/[0.02] transition-colors">
+                                                <td className="px-4 py-3 text-center align-middle text-muted text-xs font-medium tabular-nums">
+                                                    {index + 1}
+                                                </td>
+
                                                 <td className="px-4 py-3">
                                                     <div className="flex items-center gap-2.5">
                                                         <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center flex-shrink-0">
@@ -573,10 +605,39 @@ export default function Orders() {
 
                                                 <td className="px-4 py-3">
                                                     <span className="text-secondary text-sm font-medium">
-                                                        {order.total != null
-                                                            ? `$${Number(order.total).toLocaleString()}`
-                                                            : "—"}
+                                                        {(() => {
+                                                            const total =
+                                                                order.total ??
+                                                                order.finalPrice ??
+                                                                order.service?.basePrice;
+
+                                                            return total != null
+                                                                ? `$${Number(total).toLocaleString()}`
+                                                                : "—";
+                                                        })()}
                                                     </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    {(() => {
+                                                        const p = PRIORITY_CONFIG[order.priority] || PRIORITY_CONFIG.medium;
+
+                                                        return (
+                                                            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${p.color}`}>
+                                                                {p.label}
+                                                            </span>
+                                                        );
+                                                    })()}
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedOrderDetails(order);
+                                                            setShowDetails(true);
+                                                        }}
+                                                        className="px-3 py-1.5 text-xs font-medium rounded-lg bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 transition"
+                                                    >
+                                                        Ver
+                                                    </button>
                                                 </td>
 
                                                 <td className="px-4 py-3">
@@ -643,6 +704,13 @@ export default function Orders() {
                                 </div>
                             </div>
                         </div>
+                    )}
+
+                    {showDetails && (
+                        <OrderDetailsSidebar
+                            order={selectedOrderDetails}
+                            onClose={() => setShowDetails(false)}
+                        />
                     )}
                 </main>
             </div>
