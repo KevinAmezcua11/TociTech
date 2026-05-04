@@ -1,5 +1,4 @@
 const { collection, addDoc, getDocs, deleteDoc, updateDoc, query, where, getDoc, doc, serverTimestamp } = require("firebase/firestore");
-
 const { db } = require('../config/firebase');
 
 const productCollection = collection(db, "products");
@@ -58,11 +57,10 @@ async function findByName(name) {
 }
 
 // Crear producto
-async function createProduct({ name, description, price, category, image, state, stock, minStock }) {
+async function createProduct({ name, description, price, cost, category, brand, model, specs, sku, images, status, stock, minStock, warranty }) {
     try {
-        if (!name?.trim() || price == null || price < 0) {
-            throw new Error("Invalid data");
-        }
+        if (!name?.trim()) throw new Error("Name is required");
+        if (price == null || price < 0) throw new Error("Invalid price");
 
         const nameClean = name.trim().toLowerCase();
 
@@ -71,21 +69,25 @@ async function createProduct({ name, description, price, category, image, state,
 
         const data = {
             name: name.trim(),
-            nameSearch: nameClean, 
+            nameSearch: nameClean,
             description: description || "",
             price,
-            category,
-            image,
-            state: state ?? true,
+            cost: cost ?? 0,
+            category: category || "",
+            brand: brand || "",
+            model: model || "",
+            specs: specs || {},
+            sku: sku || "",
+            images: images?.length ? images : (image ? [image] : []),
+            status: status || "available", // available | out_of_stock | discontinued
             stock: stock ?? 0,
             minStock: minStock ?? 0,
+            warranty: warranty || "",
             createdAt: serverTimestamp()
         };
 
         Object.keys(data).forEach(key => {
-            if (data[key] === undefined) {
-                delete data[key];
-            }
+            if (data[key] === undefined) delete data[key];
         });
 
         const docRef = await addDoc(productCollection, data);
@@ -112,12 +114,21 @@ async function updateProduct(id, data) {
         const existingProduct = await findByName(nameClean);
         if (existingProduct && existingProduct.id !== id) return null;
 
-        data.name = data.name.trim();  
-        data.nameSearch = nameClean;    
+        data.name = data.name.trim();
+        data.nameSearch = nameClean;
     }
 
     if (data.price != null && data.price < 0) {
         throw new Error("Invalid price");
+    }
+
+    if (data.cost != null && data.cost < 0) {
+        throw new Error("Invalid cost");
+    }
+
+    if (data.image && !data.images) {
+        data.images = [data.image];
+        delete data.image;
     }
 
     delete data.createdAt;
@@ -125,9 +136,7 @@ async function updateProduct(id, data) {
     delete data.id;
 
     Object.keys(data).forEach(key => {
-        if (data[key] === undefined) {
-            delete data[key];
-        }
+        if (data[key] === undefined) delete data[key];
     });
 
     await updateDoc(doc(db, "products", id), {
