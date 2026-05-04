@@ -304,16 +304,43 @@ export default function Services() {
                                 </label>
                             </div>
 
-                            <label className="flex items-center justify-between rounded-lg bg-background border border-white/10 px-3 py-2">
-                                <span className="text-sm text-secondary">Servicio activo</span>
-                                <input
-                                    name="active"
-                                    checked={form.active}
-                                    onChange={handleChange}
-                                    type="checkbox"
-                                    className="h-4 w-4 accent-primary"
-                                />
-                            </label>
+                            <div className="space-y-1.5 mb-6">
+                                <span className="text-xs font-medium uppercase text-muted">Estado</span>
+
+                                <div className="relative flex w-full rounded-full overflow-hidden border border-white/10 bg-background">
+
+                                    {/* Sliding indicator */}
+                                    <div
+                                    className="absolute inset-0 w-1/2 rounded-full transition-all duration-300 ease-in-out"
+                                    style={{
+                                        transform: form.active ? "translateX(0%)" : "translateX(100%)",
+                                        background: form.active ? "rgba(74, 222, 128, 0.15)" : "rgba(255,255,255,0.08)",
+                                        borderRight: form.active ? "1px solid rgba(74,222,128,0.2)" : "none",
+                                        borderLeft: !form.active ? "1px solid rgba(255,255,255,0.1)" : "none",
+                                    }}
+                                    />
+
+                                    {/* Activo */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setForm((f) => ({ ...f, active: true }))}
+                                        className="relative flex-1 py-2 text-sm font-semibold transition-colors duration-300 z-10"
+                                        style={{ color: form.active ? "rgb(134, 239, 172)" : "rgba(255,255,255,0.45)" }}
+                                        >
+                                        Activo
+                                    </button>
+
+                                    {/* Inactivo */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setForm((f) => ({ ...f, active: false }))}
+                                        className="relative flex-1 py-2 text-sm font-semibold transition-colors duration-300 z-10"
+                                        style={{ color: !form.active ? "#fff" : "rgba(255,255,255,0.45)" }}
+                                        >
+                                        Inactivo
+                                    </button>
+                                </div>
+                            </div>
 
                             <button
                                 type="submit"
@@ -344,6 +371,8 @@ export default function Services() {
                                 <table className="w-full text-sm">
                                     <thead className="bg-white/5 border-b border-white/10">
                                         <tr>
+                                            <th className="px-4 py-3 w-10"></th>
+                                            
                                             <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">
                                                 Servicio
                                             </th>
@@ -363,8 +392,12 @@ export default function Services() {
                                     </thead>
 
                                     <tbody className="divide-y divide-white/5">
-                                        {filteredServices.map((service) => (
+                                        {filteredServices.map((service, index) => (
                                             <tr key={service.id} className="hover:bg-white/[0.02] transition align-middle">
+                                                <td className="px-4 py-3 text-center align-middle text-muted text-xs font-medium">
+                                                    {index + 1}
+                                                </td>
+                                                
                                                 <td className="px-4 py-3">
                                                     <div className="max-w-md">
                                                         <p className="font-medium text-white">{service.name}</p>
