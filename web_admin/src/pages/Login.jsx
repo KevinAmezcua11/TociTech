@@ -104,7 +104,7 @@ export default function Login() {
                     disabled={loading}
                     className="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:opacity-90 transition disabled:opacity-60"
                 >
-                    {loading ? "Entrando..." : "Entrar"}
+                    Entrar
                 </button>
 
                 {/* Footer */}

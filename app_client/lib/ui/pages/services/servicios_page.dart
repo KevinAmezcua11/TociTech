@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/service_detail_page.dart';
 import '../../../theme/app_theme.dart';
 
 class _Servicio {
@@ -70,14 +71,14 @@ class ServiciosPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: ListView.separated(
-        padding: EdgeInsets.only(bottom: 40),
+        padding: const EdgeInsets.only(bottom: 40),
         itemCount: _servicios.length + 1,
         separatorBuilder: (_, index) =>
-        index == 0 ? SizedBox(height: 20) : SizedBox(height: 14),
+        index == 0 ? const SizedBox(height: 20) : const SizedBox(height: 14),
         itemBuilder: (context, index) {
           if (index == 0) return _buildHeader();
           return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: _ServiceCard(servicio: _servicios[index - 1]),
           );
         },
@@ -87,15 +88,16 @@ class ServiciosPage extends StatelessWidget {
 
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 24, 20, 24),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+      decoration: const BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Nuestros Servicios",
+        children: const [
+          Text(
+            "Nuestros Servicios",
             style: TextStyle(
               color: AppColors.textPrimary,
               fontSize: 22,
@@ -103,8 +105,12 @@ class ServiciosPage extends StatelessWidget {
             ),
           ),
           SizedBox(height: 4),
-          Text("Soluciones técnicas con precios claros y accesibles.",
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          Text(
+            "Soluciones técnicas con precios claros y accesibles.",
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
           ),
         ],
       ),
@@ -119,141 +125,152 @@ class _ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
-      ),
-      clipBehavior: Clip.hardEdge,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ServiceDetailPage(
+                titulo: servicio.titulo,
+                descripcion: servicio.descripcion,
+                imagen: servicio.imagen,
+                precio: servicio.precio,
+                tiempo: servicio.tiempo,
+                icono: servicio.icono,
+              ),
+            ),
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.06)),
+          ),
+          clipBehavior: Clip.hardEdge,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 160, width: double.infinity,
-                child: Image.asset(servicio.imagen, fit: BoxFit.cover),
-              ),
-              Positioned(
-                bottom: 0, left: 0, right: 0,
-                child: Container(
-                  height: 70,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [AppColors.surface, Colors.transparent],
-                    ),
+              Stack(
+                children: [
+                  SizedBox(
+                    height: 160,
+                    width: double.infinity,
+                    child: Image.asset(servicio.imagen, fit: BoxFit.cover),
                   ),
-                ),
-              ),
-              Positioned(
-                top: 10, right: 10,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: AppColors.background.withOpacity(0.85),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Color(0xFF00E676).withOpacity(0.5)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.attach_money_rounded, color: Color(0xFF00E676), size: 13),
-                      Text("Desde \$${servicio.precio} MXN",
-                        style: TextStyle(
-                          color: Color(0xFF00E676),
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 70,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [AppColors.surface, Colors.transparent],
                         ),
                       ),
-                    ],
+                    ),
                   ),
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.background.withOpacity(0.85),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFF00E676).withOpacity(0.5)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.attach_money_rounded,
+                              color: Color(0xFF00E676), size: 13),
+                          Text(
+                            "Desde \$${servicio.precio} MXN",
+                            style: const TextStyle(
+                              color: Color(0xFF00E676),
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          child: Icon(servicio.icono,
+                              color: AppColors.primary, size: 16),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            servicio.titulo,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      servicio.descripcion,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: AppColors.blue.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(7),
+                          ),
+                          child: const Icon(Icons.schedule_rounded,
+                              color: AppColors.blue, size: 13),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          "${servicio.tiempo} días hábiles",
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-
-          // Contenido
-          Padding(
-            padding: EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(7),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                      child: Icon(servicio.icono, color: AppColors.primary, size: 16),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        servicio.titulo,
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 8),
-
-                Text(
-                  servicio.descripcion,
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    height: 1.5,
-                  ),
-                ),
-
-                SizedBox(height: 12),
-
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: AppColors.blue.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(7),
-                      ),
-                      child: Icon(Icons.schedule_rounded, color: AppColors.blue, size: 13),
-                    ),
-                    SizedBox(width: 6),
-                    Expanded(
-                      child: Text("${servicio.tiempo} días hábiles",
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                      ),
-                    ),
-                    FilledButton.icon(
-                      onPressed: () {},
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.blue,
-                        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      icon: Icon(Icons.handyman_rounded, size: 14),
-                      label: Text("Solicitar",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

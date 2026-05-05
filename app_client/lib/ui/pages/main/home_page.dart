@@ -52,6 +52,10 @@ class _TociTechAppState extends State<TociTechApp> {
             ),
             icon: Icon(Icons.notifications_outlined, color: AppColors.primary),
           ),
+          IconButton(
+            onPressed: () => (),
+            icon: Icon(Icons.shopping_cart_outlined, color: AppColors.primary),
+          ),
         ],
       ),
 
@@ -377,7 +381,7 @@ class _TociTechAppState extends State<TociTechApp> {
               imagen: s["imagen"] as String,
               precio: s["precio"] as int,
               tiempo: s["tiempo"] as String,
-              textoBoton: "Solicitar",
+              textoBoton: "Más Detalles",
             ),
           );
         },

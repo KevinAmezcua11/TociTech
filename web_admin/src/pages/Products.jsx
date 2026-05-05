@@ -51,7 +51,7 @@ const EMPTY_FORM = {
     warranty: "", status: "available",
     stock: "", minStock: "",
     images: [""],           // array de URLs
-    specs: "",              // JSON editable como textarea
+    specs: [{ key: "", value: "" }],
 };
 
 /* ─── helpers ────────────────────────────────────────── */
@@ -64,6 +64,17 @@ function stockBadge(stock, minStock) {
     if (s <= m)  return { label: "Stock bajo", cls: "bg-yellow-500/15 text-yellow-400 border border-yellow-500/25" };
     return               { label: "En stock",  cls: "bg-green-500/15 text-green-400 border border-green-500/25"  };
 }
+
+const normalizeStatus = (status, stock) => {
+    if (typeof status === "string") return status;
+
+    if (status === true) return "available";
+    if (status === false) return "discontinued";
+
+    if (Number(stock) === 0) return "out_of_stock";
+
+    return "available";
+};
 
 /* ═══════════════════════════════════════════════════════ */
 export default function Products() {
@@ -92,7 +103,13 @@ export default function Products() {
         try {
             setLoading(true);
             const data = await getProducts();
-            setProducts(data);
+
+            const normalized = data.map(p => ({
+                ...p,
+                status: normalizeStatus(p.status, p.stock)
+            }));
+
+            setProducts(normalized);
         } catch {
             showFeedback("error", "No se pudieron cargar los productos.");
         } finally {
@@ -113,7 +130,11 @@ export default function Products() {
 
     /* ── abrir modales ── */
     const openCreate = () => {
-        setForm(EMPTY_FORM);
+        setForm({
+            ...EMPTY_FORM,
+            images: [""],
+            specs: [{ key: "", value: "" }]
+        });
         setSelected(null);
         setModalMode("create");
     };
@@ -133,9 +154,9 @@ export default function Products() {
             stock:       p.stock       ?? "",
             minStock:    p.minStock    ?? "",
             images:      p.images?.length ? p.images : [""],
-            specs:       p.specs && Object.keys(p.specs).length
-                            ? JSON.stringify(p.specs, null, 2)
-                            : "",
+            specs: p.specs
+                ? Object.entries(p.specs).map(([k, v]) => ({ key: k, value: v }))
+                : [{ key: "", value: "" }],
         });
         setSelected(p);
         setModalMode("edit");
@@ -150,25 +171,32 @@ export default function Products() {
         if (!form.name.trim()) { showFeedback("error", "El nombre es obligatorio."); return; }
         if (form.price === "" || Number(form.price) < 0) { showFeedback("error", "El precio es inválido."); return; }
 
-        let specs = {};
-        if (form.specs.trim()) {
-            try { specs = JSON.parse(form.specs); }
-            catch { showFeedback("error", "Las especificaciones no son un JSON válido."); return; }
-        }
+        const specs = {};
+        form.specs
+            .filter(s => s.key && s.value)
+            .forEach(s => {
+                specs[s.key.toLowerCase()] = s.value;
+            });
 
         const images = form.images.map(u => u.trim()).filter(Boolean);
+
+        const autoStatus = (status, stock) => {
+            if (status === "discontinued") return "discontinued";
+            if (Number(stock) === 0) return "out_of_stock";
+            return "available";
+        };
 
         const payload = {
             name:        form.name.trim(),
             description: form.description.trim(),
             price:       Number(form.price),
             cost:        form.cost !== "" ? Number(form.cost) : 0,
-            category:    form.category,
+            category: form.category.trim(),
             brand:       form.brand.trim(),
             model:       form.model.trim(),
             sku:         form.sku.trim(),
             warranty:    form.warranty.trim(),
-            status:      form.status,
+            status: autoStatus(form.status, form.stock),
             stock:       form.stock !== "" ? Number(form.stock) : 0,
             minStock:    form.minStock !== "" ? Number(form.minStock) : 0,
             images,
@@ -502,13 +530,19 @@ function ProductModal({ mode, form, setForm, onClose, onSave, saving }) {
         return () => window.removeEventListener("keydown", handler);
     }, [onClose]);
 
+    useEffect(() => {
+        if (Number(form.stock) === 0 && form.status !== "out_of_stock") {
+            setForm(f => ({ ...f, status: "out_of_stock" }));
+        }
+    }, [form.stock]);
+
     return (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 overflow-y-auto"
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto"
             onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
 
             <div className="relative bg-surface border border-white/8 rounded-2xl shadow-2xl
-                            w-full max-w-2xl mb-10">
+                            w-full max-w-2xl my-10">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
                     <h2 className="text-white font-semibold text-base">
@@ -580,7 +614,7 @@ function ProductModal({ mode, form, setForm, onClose, onSave, saving }) {
                             <div className="space-y-1.5">
                                 <label className="text-muted text-xs font-medium">Estado</label>
                                 <CustomSelect value={form.status} onChange={v => set("status", v)}
-                                    options={STATUS_OPTIONS} />
+                                    options={STATUS_OPTIONS} disabled={Number(form.stock) === 0} />
                             </div>
                         </div>
                     </Section>
@@ -626,12 +660,64 @@ function ProductModal({ mode, form, setForm, onClose, onSave, saving }) {
                     </Section>
 
                     {/* Sección: Specs */}
-                    <Section title="Especificaciones (JSON opcional)">
-                        <FormField
-                            value={form.specs}
-                            onChange={v => set("specs", v)}
-                            placeholder={'{\n  "RAM": "16GB",\n  "Procesador": "Intel i7"\n}'}
-                            textarea rows={4} mono />
+                    <Section title="Especificaciones">
+                        {form.specs.every(s => !s.key && !s.value) && (
+                            <p className="text-xs text-muted">Agrega especificaciones</p>
+                        )}
+
+                        {form.specs.map((spec, i) => (
+                            <div key={i} className="flex gap-2">
+                                <input
+                                    value={spec.key}
+                                    onChange={e => {
+                                        const newSpecs = [...form.specs];
+                                        newSpecs[i].key = e.target.value;
+                                        setForm(f => ({ ...f, specs: newSpecs }));
+                                    }}
+                                    placeholder="Ej. RAM"
+                                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-muted outline-none focus:border-primary/40 transition-all"
+                                />
+
+                                <input
+                                    value={spec.value}
+                                    onChange={e => {
+                                        const newSpecs = [...form.specs];
+                                        newSpecs[i].value = e.target.value;
+                                        setForm(f => ({ ...f, specs: newSpecs }));
+                                    }}
+                                    placeholder="Ej. 8GB"
+                                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-muted outline-none focus:border-primary/40 transition-all"
+                                />
+
+                                <button
+                                    onClick={() => {
+                                        if (form.specs.length === 1) return;
+
+                                        const newSpecs = form.specs.filter((_, idx) => idx !== i);
+
+                                        setForm(f => ({
+                                            ...f,
+                                            specs: newSpecs
+                                        }));
+                                    }}
+                                    className="px-2 text-red-400"
+                                >
+                                    <Trash2 size={14}/>
+                                </button>
+                            </div>
+                        ))}
+
+                        <button
+                            onClick={() => {
+                                setForm(f => ({
+                                    ...f,
+                                    specs: [...f.specs, { key: "", value: "" }]
+                                }));
+                            }}
+                            className="text-primary text-xs mt-2"
+                        >
+                            + Agregar especificación
+                        </button>
                     </Section>
                 </div>
 

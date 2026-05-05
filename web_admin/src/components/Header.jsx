@@ -146,7 +146,7 @@ export default function Header({ products = [], services = [], customers = [] })
                 <div className="hidden md:flex flex-col items-end">
                     <span className="text-muted text-xs">{getGreeting()},</span>
                     <span className="text-white text-sm font-semibold">
-                        {USER_NAME}
+                        {USER_NAME} 👋
                     </span>
                 </div>
 
