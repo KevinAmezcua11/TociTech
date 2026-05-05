@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { LayoutGrid, Package, Wrench, ShoppingCart, Users, Settings, ChevronDown, User, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import logo from "../assets/Logo-img.png";
 
 // Logo TociTech
 function TociTechLogo({ size = 34 }) {
@@ -195,7 +196,13 @@ export default function Sidebar() {
 
             {/* Logo + nombre */}
             <div className="flex items-center gap-3 mb-5">
-                <TociTechLogo size={34} />
+                <div className="w-9 h-9 rounded-full flex items-center justify-center border border-white/10 bg-[#0F0F14]">
+                    <img
+                        src={logo}
+                        alt="TociTech"
+                        className="w-6 h-6 object-contain"
+                    />
+                </div>
                 <span className="text-white font-extrabold text-lg tracking-tight">
                     TociTech
                 </span>

@@ -8,7 +8,7 @@ async function getAll(req, res) {
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ message: "Error al obtener productos" });
     }
 }
 
@@ -17,49 +17,76 @@ async function getById(req, res) {
     try {
         const product = await Product.getById(req.params.id);
 
-        if(!product) {
-            return res.status(404).json({ message: "Product not found" });
+        if (!product) {
+            return res.status(404).json({ message: "Producto no encontrado" });
         }
 
         res.json(product);
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ message: "Error al obtener producto" });
     }
 }
 
 // Crear producto
 async function createProduct(req, res) {
     try {
-        const product = await Product.createProduct(req.body);
+        const data = req.body;
 
-        if(!product) {
-            return res.status(400).json({ message: "Product already exists" });
+        if (!data.name || data.price == null) {
+            return res.status(400).json({
+                message: "Nombre y precio son obligatorios"
+            });
         }
 
-        res.status(201).json(product);
+        const product = await Product.createProduct(data);
+
+        if (!product) {
+            return res.status(400).json({
+                message: "El producto ya existe (nombre duplicado)"
+            });
+        }
+
+        res.status(201).json({
+            message: "Producto creado correctamente",
+            data: product
+        });
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Server error" });
+
+        res.status(400).json({
+            message: err.message || "Error al crear producto"
+        });
     }
 }
 
 // Actualizar producto
 async function updateProduct(req, res) {
     try {
-        const updated = await Product.updateProduct(req.params.id, req.body);
+        const id = req.params.id;
+        const data = req.body;
 
-        if(!updated) {
-            return res.status(404).json({ message: "Product not found" });
+        const updated = await Product.updateProduct(id, data);
+
+        if (!updated) {
+            return res.status(404).json({
+                message: "Producto no encontrado"
+            });
         }
 
-        res.json(updated);
+        res.json({
+            message: "Producto actualizado correctamente",
+            data: updated
+        });
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Server error" });
+
+        res.status(400).json({
+            message: err.message || "Error al actualizar producto"
+        });
     }
 }
 
@@ -68,16 +95,23 @@ async function deleteProduct(req, res) {
     try {
         const deleted = await Product.deleteProduct(req.params.id);
 
-        if(!deleted) {
-            return res.status(404).json({ message: "Product not found" });
+        if (!deleted) {
+            return res.status(404).json({
+                message: "Producto no encontrado"
+            });
         }
 
-        res.json({ message: "Product deleted", ...deleted });
+        res.json({
+            message: "Producto eliminado correctamente",
+            id: deleted.id
+        });
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({
+            message: "Error al eliminar producto"
+        });
     }
 }
 
-module.exports = { getAll, getById, createProduct, updateProduct, deleteProduct }
+module.exports = { getAll, getById, createProduct, updateProduct, deleteProduct };

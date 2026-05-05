@@ -94,7 +94,7 @@ async function createOrder({ type, customerId, customer: manualCustomer, items, 
             const itemsFormatted = [];
             const productsMap = [];
 
-            // 🔹 Validar productos
+            // Validar productos
             for (const item of items) {
                 if (!item.productId || !item.quantity) {
                     throw new Error("Invalid item data");
