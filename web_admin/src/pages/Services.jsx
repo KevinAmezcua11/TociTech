@@ -5,7 +5,7 @@ import ConfirmModal from "../components/ConfirmModal";
 import {
     createService,
     deleteService,
-    getServices,
+    subscribeToServices,
     updateService,
 } from "../api/serviceService";
 import {
@@ -41,23 +41,33 @@ export default function Services() {
     const [success, setSuccess] = useState("");
 
     useEffect(() => {
-        fetchServices();
-    }, []);
-
-    const fetchServices = async () => {
         setLoading(true);
         setError("");
 
+        let unsubscribe;
+
         try {
-            const data = await getServices();
-            setServices(data);
+            unsubscribe = subscribeToServices({
+                onData: (data) => {
+                    setServices(data);
+                    setLoading(false);
+                },
+                onError: (err) => {
+                    console.error(err);
+                    setError("No se pudieron escuchar los servicios en tiempo real. Revisa la conexion con Firebase.");
+                    setLoading(false);
+                },
+            });
         } catch (err) {
             console.error(err);
-            setError("No se pudieron cargar los servicios. Revisa que el backend esté corriendo.");
-        } finally {
+            setError(err.message || "No se pudo iniciar la conexion en tiempo real con Firebase.");
             setLoading(false);
         }
-    };
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, []);
 
     const filteredServices = useMemo(() => {
         const term = search.trim().toLowerCase();
@@ -98,11 +108,11 @@ export default function Services() {
         const price = Number(form.price);
 
         if (!name) return "El nombre del servicio es obligatorio.";
-        if (!description) return "La descripción del servicio es obligatoria.";
-        if (!form.price || Number.isNaN(price) || price < 0) {
-            return "El precio debe ser un número válido mayor o igual a cero.";
+        if (!description) return "La descripcion del servicio es obligatoria.";
+        if (form.price === "" || Number.isNaN(price) || price < 0) {
+            return "El precio debe ser un numero valido mayor o igual a cero.";
         }
-        if (!duration) return "La duración del servicio es obligatoria.";
+        if (!duration) return "La duracion del servicio es obligatoria.";
 
         return "";
     };
@@ -136,7 +146,6 @@ export default function Services() {
                 showSuccess("Servicio creado correctamente.");
             }
 
-            await fetchServices();
             resetForm();
         } catch (err) {
             console.error(err);
@@ -173,7 +182,6 @@ export default function Services() {
                 resetForm();
             }
 
-            await fetchServices();
             setServiceToDelete(null);
         } catch (err) {
             console.error(err);
@@ -244,7 +252,7 @@ export default function Services() {
                                         type="button"
                                         onClick={resetForm}
                                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-muted transition hover:text-white"
-                                        title="Cancelar edición"
+                                        title="Cancelar edicion"
                                     >
                                         <X size={16} />
                                     </button>
@@ -264,7 +272,7 @@ export default function Services() {
                             </label>
 
                             <label className="block space-y-1.5">
-                                <span className="text-xs font-medium uppercase text-muted">Descripción</span>
+                                <span className="text-xs font-medium uppercase text-muted">Descripcion</span>
                                 <textarea
                                     name="description"
                                     value={form.description}
@@ -292,7 +300,7 @@ export default function Services() {
                                 </label>
 
                                 <label className="block space-y-1.5">
-                                    <span className="text-xs font-medium uppercase text-muted">Duración</span>
+                                    <span className="text-xs font-medium uppercase text-muted">Duracion</span>
                                     <input
                                         name="duration"
                                         value={form.duration}
@@ -351,7 +359,7 @@ export default function Services() {
                                                 Precio
                                             </th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-muted uppercase">
-                                                Duración
+                                                Duracion
                                             </th>
                                             <th className="px-4 py-3 text-center text-xs font-medium text-muted uppercase">
                                                 Estado
@@ -434,9 +442,10 @@ export default function Services() {
                 onClose={() => !deleting && setServiceToDelete(null)}
                 onConfirm={handleDelete}
                 title="Eliminar servicio"
-                message={`¿Deseas eliminar "${serviceToDelete?.name || "este servicio"}"? Esta acción no se puede deshacer.`}
+                message={`Deseas eliminar "${serviceToDelete?.name || "este servicio"}"? Esta accion no se puede deshacer.`}
                 type="danger"
             />
         </div>
     );
 }
+

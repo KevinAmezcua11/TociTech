@@ -1,5 +1,29 @@
 const Service = require('../models/services.model'); 
 
+function getServiceErrorResponse(err) {
+    const messages = {
+        "Invalid name": "El nombre del servicio es obligatorio.",
+        "Invalid description": "La descripcion del servicio es obligatoria.",
+        "Invalid duration": "La duracion del servicio es obligatoria.",
+        "Invalid price": "El precio debe ser un numero valido mayor o igual a cero.",
+        "Service already exists": "Ya existe un servicio con ese nombre.",
+    };
+
+    return messages[err.message];
+}
+
+function handleServiceError(err, res) {
+    console.error(err);
+
+    const message = getServiceErrorResponse(err);
+
+    if (message) {
+        return res.status(400).json({ message });
+    }
+
+    return res.status(500).json({ message: "No se pudo completar la operacion de servicios." });
+}
+
 // Obtener todos los servicios
 async function getAll(req, res) {
     try {
@@ -7,13 +31,7 @@ async function getAll(req, res) {
         res.json(services);
 
     } catch (err) {
-        console.error(err);
-
-        if (err.message.includes("Invalid")) {
-            return res.status(400).json({ message: err.message });
-        }
-
-        res.status(500).json({ message: "Server error" });
+        handleServiceError(err, res);
     }
 }
 
@@ -29,13 +47,7 @@ async function getById(req, res) {
         res.json(service);
 
     } catch (err) {
-        console.error(err);
-
-        if (err.message.includes("Invalid")) {
-            return res.status(400).json({ message: err.message });
-        }
-
-        res.status(500).json({ message: "Server error" });
+        handleServiceError(err, res);
     }
 }
 
@@ -44,20 +56,10 @@ async function createService(req, res) {
     try {
         const service = await Service.createService(req.body);
 
-        if(!service) {
-            return res.status(400).json({ message: "Service already exists" });
-        }
-
         res.status(201).json(service);
 
     } catch (err) {
-        console.error(err);
-
-        if (err.message.includes("Invalid")) {
-            return res.status(400).json({ message: err.message });
-        }
-
-        res.status(500).json({ message: "Server error" });
+        handleServiceError(err, res);
     }
 }
 
@@ -73,13 +75,7 @@ async function updateService(req, res) {
         res.json(updated);
 
     } catch (err) {
-        console.error(err);
-
-        if (err.message.includes("Invalid")) {
-            return res.status(400).json({ message: err.message });
-        }
-
-        res.status(500).json({ message: "Server error" });
+        handleServiceError(err, res);
     }
 }
 

@@ -60,7 +60,7 @@ function normalizeServiceData(data) {
     const normalized = { ...data };
 
     if (normalized.duration == null && normalized.days != null) {
-        normalized.duration = `${normalized.days} días`;
+        normalized.duration = `${normalized.days} dias`;
     }
 
     if (normalized.active == null && normalized.state != null) {
@@ -73,29 +73,48 @@ function normalizeServiceData(data) {
     return normalized;
 }
 
+function validateRequiredText(value, message) {
+    if (typeof value !== "string" || !value.trim()) {
+        throw new Error(message);
+    }
+
+    return value.trim();
+}
+
+function validatePrice(value) {
+    if (value === "" || value == null) {
+        throw new Error("Invalid price");
+    }
+
+    const price = Number(value);
+
+    if (price < 0 || Number.isNaN(price)) {
+        throw new Error("Invalid price");
+    }
+
+    return price;
+}
+
 // Insertar nuevo servicio
 async function createService(data) {
     try {
         const service = normalizeServiceData(data);
-        const price = Number(service.price);
+        const nameClean = validateRequiredText(service.name, "Invalid name");
+        const description = validateRequiredText(service.description, "Invalid description");
+        const duration = validateRequiredText(service.duration, "Invalid duration");
+        const price = validatePrice(service.price);
 
-        if(!service.name?.trim() || price < 0 || Number.isNaN(price)) throw new Error("Invalid data");
-
-        if (!service.description?.trim()) throw new Error("Invalid description");
-        if (!service.duration?.trim()) throw new Error("Invalid duration");
-
-        const nameClean = service.name.trim();
         const nameKey = nameClean.toLowerCase();
 
         const existing = await findByName(nameKey);
-        if(existing) return null;
+        if(existing) throw new Error("Service already exists");
 
         const docRef = await addDoc(serviceCollection, {
             name: nameClean,
             nameKey,
-            description: service.description.trim(),
+            description,
             price,
-            duration: service.duration.trim(),
+            duration,
             active: service.active !== false,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
@@ -115,24 +134,27 @@ async function updateService(id, data) {
 
     const service = normalizeServiceData(data);
 
-    if (service.name) {
-        service.name = service.name.trim();
+    if (service.name != null) {
+        service.name = validateRequiredText(service.name, "Invalid name");
         service.nameKey = service.name.toLowerCase();
 
         const existingService = await findByName(service.nameKey);
-        if (existingService && existingService.id !== id) return null;
+        if (existingService && existingService.id !== id) {
+            throw new Error("Service already exists");
+        }
     }
 
     if (service.price != null) {
-        service.price = Number(service.price);
+        service.price = validatePrice(service.price);
     }
 
-    if (service.price != null && (service.price < 0 || Number.isNaN(service.price))) {
-        throw new Error("Invalid price");
+    if (service.description != null) {
+        service.description = validateRequiredText(service.description, "Invalid description");
     }
 
-    if (service.description != null) service.description = service.description.trim();
-    if (service.duration != null) service.duration = service.duration.trim();
+    if (service.duration != null) {
+        service.duration = validateRequiredText(service.duration, "Invalid duration");
+    }
 
     delete service.createdAt;
     delete service.updatedAt;
@@ -159,3 +181,4 @@ async function deleteService(id) {
 }
 
 module.exports = { getAllServices, getById, findByName, createService, updateService, deleteService };
+
