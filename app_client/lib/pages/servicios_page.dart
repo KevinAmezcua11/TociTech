@@ -1,121 +1,349 @@
 import 'package:flutter/material.dart';
+
+import '../models/service_model.dart';
+import '../services/services_repository.dart';
 import '../theme/app_theme.dart';
 
-class _Servicio {
-  final String titulo;
-  final String descripcion;
-  final String imagen;
-  final int precio;
-  final String tiempo;
-  final IconData icono;
-
-  const _Servicio({
-    required this.titulo,
-    required this.descripcion,
-    required this.imagen,
-    required this.precio,
-    required this.tiempo,
-    required this.icono,
-  });
-}
-
-class ServiciosPage extends StatelessWidget {
+class ServiciosPage extends StatefulWidget {
   const ServiciosPage({super.key});
 
-  static const List<_Servicio> _servicios = [
-    _Servicio(
-      titulo: "Diagnóstico técnico",
-      descripcion: "Revisión completa para detectar fallas de hardware o software.",
-      imagen: "assets/servicio1.png",
-      precio: 150,
-      tiempo: "1-2",
-      icono: Icons.search_rounded,
-    ),
-    _Servicio(
-      titulo: "Mantenimiento Preventivo",
-      descripcion: "Limpieza y optimización para prolongar la vida útil del equipo.",
-      imagen: "assets/servicio2.png",
-      precio: 350,
-      tiempo: "1",
-      icono: Icons.cleaning_services_rounded,
-    ),
-    _Servicio(
-      titulo: "Reparación de Hardware",
-      descripcion: "Solución de fallas físicas en laptop o PC.",
-      imagen: "assets/servicio3.png",
-      precio: 400,
-      tiempo: "1-15",
-      icono: Icons.handyman_rounded,
-    ),
-    _Servicio(
-      titulo: "Instalación de Software",
-      descripcion: "Instalación de sistemas operativos, drivers y programas.",
-      imagen: "assets/instalacionSoftware.jpg",
-      precio: 200,
-      tiempo: "1",
-      icono: Icons.install_desktop_rounded,
-    ),
-    _Servicio(
-      titulo: "Recuperación de Datos",
-      descripcion: "Recuperación de archivos perdidos por falla o formateo accidental.",
-      imagen: "assets/recuperacionDatos.jpg",
-      precio: 500,
-      tiempo: "2-5",
-      icono: Icons.restore_rounded,
-    ),
-  ];
+  @override
+  State<ServiciosPage> createState() => _ServiciosPageState();
+}
+
+class _ServiciosPageState extends State<ServiciosPage> {
+  final ServicesRepository _repository = ServicesRepository();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: ListView.separated(
-        padding: EdgeInsets.only(bottom: 40),
-        itemCount: _servicios.length + 1,
-        separatorBuilder: (_, index) =>
-        index == 0 ? SizedBox(height: 20) : SizedBox(height: 14),
-        itemBuilder: (context, index) {
-          if (index == 0) return _buildHeader();
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: _ServiceCard(servicio: _servicios[index - 1]),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'add-service',
+        backgroundColor: AppColors.blue,
+        onPressed: () => _openServiceForm(),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      body: StreamBuilder<List<ServiceModel>>(
+        stream: _repository.watchServices(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return _ErrorState(
+              message:
+                  'No se pudieron cargar los servicios. Revisa la conexion con Firebase.',
+              onRetry: () => setState(() {}),
+            );
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final services = snapshot.data ?? [];
+
+          return ListView.separated(
+            padding: const EdgeInsets.only(bottom: 96),
+            itemCount: services.length + 1,
+            separatorBuilder: (_, index) =>
+                index == 0 ? const SizedBox(height: 20) : const SizedBox(height: 14),
+            itemBuilder: (context, index) {
+              if (index == 0) return _buildHeader(services.length);
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _ServiceCard(
+                  service: services[index - 1],
+                  onEdit: () => _openServiceForm(service: services[index - 1]),
+                  onDelete: () => _confirmDelete(services[index - 1]),
+                ),
+              );
+            },
           );
         },
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(int total) {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 24, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Nuestros Servicios",
+          Text(
+            'Nuestros Servicios',
             style: TextStyle(
               color: AppColors.textPrimary,
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 4),
-          Text("Soluciones técnicas con precios claros y accesibles.",
+          const SizedBox(height: 4),
+          Text(
+            total == 0
+                ? 'No hay servicios registrados todavia.'
+                : '$total servicios disponibles actualizados en tiempo real.',
             style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
           ),
         ],
       ),
     );
   }
+
+  Future<void> _openServiceForm({ServiceModel? service}) async {
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _ServiceForm(
+        service: service,
+        onSave: (value) async {
+          if (service == null) {
+            await _repository.createService(value);
+          } else {
+            await _repository.updateService(value);
+          }
+        },
+      ),
+    );
+
+    if (!mounted || saved != true) return;
+    _showMessage(service == null ? 'Servicio creado.' : 'Servicio actualizado.');
+  }
+
+  Future<void> _confirmDelete(ServiceModel service) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Eliminar servicio', style: TextStyle(color: AppColors.textPrimary)),
+        content: Text(
+          'Deseas eliminar "${service.name}"? Esta accion no se puede deshacer.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _repository.deleteService(service.id);
+      if (mounted) _showMessage('Servicio eliminado.');
+    } catch (error) {
+      if (mounted) _showMessage(_errorMessage(error), isError: true);
+    }
+  }
+
+  void _showMessage(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.redAccent : AppColors.green,
+      ),
+    );
+  }
+}
+
+class _ServiceForm extends StatefulWidget {
+  const _ServiceForm({required this.service, required this.onSave});
+
+  final ServiceModel? service;
+  final Future<void> Function(ServiceModel service) onSave;
+
+  @override
+  State<_ServiceForm> createState() => _ServiceFormState();
+}
+
+class _ServiceFormState extends State<_ServiceForm> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameController;
+  late final TextEditingController _descriptionController;
+  late final TextEditingController _priceController;
+  late final TextEditingController _durationController;
+  late bool _active;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final service = widget.service;
+    _nameController = TextEditingController(text: service?.name ?? '');
+    _descriptionController = TextEditingController(text: service?.description ?? '');
+    _priceController = TextEditingController(
+      text: service == null ? '' : service.price.toStringAsFixed(2),
+    );
+    _durationController = TextEditingController(text: service?.duration ?? '');
+    _active = service?.active ?? true;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _priceController.dispose();
+    _durationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, bottom + 20),
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.service == null ? 'Nuevo servicio' : 'Editar servicio',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 18),
+              _field(_nameController, 'Nombre'),
+              const SizedBox(height: 12),
+              _field(_descriptionController, 'Descripcion', maxLines: 3),
+              const SizedBox(height: 12),
+              _field(
+                _priceController,
+                'Precio',
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                validator: _validatePrice,
+              ),
+              const SizedBox(height: 12),
+              _field(_durationController, 'Duracion'),
+              const SizedBox(height: 12),
+              SwitchListTile(
+                value: _active,
+                onChanged: (value) => setState(() => _active = value),
+                activeColor: AppColors.primary,
+                title: Text('Servicio activo', style: TextStyle(color: AppColors.textPrimary)),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: FilledButton.icon(
+                  onPressed: _saving ? null : _save,
+                  icon: _saving
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.save_rounded),
+                  label: Text(widget.service == null ? 'Crear servicio' : 'Guardar cambios'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  TextFormField _field(
+    TextEditingController controller,
+    String label, {
+    int maxLines = 1,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      style: TextStyle(color: AppColors.textPrimary),
+      validator: validator ??
+          (value) {
+            if (value == null || value.trim().isEmpty) {
+              return '$label es obligatorio.';
+            }
+            return null;
+          },
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: AppColors.textSecondary),
+        filled: true,
+        fillColor: AppColors.background,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
+  }
+
+  String? _validatePrice(String? value) {
+    final price = double.tryParse((value ?? '').trim());
+    if (price == null || price < 0) {
+      return 'El precio debe ser un numero valido mayor o igual a cero.';
+    }
+    return null;
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _saving = true);
+
+    final service = ServiceModel(
+      id: widget.service?.id ?? '',
+      name: _nameController.text,
+      description: _descriptionController.text,
+      price: double.parse(_priceController.text.trim()),
+      duration: _durationController.text,
+      active: _active,
+    );
+
+    try {
+      await widget.onSave(service);
+      if (mounted) Navigator.pop(context, true);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_errorMessage(error)),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      setState(() => _saving = false);
+    }
+  }
 }
 
 class _ServiceCard extends StatelessWidget {
-  final _Servicio servicio;
+  const _ServiceCard({
+    required this.service,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
-  const _ServiceCard({required this.servicio});
+  final ServiceModel service;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -125,136 +353,115 @@ class _ServiceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withOpacity(0.06)),
       ),
-      clipBehavior: Clip.hardEdge,
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Stack(
+          Row(
             children: [
-              SizedBox(
-                height: 160, width: double.infinity,
-                child: Image.asset(servicio.imagen, fit: BoxFit.cover),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.handyman_rounded, color: AppColors.primary, size: 18),
               ),
-              Positioned(
-                bottom: 0, left: 0, right: 0,
-                child: Container(
-                  height: 70,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [AppColors.surface, Colors.transparent],
-                    ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  service.name,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              Positioned(
-                top: 10, right: 10,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: AppColors.background.withOpacity(0.85),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Color(0xFF00E676).withOpacity(0.5)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.attach_money_rounded, color: Color(0xFF00E676), size: 13),
-                      Text("Desde \$${servicio.precio} MXN",
-                        style: TextStyle(
-                          color: Color(0xFF00E676),
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              IconButton(
+                onPressed: onEdit,
+                icon: Icon(Icons.edit_rounded, color: AppColors.textSecondary),
+              ),
+              IconButton(
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
               ),
             ],
           ),
-
-          // Contenido
-          Padding(
-            padding: EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(7),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                      child: Icon(servicio.icono, color: AppColors.primary, size: 16),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        servicio.titulo,
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+          const SizedBox(height: 10),
+          Text(
+            service.description,
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.45),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Icon(Icons.attach_money_rounded, color: AppColors.green, size: 16),
+              Text(
+                '${service.price.toStringAsFixed(2)} MXN',
+                style: TextStyle(color: AppColors.green, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 14),
+              Icon(Icons.schedule_rounded, color: AppColors.blue, size: 16),
+              Expanded(
+                child: Text(
+                  service.duration,
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                 ),
-
-                SizedBox(height: 8),
-
-                Text(
-                  servicio.descripcion,
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    height: 1.5,
-                  ),
+              ),
+              Chip(
+                label: Text(service.active ? 'Activo' : 'Inactivo'),
+                backgroundColor: service.active
+                    ? AppColors.green.withOpacity(0.12)
+                    : Colors.white.withOpacity(0.08),
+                labelStyle: TextStyle(
+                  color: service.active ? AppColors.green : AppColors.textMuted,
+                  fontSize: 12,
                 ),
-
-                SizedBox(height: 12),
-
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: AppColors.blue.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(7),
-                      ),
-                      child: Icon(Icons.schedule_rounded, color: AppColors.blue, size: 13),
-                    ),
-                    SizedBox(width: 6),
-                    Expanded(
-                      child: Text("${servicio.tiempo} días hábiles",
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                      ),
-                    ),
-                    FilledButton.icon(
-                      onPressed: () {},
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.blue,
-                        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      icon: Icon(Icons.handyman_rounded, size: 14),
-                      label: Text("Solicitar",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off_rounded, color: Colors.redAccent, size: 42),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Reintentar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _errorMessage(Object error) {
+  if (error is ArgumentError) return error.message.toString();
+  return 'No se pudo completar la operacion. Revisa la conexion e intenta de nuevo.';
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tocitech/pages/servicios_page.dart';
+import 'package:tocitech/services/settings_preferences.dart';
 import '../theme/app_theme.dart';
 import '../widgets/service_card.dart';
 import 'ajustes_page.dart';
@@ -18,6 +19,14 @@ class TociTechApp extends StatefulWidget {
 class _TociTechAppState extends State<TociTechApp> {
   int _index = 0;
 
+  bool get _isLight => settingsController.value.themeMode == ClientThemeMode.light;
+  Color get _background => _isLight ? const Color(0xFFF7F8FC) : AppColors.background;
+  Color get _surface => _isLight ? Colors.white : AppColors.surface;
+  Color get _controlSurface => _isLight ? const Color(0xFFF0F3FA) : AppColors.background;
+  Color get _textPrimary => _isLight ? const Color(0xFF171923) : AppColors.textPrimary;
+  Color get _textSecondary =>
+      _isLight ? const Color(0xB8171923) : AppColors.textSecondary;
+
   final List _titulosAppBar = [
     "TociTech",
     "Productos",
@@ -27,78 +36,93 @@ class _TociTechAppState extends State<TociTechApp> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        toolbarHeight: 70,
-        title: Padding(
-          padding: EdgeInsets.only(left: 8),
-          child: Text(
-            _titulosAppBar[_index],
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+    return ValueListenableBuilder<ClientSettings>(
+      valueListenable: settingsController,
+      builder: (context, _, __) {
+        return Scaffold(
+          backgroundColor: _background,
+          appBar: AppBar(
+            backgroundColor: _surface,
+            elevation: _isLight ? 0 : null,
+            toolbarHeight: 70,
+            title: Padding(
+              padding: EdgeInsets.only(left: 8),
+              child: Text(
+                _titulosAppBar[_index],
+                style: TextStyle(
+                  color: _textPrimary,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            actions: [
+              IconButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const NotificacionesPage()),
+                ),
+                icon: Icon(Icons.notifications_outlined, color: AppColors.primary),
+              ),
+            ],
+          ),
+
+          body: _contenido(),
+
+          bottomNavigationBar: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            child: Container(
+              padding: EdgeInsets.only(top: 8),
+              decoration: BoxDecoration(
+                color: _surface,
+                borderRadius: BorderRadius.circular(20),
+                border: _isLight ? Border.all(color: const Color(0xFFE4E8F2)) : null,
+                boxShadow: [
+                  BoxShadow(
+                    color: _isLight
+                        ? const Color(0xFF1E293B).withOpacity(0.08)
+                        : Colors.black.withOpacity(0.4),
+                    blurRadius: _isLight ? 18 : 10,
+                    offset: _isLight ? const Offset(0, 8) : Offset.zero,
+                  ),
+                ],
+              ),
+              child: BottomNavigationBar(
+                currentIndex: _index,
+                onTap: (x) => setState(() => _index = x),
+                items: [
+                  BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: "Inicio"),
+                  BottomNavigationBarItem(icon: Icon(Icons.category_outlined), label: "Productos"),
+                  BottomNavigationBarItem(icon: Icon(Icons.handyman), label: "Servicios"),
+                  BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: "Ajustes"),
+                ],
+                iconSize: 24,
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                showUnselectedLabels: true,
+                selectedIconTheme: IconThemeData(color: AppColors.primary),
+                unselectedIconTheme: IconThemeData(
+                  color: _isLight ? const Color(0xFF6B7280) : const Color(0xFF8A8A93),
+                ),
+                selectedLabelStyle: TextStyle(fontSize: 12),
+                unselectedLabelStyle: TextStyle(fontSize: 12),
+                selectedItemColor: AppColors.primary,
+                unselectedItemColor: _isLight ? const Color(0xFF6B7280) : const Color(0xFFD6D6D6),
+              ),
             ),
           ),
-        ),
 
-        actions: [
-          IconButton(
+          floatingActionButton: FloatingActionButton(
             onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const NotificacionesPage()),
+              context,MaterialPageRoute(builder: (_) => const AiChatPage()),
             ),
-            icon: Icon(Icons.notifications_outlined, color: AppColors.primary),
+            backgroundColor: AppColors.blue,
+            child: Icon(Icons.smart_toy, size: 28, color: Colors.white),
           ),
-        ],
-      ),
-
-      body: _contenido(),
-
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        child: Container(
-          padding: EdgeInsets.only(top: 8),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 10),
-            ],
-          ),
-          child: BottomNavigationBar(
-            currentIndex: _index,
-            onTap: (x) => setState(() => _index = x),
-            items: [
-              BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: "Inicio"),
-              BottomNavigationBarItem(icon: Icon(Icons.category_outlined), label: "Productos"),
-              BottomNavigationBarItem(icon: Icon(Icons.handyman), label: "Servicios"),
-              BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: "Ajustes"),
-            ],
-            iconSize: 24,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            showUnselectedLabels: true,
-            selectedIconTheme: IconThemeData(color: AppColors.primary),
-            unselectedIconTheme: IconThemeData(color: Color(0xFF8A8A93)),
-            selectedLabelStyle: TextStyle(fontSize: 12),
-            unselectedLabelStyle: TextStyle(fontSize: 12),
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor: Color(0xFFD6D6D6),
-          ),
-        ),
-      ),
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(
-          context,MaterialPageRoute(builder: (_) => const AiChatPage()),
-        ),
-        backgroundColor: AppColors.blue,
-        child: Icon(Icons.smart_toy, size: 28, color: Colors.white),
-      ),
+        );
+      },
     );
   }
 
@@ -137,7 +161,7 @@ class _TociTechAppState extends State<TociTechApp> {
     return Container(
       height: 56,
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: AppColors.surface,
+      color: _surface,
       child: GestureDetector(
         onTap: () => Navigator.push(
           context,
@@ -146,7 +170,7 @@ class _TociTechAppState extends State<TociTechApp> {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: AppColors.background,
+            color: _controlSurface,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -165,7 +189,7 @@ class _TociTechAppState extends State<TociTechApp> {
   Widget _heroSection() {
     return Container(
       padding: EdgeInsets.fromLTRB(20, 24, 20, 28),
-      color: AppColors.surface,
+      color: _surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -194,7 +218,7 @@ class _TociTechAppState extends State<TociTechApp> {
                     SizedBox(height: 2),
                     Text("Soluciones tecnológicas\npara tu equipo",
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: _textPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         height: 1.3,
@@ -210,7 +234,7 @@ class _TociTechAppState extends State<TociTechApp> {
 
           Text("Venta de hardware, reparación especializada y atención para que tu equipo rinda al máximo.",
             style: TextStyle(
-                color: AppColors.textSecondary,
+                color: _textSecondary,
                 fontSize: 13,
                 height: 1.5
             ),
@@ -286,7 +310,7 @@ class _TociTechAppState extends State<TociTechApp> {
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: _surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: color.withOpacity(0.3)),
         ),
@@ -296,14 +320,14 @@ class _TociTechAppState extends State<TociTechApp> {
             SizedBox(height: 6),
             Text(titulo,
               style: TextStyle(
-                  color: AppColors.textPrimary,
+                  color: _textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 14
               ),
             ),
             SizedBox(height: 2),
             Text(descripcion,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+              style: TextStyle(color: _textSecondary, fontSize: 11),
               textAlign: TextAlign.center,
             ),
           ],
@@ -320,14 +344,14 @@ class _TociTechAppState extends State<TociTechApp> {
         children: [
           Text(titulo,
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: _textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
           SizedBox(height: 4),
           Text(subtitulo,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style: TextStyle(color: _textSecondary, fontSize: 13),
           ),
         ],
       ),
@@ -405,7 +429,7 @@ class _TociTechAppState extends State<TociTechApp> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: _surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color.withOpacity(0.25)),
       ),
@@ -425,7 +449,7 @@ class _TociTechAppState extends State<TociTechApp> {
           Expanded(
             child: Text(dia,
               style: TextStyle(
-                  color: AppColors.textPrimary,
+                  color: _textPrimary,
                   fontWeight: FontWeight.w600,
                   fontSize: 14
               ),
@@ -434,7 +458,7 @@ class _TociTechAppState extends State<TociTechApp> {
 
           Text(horario,
             style: TextStyle(
-              color: horario == "Cerrado" ? Colors.grey : AppColors.textSecondary,
+              color: horario == "Cerrado" ? Colors.grey : _textSecondary,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
