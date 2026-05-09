@@ -17,6 +17,7 @@ app.use(cors({
         "http://localhost:5173",
         "http://10.0.2.2:3000",  // Android emulator
         "http://localhost:3000",  // iOS simulator
+        "https://toci-tech.vercel.app"
     ],
     credentials: true
 }));
