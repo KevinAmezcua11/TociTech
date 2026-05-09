@@ -1,25 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
+import '../../../models/product_model.dart';
+import '../../../services/product_service.dart';
+import '../../../services/api_service.dart';
 import '../../widgets/product_card.dart';
 import 'product_detail_page.dart';
-
-class _Producto {
-  final String nombre;
-  final String descripcion;
-  final double precio;
-  final int stock;
-  final int total;
-  final String imagen;
-
-  const _Producto({
-    required this.nombre,
-    required this.descripcion,
-    required this.precio,
-    required this.stock,
-    required this.total,
-    required this.imagen,
-  });
-}
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
@@ -29,227 +14,258 @@ class ProductsPage extends StatefulWidget {
 }
 
 class _ProductsPageState extends State<ProductsPage> {
-  String ordenarPor = "Precio menor a mayor";
-  String? categoriaSeleccionada;
-  String? marcaSeleccionada;
+  late final ProductService _productService;
 
-  Map<String, bool> preciosSeleccionados = {
-    "Menos de \$1000": false,
-    "\$1,000 - \$5,000": false,
-    "Más de \$5,000": false,
+  List<Product> _allProducts = [];
+  List<Product> _filtered    = [];
+  bool _loading  = true;
+  String? _error;
+
+  // ── Filtros ──────────────────────────────────────
+  String  _ordenarPor           = 'Precio: menor a mayor';
+  String? _categoriaSeleccionada;
+  String? _marcaSeleccionada;
+  String? _modeloSeleccionado;
+  final Map<String, bool> _preciosSeleccionados = {
+    'Menos de \$500':          false,
+    '\$500 - \$1,500':         false,
+    '\$1,500 - \$5,000':       false,
+    '\$5,000 - \$15,000':      false,
+    '\$15,000 - \$30,000':     false,
+    'Más de \$30,000':         false,
   };
 
-  // Lista centralizada de productos
-  static const List<_Producto> _productos = [
-    _Producto(
-      nombre: "Memoria RAM Kingston Fury 16GB",
-      descripcion: "Alto rendimiento para gaming",
-      precio: 1250,
-      stock: 11,
-      total: 26,
-      imagen: "assets/img-1.png",
-    ),
-    _Producto(
-      nombre: "Procesador AMD Ryzen 5 5600G",
-      descripcion: "6 núcleos | 12 hilos | Gráficos integrados",
-      precio: 3200,
-      stock: 8,
-      total: 15,
-      imagen: "assets/img-2.png",
-    ),
-    _Producto(
-      nombre: "NVIDIA GeForce RTX 3060 12GB",
-      descripcion: "Alto rendimiento para gaming y diseño",
-      precio: 7800,
-      stock: 3,
-      total: 10,
-      imagen: "assets/img-3.png",
-    ),
-    _Producto(
-      nombre: "Corsair Vengeance 16GB DDR4 3200MHz",
-      descripcion: "Optimizada para alto rendimiento",
-      precio: 1350,
-      stock: 11,
-      total: 20,
-      imagen: "assets/img-4.jpg",
-    ),
-    _Producto(
-      nombre: "Fuente Corsair 650W 80+ Bronze",
-      descripcion: "Energía estable y eficiente",
-      precio: 1200,
-      stock: 6,
-      total: 12,
-      imagen: "assets/img-5.png",
-    ),
-  ];
+  // Especificaciones importantes a filtrar (clave Firestore → label visible)
+  static const Map<String, String> _specKeys = {
+    'RAM':         'RAM',
+    'Procesador':  'Procesador',
+    'Almacenamiento': 'Almacenamiento',
+    'GPU':         'GPU / Tarjeta gráfica',
+    'Pantalla':    'Pantalla',
+    'Conectividad':'Conectividad',
+    'Sistema operativo': 'Sistema operativo',
+    'Velocidad':   'Velocidad',
+    'Capacidad':   'Capacidad',
+    'Frecuencia':  'Frecuencia',
+    'Formato':     'Formato',
+    'Potencia':    'Potencia',
+    'Núcleos':     'Núcleos',
+  };
 
-  void _irADetalle(BuildContext context, _Producto p) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ProductDetailPage(
-          nombre: p.nombre,
-          descripcion: p.descripcion,
-          precio: p.precio,
-          stock: p.stock,
-          total: p.total,
-          imagen: p.imagen,
-        ),
-      ),
-    );
+  // spec key seleccionada → valor seleccionado
+  final Map<String, String?> _specFilters = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _productService = ProductService(ApiService());
+    _fetchProducts();
+  }
+
+  Future<void> _fetchProducts() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final data = await _productService.getProducts();
+      final disponibles = data.where((p) => p.status == 'available' && p.stock > 0).toList();
+      setState(() {
+        _allProducts = disponibles;
+        _applyFilters();
+      });
+    } catch (e) {
+      setState(() => _error = e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  void _applyFilters() {
+    List<Product> result = List.from(_allProducts);
+
+    if (_categoriaSeleccionada != null) {
+      result = result.where((p) => p.category == _categoriaSeleccionada).toList();
+    }
+
+    if (_marcaSeleccionada != null) {
+      result = result.where((p) =>
+      p.brand.toLowerCase() == _marcaSeleccionada!.toLowerCase()).toList();
+    }
+
+    if (_modeloSeleccionado != null) {
+      result = result.where((p) =>
+      p.model.toLowerCase() == _modeloSeleccionado!.toLowerCase()).toList();
+    }
+
+    // Filtros de specs
+    _specFilters.forEach((key, value) {
+      if (value != null && value.isNotEmpty) {
+        result = result.where((p) {
+          final specVal = p.specs[key]?.toString().toLowerCase() ?? '';
+          return specVal.contains(value.toLowerCase());
+        }).toList();
+      }
+    });
+
+    // Rangos de precio
+    final activeRanges = _preciosSeleccionados.entries
+        .where((e) => e.value).map((e) => e.key).toList();
+    if (activeRanges.isNotEmpty) {
+      result = result.where((p) {
+        for (final r in activeRanges) {
+          if (r == 'Menos de \$500'       && p.price < 500)                          return true;
+          if (r == '\$500 - \$1,500'      && p.price >= 500   && p.price < 1500)     return true;
+          if (r == '\$1,500 - \$5,000'    && p.price >= 1500  && p.price < 5000)     return true;
+          if (r == '\$5,000 - \$15,000'   && p.price >= 5000  && p.price < 15000)    return true;
+          if (r == '\$15,000 - \$30,000'  && p.price >= 15000 && p.price < 30000)    return true;
+          if (r == 'Más de \$30,000'      && p.price >= 30000)                       return true;
+        }
+        return false;
+      }).toList();
+    }
+
+    // Ordenar
+    result.sort((a, b) {
+      switch (_ordenarPor) {
+        case 'Precio: menor a mayor': return a.price.compareTo(b.price);
+        case 'Precio: mayor a menor': return b.price.compareTo(a.price);
+        case 'Nombre A-Z':            return a.name.compareTo(b.name);
+        case 'Nombre Z-A':            return b.name.compareTo(a.name);
+        default:                      return 0;
+      }
+    });
+
+    _filtered = result;
+  }
+
+  // ── Datos dinámicos del backend ───────────────────
+  List<String> get _categories => _allProducts
+      .map((p) => p.category).where((c) => c.isNotEmpty).toSet().toList()..sort();
+
+  List<String> get _brands => _allProducts
+      .map((p) => p.brand).where((b) => b.isNotEmpty).toSet().toList()..sort();
+
+  List<String> get _models => _allProducts
+      .where((p) => p.brand.toLowerCase() == _marcaSeleccionada!.toLowerCase())
+      .map((p) => p.model)
+      .where((m) => m.isNotEmpty)
+      .toSet()
+      .toList()..sort();
+
+  // Obtiene los valores únicos de una spec key presentes en los productos actuales
+  List<String> _specValues(String key) {
+    return _allProducts
+        .map((p) => p.specs[key]?.toString() ?? '')
+        .where((v) => v.isNotEmpty)
+        .toSet()
+        .toList()..sort();
+  }
+
+  // Specs que tienen al menos un valor en los productos
+  List<String> get _activeSpecKeys => _specKeys.keys
+      .where((k) => _specValues(k).isNotEmpty)
+      .toList();
+
+  bool get _hasFilters =>
+      _categoriaSeleccionada != null ||
+          _marcaSeleccionada != null ||
+          _modeloSeleccionado != null ||
+          _preciosSeleccionados.values.any((v) => v) ||
+          _specFilters.values.any((v) => v != null);
+
+  void _resetFiltros() {
+    setState(() {
+      _categoriaSeleccionada = null;
+      _marcaSeleccionada     = null;
+      _modeloSeleccionado    = null;
+      _ordenarPor            = 'Precio: menor a mayor';
+      _preciosSeleccionados.updateAll((k, v) => false);
+      _specFilters.clear();
+      _applyFilters();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      drawer: _buildFiltros(),
+      drawer: _buildDrawer(),
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        title: const Text("Filtros", style: TextStyle(color: AppColors.textPrimary)),
+        automaticallyImplyLeading: false,
+        titleSpacing: 12,
+        title: Builder(
+          builder: (ctx) => GestureDetector(
+            onTap: () => Scaffold.of(ctx).openDrawer(),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.menu_rounded, color: AppColors.textPrimary, size: 22),
+                SizedBox(width: 12),
+                Text('Filtros', style: TextStyle(color: AppColors.textPrimary)),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          if (_hasFilters)
+            TextButton(
+              onPressed: _resetFiltros,
+              child: const Text('Limpiar', style: TextStyle(color: AppColors.primary)),
+            ),
+        ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Hero image
-            SizedBox(
-              height: 500,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.asset("assets/fondo_productos.jpg", fit: BoxFit.cover),
-                  Container(color: Colors.black.withOpacity(0.4)),
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Align(
-                      alignment: Alignment.bottomLeft,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Text(
-                            "Explora Nuestro Catálogo",
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
+      body: RefreshIndicator(
+        color: AppColors.primary,
+        backgroundColor: AppColors.surface,
+        onRefresh: _fetchProducts,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              // Hero banner
+              SizedBox(
+                height: 240,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset('assets/fondo_productos.jpg', fit: BoxFit.cover),
+                    Container(color: Colors.black.withValues(alpha: 0.5)),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      child: Align(
+                        alignment: Alignment.bottomLeft,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Explora Nuestro Catálogo',
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            "Componentes y equipos con calidad y el mejor precio.",
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                          ),
-                        ],
+                            const SizedBox(height: 4),
+                            Text(
+                              _loading
+                                  ? 'Cargando productos...'
+                                  : '${_filtered.length} producto${_filtered.length != 1 ? "s" : ""} disponibles',
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            // Grid de productos
-            Container(
-              decoration: const BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-              ),
-              child: GridView.count(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 10,
-                childAspectRatio: 0.62,
-                padding: const EdgeInsets.all(20),
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: _productos.map((p) => ProductCard(
-                  nombre: p.nombre,
-                  descripcion: p.descripcion,
-                  precio: p.precio,
-                  stock: p.stock,
-                  total: p.total,
-                  imagen: p.imagen,
-                  onTap: () => _irADetalle(context, p),
-                )).toList(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFiltros() {
-    return Drawer(
-      backgroundColor: AppColors.background,
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: ListView(
-            children: [
-              const Text("Ordenar por:",
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(20),
+                decoration: const BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                 ),
-                child: DropdownButton<String>(
-                  value: ordenarPor,
-                  dropdownColor: AppColors.surface,
-                  isExpanded: true,
-                  underline: const SizedBox(),
-                  style: const TextStyle(color: AppColors.textPrimary),
-                  items: ["Precio menor a mayor", "Precio mayor a menor"]
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (value) => setState(() => ordenarPor = value!),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text("Categoría:",
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-              ),
-              _radioItem("Procesadores (CPU)", categoriaSeleccionada,
-                      (val) => setState(() => categoriaSeleccionada = val)),
-              _radioItem("Tarjetas gráficas (GPU)", categoriaSeleccionada,
-                      (val) => setState(() => categoriaSeleccionada = val)),
-              _radioItem("Memoria RAM", categoriaSeleccionada,
-                      (val) => setState(() => categoriaSeleccionada = val)),
-              _radioItem("Almacenamiento (SSD / HDD)", categoriaSeleccionada,
-                      (val) => setState(() => categoriaSeleccionada = val)),
-              _radioItem("Fuentes de poder", categoriaSeleccionada,
-                      (val) => setState(() => categoriaSeleccionada = val)),
-              const SizedBox(height: 20),
-              const Text("Marca:",
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-              ),
-              _radioItem("Intel", marcaSeleccionada,
-                      (val) => setState(() => marcaSeleccionada = val)),
-              _radioItem("AMD", marcaSeleccionada,
-                      (val) => setState(() => marcaSeleccionada = val)),
-              _radioItem("NVIDIA", marcaSeleccionada,
-                      (val) => setState(() => marcaSeleccionada = val)),
-              _radioItem("ASUS", marcaSeleccionada,
-                      (val) => setState(() => marcaSeleccionada = val)),
-              _radioItem("Kingston", marcaSeleccionada,
-                      (val) => setState(() => marcaSeleccionada = val)),
-              const SizedBox(height: 20),
-              const Text("Precios:",
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-              ),
-              ...preciosSeleccionados.keys.map(
-                    (key) => CheckboxListTile(
-                  value: preciosSeleccionados[key],
-                  activeColor: AppColors.primary,
-                  checkColor: AppColors.textPrimary,
-                  title: Text(key, style: const TextStyle(color: AppColors.textSecondary)),
-                  onChanged: (value) => setState(() => preciosSeleccionados[key] = value!),
-                ),
+                child: _buildBody(),
               ),
             ],
           ),
@@ -258,13 +274,301 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  Widget _radioItem(String title, String? groupValue, Function(String?) onChanged) {
-    return RadioListTile<String>(
-      value: title,
+  Widget _buildBody() {
+    if (_loading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
+        child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
+
+    if (_error != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 32),
+        child: Column(
+          children: [
+            const Icon(Icons.wifi_off_rounded, color: AppColors.textMuted, size: 48),
+            const SizedBox(height: 16),
+            const Text('No se pudieron cargar los productos',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            Text(_error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: _fetchProducts,
+              icon: const Icon(Icons.refresh_rounded, size: 16),
+              label: const Text('Reintentar'),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_filtered.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 32),
+        child: Column(
+          children: [
+            const Icon(Icons.search_off_rounded, color: AppColors.textMuted, size: 48),
+            const SizedBox(height: 16),
+            const Text('Sin resultados',
+                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            const Text('Prueba cambiando los filtros',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+            const SizedBox(height: 20),
+            OutlinedButton(
+              onPressed: _resetFiltros,
+              style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primary)),
+              child: const Text('Limpiar filtros', style: TextStyle(color: AppColors.primary)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return GridView.builder(
+      itemCount: _filtered.length,
+      padding: const EdgeInsets.all(16),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 14,
+        crossAxisSpacing: 10,
+        childAspectRatio: 0.60,
+      ),
+      itemBuilder: (context, i) {
+        final p = _filtered[i];
+        return ProductCard(
+          product: p,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => ProductDetailPage(product: p)),
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Drawer de filtros ─────────────────────────────
+  Widget _buildDrawer() {
+    return Drawer(
+      backgroundColor: AppColors.background,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Encabezado fijo
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Filtros',
+                      style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold)),
+                  TextButton(
+                    onPressed: () { _resetFiltros(); Navigator.pop(context); },
+                    child: const Text('Limpiar todo',
+                        style: TextStyle(color: AppColors.primary, fontSize: 13)),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(color: Colors.white12, height: 16),
+
+            // Contenido scrollable
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                children: [
+
+                  // Ordenar
+                  _sectionTitle('Ordenar por'),
+                  const SizedBox(height: 6),
+                  _dropdownOrden(),
+                  const SizedBox(height: 20),
+
+                  // Categoría
+                  if (_categories.isNotEmpty) ...[
+                    _sectionTitle('Categoría'),
+                    ..._categories.map((cat) => _radioTile(
+                      cat, _categoriaSeleccionada, cat,
+                          (v) => setState(() {
+                        _categoriaSeleccionada = v;
+                        _marcaSeleccionada = null;
+                        _applyFilters();
+                      }),
+                    )),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // Marca
+                  if (_brands.isNotEmpty) ...[
+                    _sectionTitle('Marca'),
+                    ..._brands.map((m) => _radioTile(
+                      m, _marcaSeleccionada, m,
+                          (v) => setState(() {
+                        _marcaSeleccionada = v;
+                        _modeloSeleccionado = null;
+                        _applyFilters();
+                      }),
+                    )),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // Modelo (solo visible cuando hay marca seleccionada)
+                  if (_marcaSeleccionada != null && _models.isNotEmpty) ...[
+                    _sectionTitle('Modelo'),
+                    ..._models.map((m) => _radioTile(
+                      m, _modeloSeleccionado, m,
+                          (v) => setState(() {
+                        _modeloSeleccionado = v;
+                        _applyFilters();
+                      }),
+                    )),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // Especificaciones dinámicas
+                  if (_activeSpecKeys.isNotEmpty) ...[
+                    _sectionTitle('Especificaciones'),
+                    const SizedBox(height: 8),
+                    ..._activeSpecKeys.map((key) {
+                      final values = _specValues(key);
+                      final label  = _specKeys[key] ?? key;
+                      final current = _specFilters[key];
+                      return _specSection(key, label, values, current);
+                    }),
+                    const SizedBox(height: 12),
+                  ],
+
+                  // Rango de precio
+                  _sectionTitle('Rango de precio'),
+                  ..._preciosSeleccionados.keys.map((key) => CheckboxListTile(
+                    value: _preciosSeleccionados[key],
+                    activeColor: AppColors.primary,
+                    checkColor: AppColors.textPrimary,
+                    dense: true,
+                    title: Text(key,
+                        style: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 13)),
+                    onChanged: (v) => setState(() {
+                      _preciosSeleccionados[key] = v!;
+                      _applyFilters();
+                    }),
+                  )),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Sección de spec con chips de valores ──────────
+  Widget _specSection(
+      String key, String label, List<String> values, String? current) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: values.map((v) => _specChip(v, current == v, () => setState(() {
+              _specFilters[key] = v;
+              _applyFilters();
+            }))).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _specChip(String label, bool active, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: active ? AppColors.primary.withValues(alpha: 0.2) : AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: active ? AppColors.primary : Colors.white.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: active ? AppColors.primary : AppColors.textSecondary,
+            fontSize: 12,
+            fontWeight: active ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Helpers UI ────────────────────────────────────
+  Widget _sectionTitle(String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 2),
+    child: Text(text,
+        style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.bold)),
+  );
+
+  Widget _dropdownOrden() => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12),
+    decoration: BoxDecoration(
+        color: AppColors.surface, borderRadius: BorderRadius.circular(20)),
+    child: DropdownButton<String>(
+      value: _ordenarPor,
+      dropdownColor: AppColors.surface,
+      isExpanded: true,
+      underline: const SizedBox(),
+      style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+      items: [
+        'Precio: menor a mayor',
+        'Precio: mayor a menor',
+        'Nombre A-Z',
+        'Nombre Z-A',
+      ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+      onChanged: (v) => setState(() { _ordenarPor = v!; _applyFilters(); }),
+    ),
+  );
+
+  Widget _radioTile(String title, String? groupValue, String? value,
+      Function(String?) onChanged) {
+    return RadioGroup<String?>(
       groupValue: groupValue,
-      activeColor: AppColors.primary,
-      title: Text(title, style: const TextStyle(color: AppColors.textSecondary)),
       onChanged: onChanged,
+      child: RadioListTile<String?>(
+        value: value,
+        toggleable: true,
+        activeColor: AppColors.primary,
+        dense: true,
+        contentPadding: EdgeInsets.zero,
+        title: Text(title,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+      ),
     );
   }
 }
