@@ -1,11 +1,11 @@
-const { collection, addDoc, getDocs, deleteDoc, updateDoc, query, where, getDoc, doc, serverTimestamp } = require("firebase/firestore");
-const { db } = require('../config/firebase');
-
-const productCollection = collection(db, "products");
+const admin = require("firebase-admin");
+const db = require("../config/firebase");
 
 // Obtener todos los productos
 async function getAllProducts() {
-    const snapshot = await getDocs(productCollection);
+    const snapshot = await db
+        .collection("products")
+        .get();
 
     return snapshot.docs.map(d => {
         const product = d.data();
@@ -21,10 +21,10 @@ async function getAllProducts() {
 
 // Obtener producto por ID
 async function getById(id) {
-    const productRef = doc(db, "products", id);
-    const productSnap = await getDoc(productRef);
+    const productRef = db.collection("products").doc(id);
+    const productSnap = await productRef.get();
 
-    if (!productSnap.exists()) return null;
+    if (!productSnap.exists) return null;
 
     const product = productSnap.data();
 
@@ -40,8 +40,10 @@ async function getById(id) {
 async function findByName(name) {
     const nameClean = name.trim().toLowerCase();
 
-    const q = query(productCollection, where("nameSearch", "==", nameClean));
-    const snapshot = await getDocs(q);
+    const snapshot = await db
+        .collection("products")
+        .where("nameSearch", "==", nameClean)
+        .get();
 
     if (snapshot.empty) return null;
 
@@ -78,19 +80,22 @@ async function createProduct({ name, description, price, cost, category, brand, 
             model: model || "",
             specs: specs || {},
             sku: sku || "",
-            images: images?.length ? images : (image ? [image] : []),
+            images: images || [],
             status: status || "available", // available | out_of_stock | discontinued
             stock: stock ?? 0,
             minStock: minStock ?? 0,
             warranty: warranty || "",
-            createdAt: serverTimestamp()
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
 
         Object.keys(data).forEach(key => {
             if (data[key] === undefined) delete data[key];
         });
 
-        const docRef = await addDoc(productCollection, data);
+        const docRef = await db
+            .collection("products")
+            .add(data);
 
         return {
             id: docRef.id,
@@ -139,9 +144,13 @@ async function updateProduct(id, data) {
         if (data[key] === undefined) delete data[key];
     });
 
-    await updateDoc(doc(db, "products", id), {
+    const productRef = db
+        .collection("products")
+        .doc(id);
+
+    await productRef.update({
         ...data,
-        updatedAt: serverTimestamp()
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
     return getById(id);
@@ -149,12 +158,12 @@ async function updateProduct(id, data) {
 
 // Eliminar producto
 async function deleteProduct(id) {
-    const productRef = doc(db, "products", id);
-    const productSnap = await getDoc(productRef);
+    const productRef = db.collection("products").doc(id);
+    const productSnap = await productRef.get();
 
-    if (!productSnap.exists()) return null;
+    if (!productSnap.exists) return null;
 
-    await deleteDoc(productRef);
+    await productRef.delete();
 
     return { id };
 }

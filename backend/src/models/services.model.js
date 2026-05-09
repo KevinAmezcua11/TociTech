@@ -1,12 +1,11 @@
-const { collection, addDoc, getDocs, deleteDoc, updateDoc, query, where, getDoc, doc, serverTimestamp } = require("firebase/firestore");
-
-const { db } = require('../config/firebase');
-
-const serviceCollection = collection(db, "services");
+const admin = require("firebase-admin");
+const db = require("../config/firebase");
 
 // Obtener todos los servicios
 async function getAllServices() {
-    const snapshot = await getDocs(serviceCollection);
+    const snapshot = await db
+        .collection("services")
+        .get();
 
     return snapshot.docs.map(d => {
         const service = d.data();
@@ -22,10 +21,10 @@ async function getAllServices() {
 
 // Obtener servicio por ID
 async function getById(id) {
-    const serviceRef = doc(db, "services", id);
-    const serviceSnap = await getDoc(serviceRef);
+    const serviceRef = db.collection("services").doc(id);
+    const serviceSnap = await serviceRef.get();
 
-    if (!serviceSnap.exists()) return null;
+    if (!serviceSnap.exists) return null;
 
     const service = serviceSnap.data();
 
@@ -34,15 +33,17 @@ async function getById(id) {
         ...service,
         createdAt: service.createdAt?.toDate(),
         updatedAt: service.updatedAt?.toDate()
-        };
+    };
 }
 
 // Buscar servicio por nombre
 async function findByName(name) {
     const nameClean = name.trim().toLowerCase();
 
-    const q = query(serviceCollection, where("nameSearch", "==", nameClean));
-    const snapshot = await getDocs(q);
+    const snapshot = await db
+        .collection("services")
+        .where("nameSearch", "==", nameClean)
+        .get();
 
     if (snapshot.empty) return null;
 
@@ -80,7 +81,8 @@ async function createService({ name, description, price, duration, state }) {
             price,
             duration: duration.trim().toLowerCase(),
             state: state ?? true,
-            createdAt: serverTimestamp()
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
 
         Object.keys(data).forEach(key => {
@@ -89,7 +91,9 @@ async function createService({ name, description, price, duration, state }) {
             }
         });
 
-        const docRef = await addDoc(serviceCollection, data);
+        const docRef = await db
+            .collection("services")
+            .add(data);
 
         return {
             id: docRef.id,
@@ -135,9 +139,13 @@ async function updateService(id, data) {
         }
     });
 
-    await updateDoc(doc(db, "services", id), {
+    const serviceRef = db
+        .collection("services")
+        .doc(id);
+
+    await serviceRef.update({
         ...data,
-        updatedAt: serverTimestamp()
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
     return getById(id);
@@ -145,12 +153,12 @@ async function updateService(id, data) {
 
 // Eliminar servicio
 async function deleteService(id) {
-    const serviceRef = doc(db, "services", id);
-    const serviceSnap = await getDoc(serviceRef);
+    const serviceRef = db.collection("services").doc(id);
+    const serviceSnap = await serviceRef.get();
 
-    if (!serviceSnap.exists()) return null;
+    if (!serviceSnap.exists) return null;
 
-    await deleteDoc(serviceRef);
+    await serviceRef.delete();
 
     return { id };
 }

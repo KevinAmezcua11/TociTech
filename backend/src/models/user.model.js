@@ -1,12 +1,13 @@
-const { collection, addDoc, getDocs, deleteDoc, updateDoc, query, where, getDoc, doc, serverTimestamp } = require("firebase/firestore");
-const { db } = require("../config/firebase");
-const bcrypt = require('bcryptjs');
+const admin = require("firebase-admin");
+const db = require("../config/firebase");
 
-const usersCollection = collection(db, "users");
+const bcrypt = require('bcryptjs');
 
 // Obtener todos los usuarios
 async function getAllUsers() {
-    const snapshot = await getDocs(usersCollection);
+    const snapshot = await db
+        .collection("users")
+        .get();
 
     return snapshot.docs.map(d => {
         const { password, ...userData } = d.data();
@@ -22,10 +23,10 @@ async function getAllUsers() {
 
 // Obtener usuario por ID
 async function getById(id) {
-    const userRef = doc(db, "users", id);
-    const userSnap = await getDoc(userRef);
+    const userRef = db.collection("users").doc(id);
+    const userSnap = await userRef.get();
 
-    if(!userSnap.exists()) return null;
+    if (!userSnap.exists) return null;
 
     const { password, ...userData } = userSnap.data();
 
@@ -41,8 +42,10 @@ async function getById(id) {
 async function findByUsername(username) {
     const usernameClean = username.trim().toLowerCase();
 
-    const q = query(usersCollection, where("username", "==", usernameClean));
-    const snapshot = await getDocs(q);
+    const snapshot = await db
+        .collection("users")
+        .where("username", "==", usernameClean)
+        .get();
 
     if(snapshot.empty) return null;
 
@@ -75,16 +78,19 @@ async function createUser({ username, password, names, lastnames, email, phone, 
 
         const hashedPass = await bcrypt.hash(password, 10);
 
-        const docRef = await addDoc(usersCollection, {
-            username: usernameClean,
-            password: hashedPass,
-            names,
-            lastnames,
-            email,
-            phone,
-            role: role || "client",
-            createdAt: serverTimestamp()
-        });
+        const docRef = await db
+            .collection("users")
+            .add({
+                username: usernameClean,
+                password: hashedPass,
+                names,
+                lastnames,
+                email,
+                phone,
+                role: role || "client",
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
 
         return { id: docRef.id, username: usernameClean, names, lastnames, email, phone, role: role || "client" };
 
@@ -113,9 +119,13 @@ async function updateUser(id, data) {
     delete data.id;
     delete data.role;
 
-    await updateDoc(doc(db, "users", id), {
+    const userRef = db
+        .collection("users")
+        .doc(id);
+
+    await userRef.update({
         ...data,
-        updatedAt: serverTimestamp()
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
     return getById(id);
@@ -123,12 +133,12 @@ async function updateUser(id, data) {
 
 // Eliminar usuario
 async function deleteUser(id) {
-    const userRef = doc(db, "users", id);
-    const userSnap = await getDoc(userRef);
+    const userRef = db.collection("users").doc(id);
+    const userSnap = await userRef.get();
 
-    if(!userSnap.exists()) return null;
+    if (!userSnap.exists) return null;
 
-    await deleteDoc(userRef);
+    await userRef.delete();
 
     return { id };
 }

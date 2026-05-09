@@ -1,7 +1,5 @@
-const { collection, addDoc, getDocs, deleteDoc, updateDoc, query, where, getDoc, doc, serverTimestamp } = require("firebase/firestore");
-const { db } = require('../config/firebase');
-
-const orderCollection = collection(db, "orders");
+const admin = require("firebase-admin");
+const db = require("../config/firebase");
 
 const Product = require("./product.model");
 const Service = require("./services.model");
@@ -9,7 +7,9 @@ const User = require("./user.model");
 
 // Obtener todos los pedidos
 async function getAllOrders() {
-    const snapshot = await getDocs(orderCollection);
+    const snapshot = await db
+        .collection("orders")
+        .get();
 
     return snapshot.docs.map(d => {
         const order = d.data();
@@ -25,10 +25,10 @@ async function getAllOrders() {
 
 // Obtener pedidos por ID
 async function getById(id) {
-    const orderRef = doc(db, "orders", id);
-    const orderSnap = await getDoc(orderRef);
+    const orderRef = db.collection("orders").doc(id);
+    const orderSnap = await orderRef.get();
 
-    if(!orderSnap.exists()) return null;
+    if (!orderSnap.exists) return null;
 
     const order = orderSnap.data();
 
@@ -76,8 +76,8 @@ async function createOrder({ type, customerId, customer: manualCustomer, items, 
             priority: priority || "medium",
             scheduledDate: scheduledDate || null,
             notes: notes || "",
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
 
         if (customerId) {
@@ -153,7 +153,9 @@ async function createOrder({ type, customerId, customer: manualCustomer, items, 
             orderData.finalPrice = null;
         }
 
-        const docRef = await addDoc(orderCollection, orderData);
+        const docRef = await db
+            .collection("orders")
+            .add(orderData);
 
         return await getById(docRef.id);
 
@@ -165,10 +167,10 @@ async function createOrder({ type, customerId, customer: manualCustomer, items, 
 
 // Actualizar pedido
 async function updateOrder(id, data) {
-    const orderRef = doc(db, "orders", id);
-    const orderSnap = await getDoc(orderRef);
+    const orderRef = db.collection("orders").doc(id);
+    const orderSnap = await orderRef.get();
 
-    if (!orderSnap.exists()) return null;
+    if (!orderSnap.exists) return null;
 
     const allowedStatus = ["pending", "in_progress", "completed", "cancelled"];
     if (data.status && !allowedStatus.includes(data.status)) throw new Error("Invalid status");
@@ -185,9 +187,9 @@ async function updateOrder(id, data) {
     delete data.createdAt;
     delete data.id;
 
-    await updateDoc(orderRef, {
+    await orderRef.update({
         ...data,
-        updatedAt: serverTimestamp()
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
     return getById(id);
@@ -195,12 +197,12 @@ async function updateOrder(id, data) {
 
 // Eliminar pedido
 async function deleteOrder(id) {
-    const orderRef = doc(db, "orders", id);
-    const orderSnap = await getDoc(orderRef);
+    const orderRef = db.collection("orders").doc(id);
+    const orderSnap = await orderRef.get();
 
-    if(!orderSnap.exists()) return null;
+    if (!orderSnap.exists) return null;
 
-    await deleteDoc(orderRef);
+    await orderRef.delete();
 
     return { id }
 }
