@@ -1,23 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../models/service_model.dart';
 import '../../../theme/app_theme.dart';
 
 class ServiceDetailPage extends StatelessWidget {
-  final String titulo;
-  final String descripcion;
-  final String imagen;
-  final int precio;
-  final String tiempo;
-  final IconData icono;
+  final ServiceModel service;
 
-  const ServiceDetailPage({
-    super.key,
-    required this.titulo,
-    required this.descripcion,
-    required this.imagen,
-    required this.precio,
-    required this.tiempo,
-    required this.icono,
-  });
+  const ServiceDetailPage({super.key, required this.service});
 
   @override
   Widget build(BuildContext context) {
@@ -27,35 +15,18 @@ class ServiceDetailPage extends StatelessWidget {
         slivers: [
 
           SliverAppBar(
-            expandedHeight: 260,
+            expandedHeight: 220,
             pinned: true,
             backgroundColor: AppColors.surface,
             iconTheme: const IconThemeData(color: AppColors.textPrimary),
             flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.asset(imagen, fit: BoxFit.cover),
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 90,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            AppColors.background,
-                            Colors.transparent
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              background: service.hasImage
+                  ? Image.network(
+                      service.image,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => _placeholderHeader(),
+                    )
+                  : _placeholderHeader(),
             ),
           ),
 
@@ -67,7 +38,7 @@ class ServiceDetailPage extends StatelessWidget {
                 children: [
 
                   Text(
-                    titulo,
+                    service.name,
                     style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 22,
@@ -77,32 +48,21 @@ class ServiceDetailPage extends StatelessWidget {
 
                   const SizedBox(height: 8),
 
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(icono,
-                            color: AppColors.primary, size: 18),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        "Servicio técnico",
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    service.description.isEmpty
+                        ? 'Sin descripción disponible.'
+                        : service.description,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
                   ),
 
                   const SizedBox(height: 20),
 
                   Text(
-                    "\$$precio MXN",
+                    '\$${service.price.toStringAsFixed(2)} MXN',
                     style: const TextStyle(
                       color: AppColors.primary,
                       fontSize: 30,
@@ -114,18 +74,9 @@ class ServiceDetailPage extends StatelessWidget {
 
                   _infoCard(
                     icon: Icons.schedule_rounded,
-                    label: "Tiempo estimado",
-                    value: "$tiempo días hábiles",
+                    label: 'Tiempo estimado',
+                    value: service.duration,
                     color: AppColors.blue,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  _infoCard(
-                    icon: Icons.info_outline,
-                    label: "Descripción",
-                    value: descripcion,
-                    color: AppColors.primary,
                   ),
 
                 ],
@@ -140,12 +91,12 @@ class ServiceDetailPage extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.background,
           border: Border(
-            top: BorderSide(color: Colors.white.withOpacity(0.05)),
+            top: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
           ),
         ),
         child: SizedBox(
           height: 52,
-          child: FilledButton(
+          child: FilledButton.icon(
             onPressed: () {},
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -153,15 +104,31 @@ class ServiceDetailPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            child: const Text(
-              "Solicitar servicio",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
+            icon: const Icon(Icons.shopping_cart_outlined),
+            label: const Text(
+              'Agregar al carrito',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _placeholderHeader() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withValues(alpha: 0.30),
+            AppColors.blue.withValues(alpha: 0.18),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const Center(
+        child: Icon(Icons.handyman_rounded, color: AppColors.primary, size: 72),
       ),
     );
   }
@@ -177,7 +144,7 @@ class ServiceDetailPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,7 +153,7 @@ class ServiceDetailPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 18),

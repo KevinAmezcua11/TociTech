@@ -1,52 +1,54 @@
 import 'package:flutter/material.dart';
+import '../../models/service_model.dart';
 import '../../theme/app_theme.dart';
 
 class ServiceCard extends StatelessWidget {
-  final String titulo;
-  final String descripcion;
-  final String imagen;
-  final int precio;
-  final String tiempo;
-  final String textoBoton;
+  final ServiceModel service;
+  final VoidCallback? onTap;
 
   const ServiceCard({
     super.key,
-    required this.titulo,
-    required this.descripcion,
-    required this.imagen,
-    required this.precio,
-    required this.tiempo,
-    required this.textoBoton,
+    required this.service,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF2A2A35)),
-      ),
-      clipBehavior: Clip.hardEdge,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Imagen fija arriba
-          SizedBox(
-            height: 130,
-            width: double.infinity,
-            child: Image.asset(imagen, fit: BoxFit.cover),
-          ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF2A2A35)),
+        ),
+        clipBehavior: Clip.hardEdge,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: imagen de red o gradiente fallback
+            SizedBox(
+              height: 160,
+              width: double.infinity,
+              child: service.hasImage
+                  ? Image.network(
+                      service.image,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => _gradientHeader(),
+                    )
+                  : _gradientHeader(),
+            ),
 
-          // Contenido
-          Expanded(
-            child: Padding(
+            // Contenido
+            Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    titulo,
+                    service.name,
                     style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 14,
@@ -59,21 +61,24 @@ class ServiceCard extends StatelessWidget {
                   const SizedBox(height: 4),
 
                   Text(
-                    descripcion,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                    service.description,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 12, height: 1.4),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
 
-                  const Spacer(),
+                  const SizedBox(height: 10),
 
-                  // Precio y tiempo
                   Row(
                     children: [
                       const Icon(Icons.attach_money_rounded, color: Color(0xFF00E676), size: 16),
                       Text(
-                        "Desde \$$precio MXN",
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600),
+                        'Desde \$${service.price.toStringAsFixed(0)} MXN',
+                        style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -84,33 +89,39 @@ class ServiceCard extends StatelessWidget {
                     children: [
                       const Icon(Icons.schedule_rounded, color: Color(0xFF42A5F5), size: 16),
                       const SizedBox(width: 4),
-                      Text(
-                        "$tiempo días hábiles",
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                      Expanded(
+                        child: Text(
+                          service.duration,
+                          style: const TextStyle(
+                              color: AppColors.textSecondary, fontSize: 12),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: () {},
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.blue,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      icon: const Icon(Icons.handyman_rounded, size: 14),
-                      label: Text(textoBoton, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                    ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _gradientHeader() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withValues(alpha: 0.25),
+            AppColors.blue.withValues(alpha: 0.15),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Icon(Icons.handyman_rounded, color: AppColors.primary, size: 40),
       ),
     );
   }

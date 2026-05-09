@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import {
     Bell,
     CheckCircle2,
+    AlertCircle,
     Info,
     Loader2,
     Moon,
@@ -12,51 +13,7 @@ import {
     Settings as SettingsIcon,
     Sun,
 } from "lucide-react";
-
-const SETTINGS_STORAGE_KEY = "adminSettings";
-
-const defaultSettings = {
-    theme: "dark",
-    notifications: true,
-};
-
-function loadLocalSettings() {
-    try {
-        const storedSettings = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY));
-        return { ...defaultSettings, ...storedSettings };
-    } catch {
-        return defaultSettings;
-    }
-}
-
-function applyTheme(theme) {
-    const isLight = theme === "light";
-    const styleId = "admin-theme-overrides";
-    let style = document.getElementById(styleId);
-
-    if (!style) {
-        style = document.createElement("style");
-        style.id = styleId;
-        document.head.appendChild(style);
-    }
-
-    document.documentElement.dataset.adminTheme = theme;
-    document.documentElement.style.colorScheme = isLight ? "light" : "dark";
-    document.body.style.backgroundColor = isLight ? "#F4F6FB" : "#0F0F14";
-
-    style.textContent = isLight
-        ? `
-            .bg-background { background-color: #F4F6FB !important; }
-            .bg-surface { background-color: #FFFFFF !important; }
-            .bg-surfaceDark { background-color: #E9EDF7 !important; }
-            .text-white { color: #12131A !important; }
-            .text-secondary { color: rgba(18, 19, 26, 0.72) !important; }
-            .text-muted { color: rgba(18, 19, 26, 0.48) !important; }
-            .border-white\\/10, .border-white\\/8, .border-white\\/5 { border-color: rgba(18, 19, 26, 0.10) !important; }
-            .bg-white\\/5, .bg-white\\/\\[0\\.02\\] { background-color: rgba(18, 19, 26, 0.04) !important; }
-        `
-        : "";
-}
+import { applyTheme, loadSettings, saveSettings } from "../utils/settingsPreferences";
 
 function SettingsSection({ icon, title, description, children }) {
     const SectionIcon = icon;
@@ -137,33 +94,46 @@ function InfoRow({ label, value }) {
 }
 
 export default function Settings() {
-    const [settings, setSettings] = useState(loadLocalSettings);
+    const [settings, setSettings] = useState(loadSettings);
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState("");
+    const [error, setError] = useState("");
 
     useEffect(() => {
-        applyTheme(settings.theme);
-        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+        try {
+            applyTheme(settings.theme);
+            saveSettings(settings);
+        } catch (err) {
+            console.error(err);
+            setError("No se pudieron guardar los ajustes en este navegador.");
+        }
     }, [settings]);
 
     const updatePreference = (key, value) => {
+        setError("");
         setSettings((currentSettings) => ({
             ...currentSettings,
             [key]: value,
         }));
-        setSuccess("");
+        setSuccess("Cambio aplicado.");
+        window.setTimeout(() => setSuccess(""), 1800);
     };
 
     const handleSave = async () => {
         setSaving(true);
         setSuccess("");
+        setError("");
 
-        window.setTimeout(() => {
-            localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+        try {
+            saveSettings(settings);
             setSuccess("Ajustes guardados correctamente.");
             window.setTimeout(() => setSuccess(""), 2500);
+        } catch (err) {
+            console.error(err);
+            setError("No se pudieron guardar los ajustes. Revisa permisos de almacenamiento del navegador.");
+        } finally {
             setSaving(false);
-        }, 250);
+        }
     };
 
     return (
@@ -203,6 +173,13 @@ export default function Settings() {
                         <div className="flex items-center gap-2 rounded-lg border border-brand-green/30 bg-brand-green/10 px-4 py-3 text-sm text-green-200">
                             <CheckCircle2 size={16} />
                             {success}
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                            <AlertCircle size={16} />
+                            {error}
                         </div>
                     )}
 

@@ -252,8 +252,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 hayStock ? '${p.stock} piezas disponibles' : 'Sin stock',
                 style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 14),
               ),
-              Text('${p.stock} unidades',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
             ],
           ),
           const SizedBox(height: 10),
@@ -296,7 +294,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               children: [
                 Expanded(
                   flex: 2,
-                  child: Text(e.key,
+                  child: Text(
+                      e.key.isEmpty ? '' : '${e.key[0].toUpperCase()}${e.key.substring(1)}',
                       style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
                 ),
                 Expanded(

@@ -35,4 +35,25 @@ class ApiService {
     if (response.statusCode >= 200 && response.statusCode < 300) return body;
     throw Exception(body['message'] ?? 'POST error');
   }
+
+  Future<dynamic> put(String endpoint, dynamic data) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: headers,
+      body: jsonEncode(data),
+    );
+    final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+    if (response.statusCode >= 200 && response.statusCode < 300) return body;
+    throw Exception(body['message'] ?? 'PUT error');
+  }
+
+  Future<dynamic> delete(String endpoint) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: headers,
+    );
+    final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+    if (response.statusCode >= 200 && response.statusCode < 300) return body;
+    throw Exception(body['message'] ?? 'DELETE error');
+  }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:tocitech/ui/pages/services/servicios_page.dart';
+import '../../../models/service_model.dart';
 import '../../../theme/app_theme.dart';
 import '../../widgets/service_card.dart';
+import '../services/service_detail_page.dart';
 import 'ajustes_page.dart';
 import 'notificaciones_page.dart';
 import '../products/products_page.dart';
@@ -341,47 +343,49 @@ class _TociTechAppState extends State<TociTechApp> {
   // Seccion Servicios
   Widget _serviciosHorizontal() {
     final servicios = [
-      {
-        "titulo": "Diagnóstico técnico",
-        "descripcion": "Revisión completa para detectar fallas de hardware o software.",
-        "imagen": "assets/servicio1.png",
-        "precio": 150,
-        "tiempo": "1-2",
-      },
-      {
-        "titulo": "Mantenimiento Preventivo",
-        "descripcion": "Limpieza y optimización para prolongar la vida útil del equipo.",
-        "imagen": "assets/servicio2.png",
-        "precio": 350,
-        "tiempo": "1",
-      },
-      {
-        "titulo": "Reparación de Hardware",
-        "descripcion": "Solución de fallas físicas en laptop o PC.",
-        "imagen": "assets/servicio3.png",
-        "precio": 400,
-        "tiempo": "1-15",
-      },
+      ServiceModel(
+        id: '',
+        name: 'Diagnóstico técnico',
+        description: 'Revisión completa para detectar fallas de hardware o software.',
+        price: 150,
+        duration: '1-2 días hábiles',
+        active: true,
+      ),
+      ServiceModel(
+        id: '',
+        name: 'Mantenimiento Preventivo',
+        description: 'Limpieza y optimización para prolongar la vida útil del equipo.',
+        price: 350,
+        duration: '1 día hábil',
+        active: true,
+      ),
+      ServiceModel(
+        id: '',
+        name: 'Reparación de Hardware',
+        description: 'Solución de fallas físicas en laptop o PC.',
+        price: 400,
+        duration: '1-15 días hábiles',
+        active: true,
+      ),
     ];
 
     return SizedBox(
       height: 320,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: servicios.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 14),
+        separatorBuilder: (_, _) => const SizedBox(width: 14),
         itemBuilder: (context, i) {
           final s = servicios[i];
           return SizedBox(
             width: 240,
             child: ServiceCard(
-              titulo: s["titulo"] as String,
-              descripcion: s["descripcion"] as String,
-              imagen: s["imagen"] as String,
-              precio: s["precio"] as int,
-              tiempo: s["tiempo"] as String,
-              textoBoton: "Más Detalles",
+              service: s,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ServiceDetailPage(service: s)),
+              ),
             ),
           );
         },

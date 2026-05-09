@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:tocitech/controllers/auth_controller.dart';
-import 'package:tocitech/services/api_service.dart';
 import 'package:tocitech/services/auth_service.dart';
 import 'package:tocitech/ui/pages/main/home_page.dart';
 import '../../../theme/app_theme.dart';

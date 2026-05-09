@@ -63,7 +63,7 @@ flutter:
   assets:
     - assets/
     - assets/fondo_productos.jpg
-    - assets/mouseacteck.png
+    - assets/fondo_servicios.jpg
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

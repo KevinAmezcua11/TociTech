@@ -13,6 +13,8 @@ import {
     CheckCircle2,
     DollarSign,
     Edit3,
+    ImageIcon,
+    Link2,
     Loader2,
     Plus,
     Search,
@@ -25,6 +27,7 @@ const emptyForm = {
     description: "",
     price: "",
     duration: "",
+    image: "",
     active: true,
 };
 
@@ -121,6 +124,7 @@ export default function Services() {
             description: form.description.trim(),
             price: Number(form.price),
             duration: form.duration.trim(),
+            image: form.image.trim(),
             active: form.active,
         };
 
@@ -153,6 +157,7 @@ export default function Services() {
             description: service.description || "",
             price: service.price?.toString() || "",
             duration: service.duration || "",
+            image: service.image || "",
             active: service.active !== false,
         });
         setError("");
@@ -274,6 +279,30 @@ export default function Services() {
                                     placeholder="Describe el alcance del servicio"
                                     maxLength={300}
                                 />
+                            </label>
+
+                            <label className="block space-y-1.5">
+                                <span className="text-xs font-medium uppercase text-muted">URL de imagen</span>
+                                <div className="relative">
+                                    <Link2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                                    <input
+                                        name="image"
+                                        value={form.image}
+                                        onChange={handleChange}
+                                        className="w-full rounded-lg bg-background border border-white/10 px-3 py-2 pl-8 text-sm text-white outline-none transition placeholder:text-muted focus:border-primary/60"
+                                        placeholder="https://ejemplo.com/imagen.jpg"
+                                    />
+                                </div>
+                                {form.image.trim() && (
+                                    <div className="mt-2 rounded-lg overflow-hidden border border-white/10 h-32 bg-white/5">
+                                        <img
+                                            src={form.image.trim()}
+                                            alt="Preview"
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => { e.currentTarget.style.display = "none"; }}
+                                        />
+                                    </div>
+                                )}
                             </label>
 
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-1">
@@ -399,11 +428,32 @@ export default function Services() {
                                                 </td>
                                                 
                                                 <td className="px-4 py-3">
-                                                    <div className="max-w-md">
-                                                        <p className="font-medium text-white">{service.name}</p>
-                                                        <p className="mt-1 line-clamp-2 text-xs text-muted">
-                                                            {service.description}
-                                                        </p>
+                                                    <div className="flex items-center gap-3 max-w-md">
+                                                        <div className="shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
+                                                            {service.image ? (
+                                                                <img
+                                                                    src={service.image}
+                                                                    alt={service.name}
+                                                                    className="w-full h-full object-cover"
+                                                                    onError={(e) => {
+                                                                        e.currentTarget.style.display = "none";
+                                                                        e.currentTarget.nextSibling.style.display = "flex";
+                                                                    }}
+                                                                />
+                                                            ) : null}
+                                                            <span
+                                                                className="text-muted"
+                                                                style={{ display: service.image ? "none" : "flex" }}
+                                                            >
+                                                                <ImageIcon size={16} />
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-medium text-white">{service.name}</p>
+                                                            <p className="mt-0.5 line-clamp-1 text-xs text-muted">
+                                                                {service.description}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </td>
 
