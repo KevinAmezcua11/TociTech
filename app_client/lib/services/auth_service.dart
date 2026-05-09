@@ -2,9 +2,7 @@ import '../models/user_model.dart';
 import 'api_service.dart';
 
 class AuthService {
-  final ApiService api;
-
-  AuthService(this.api);
+  final ApiService api = ApiService();
 
   Future<User> login(String username, String password) async {
     final response = await api.post(
@@ -16,7 +14,6 @@ class AuthService {
     );
 
     api.token = response['token'];
-
     return User.fromJson(response['user']);
   }
 
@@ -39,7 +36,6 @@ class AuthService {
         "phone": phone,
       },
     );
-
     return User.fromJson(response);
   }
 }

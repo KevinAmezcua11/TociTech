@@ -32,9 +32,7 @@ class _RegisterPageState extends State<RegisterPage> {
   void initState() {
     super.initState();
 
-    final api = ApiService();
-    final authService = AuthService(api);
-    authController = AuthController(authService);
+    authController = AuthController(AuthService());
   }
 
   @override

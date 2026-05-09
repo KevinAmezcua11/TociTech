@@ -26,8 +26,7 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
 
-    final api = ApiService();
-    authController = AuthController(AuthService(api));
+    authController = AuthController(AuthService());
   }
 
   Future<void> _login() async {

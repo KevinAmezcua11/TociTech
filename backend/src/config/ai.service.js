@@ -131,9 +131,13 @@ Respuesta:`;
 
         if (isRateLimit && canRetry) {
             const delay = getRetryDelay(error);
-            console.log(`⏳ Rate limit alcanzado. Reintentando en ${delay / 1000}s... (intentos restantes: ${retries - 1})`);
-            await sleep(delay);
-            return askAI(message, retries - 1);
+            // Solo reintentar si la espera es corta (<=8s), si no, fallar rápido
+            if (delay <= 8000) {
+                console.log(`⏳ Rate limit. Reintentando en ${delay / 1000}s... (intentos restantes: ${retries - 1})`);
+                await sleep(delay);
+                return askAI(message, retries - 1);
+            }
+            console.log(`⏳ Rate limit con espera larga (${delay / 1000}s). Fallando rápido.`);
         }
 
         if (isRateLimit) {

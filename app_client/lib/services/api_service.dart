@@ -2,32 +2,27 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = "http://10.0.2.2:3000/api";
+  static const String baseUrl = "https://tocitech-backend.onrender.com/api";
+
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  ApiService._internal();
 
   String? token;
 
-  Map<String, String> get headers {
-    return {
-      "Content-Type": "application/json",
-      if (token != null) "Authorization": "Bearer $token",
-    };
-  }
+  Map<String, String> get headers => {
+    "Content-Type": "application/json",
+    if (token != null) "Authorization": "Bearer $token",
+  };
 
   Future<dynamic> get(String endpoint) async {
     final response = await http.get(
       Uri.parse('$baseUrl$endpoint'),
       headers: headers,
     );
-
-    final body = response.body.isNotEmpty
-        ? jsonDecode(response.body)
-        : {};
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return body;
-    } else {
-      throw Exception(body['message'] ?? 'GET error');
-    }
+    final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+    if (response.statusCode >= 200 && response.statusCode < 300) return body;
+    throw Exception(body['message'] ?? 'GET error');
   }
 
   Future<dynamic> post(String endpoint, dynamic data) async {
@@ -36,15 +31,8 @@ class ApiService {
       headers: headers,
       body: jsonEncode(data),
     );
-
-    final body = response.body.isNotEmpty
-        ? jsonDecode(response.body)
-        : {};
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return body;
-    } else {
-      throw Exception(body['message'] ?? 'POST error');
-    }
+    final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+    if (response.statusCode >= 200 && response.statusCode < 300) return body;
+    throw Exception(body['message'] ?? 'POST error');
   }
 }
