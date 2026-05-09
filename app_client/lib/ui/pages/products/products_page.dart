@@ -136,7 +136,7 @@ class _ProductsPageState extends State<ProductsPage> {
     _filtered = result;
   }
 
-  // ── Datos dinámicos del backend ───────────────────
+  // Datos dinámicos del backend
   List<String> get _categories => _allProducts
       .map((p) => p.category).where((c) => c.isNotEmpty).toSet().toList()..sort();
 

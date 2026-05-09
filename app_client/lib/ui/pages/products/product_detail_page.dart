@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/product_model.dart';
+import '../../widgets/app_network_image.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -184,24 +185,33 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       return Container(
         color: AppColors.surface,
         child: const Center(
-          child: Icon(Icons.inventory_2_outlined, color: AppColors.textMuted, size: 64),
+          child: Icon(
+            Icons.inventory_2_outlined,
+            color: AppColors.textMuted,
+            size: 64,
+          ),
         ),
       );
     }
-    return Image.network(
-      p.images[_imagenActiva],
+
+    return AppNetworkImage(
+      url: p.images[_imagenActiva],
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => Container(
+      loading: Container(
         color: AppColors.surface,
         child: const Center(
-          child: Icon(Icons.broken_image_outlined, color: AppColors.textMuted, size: 64),
+          child: CircularProgressIndicator(color: AppColors.primary),
         ),
       ),
-      loadingBuilder: (_, child, progress) => progress == null
-          ? child
-          : Container(
+      error: Container(
         color: AppColors.surface,
-        child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        child: const Center(
+          child: Icon(
+            Icons.broken_image_outlined,
+            color: AppColors.textMuted,
+            size: 64,
+          ),
+        ),
       ),
     );
   }

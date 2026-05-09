@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/service_model.dart';
 import '../../theme/app_theme.dart';
+import 'app_network_image.dart';
 
 class ServiceCard extends StatelessWidget {
   final ServiceModel service;
@@ -31,13 +32,20 @@ class ServiceCard extends StatelessWidget {
             SizedBox(
               height: 160,
               width: double.infinity,
-              child: service.hasImage
-                  ? Image.network(
-                      service.image,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _gradientHeader(),
-                    )
-                  : _gradientHeader(),
+              child: AppNetworkImage(
+                url:     service.image,
+                fit:     BoxFit.cover,
+                loading: Container(
+                  color: AppColors.surface,
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primary,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                ),
+                error: _gradientHeader(),
+              ),
             ),
 
             // Contenido

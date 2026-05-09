@@ -1,4 +1,5 @@
 import '../models/product_model.dart';
+import '../database/local/product_local_service.dart';
 import 'api_service.dart';
 
 class ProductService {
@@ -7,14 +8,29 @@ class ProductService {
   ProductService(this.api);
 
   Future<List<Product>> getProducts() async {
-    final response = await api.get('/products');
+    try {
+      final response = await api.get('/products');
 
-    final data = response is List
-        ? response
-        : (response['data'] ?? []);
+      final data = response is List
+      ? response
+          : (response['data'] ?? []);
 
-    return List<Product>.from(
-      data.map((item) => Product.fromJson(item)),
-    );
+      final products = List<Product>.from(
+        data.map((item) => Product.fromJson(item)),
+      );
+
+      await ProductLocalService.cacheProducts(products);
+
+      return products;
+
+    } catch (e) {
+      final cachedProducts = await ProductLocalService.getCachedProducts();
+
+      if (cachedProducts.isNotEmpty) {
+        return cachedProducts;
+      }
+
+      rethrow;
+    }
   }
 }

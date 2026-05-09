@@ -1,20 +1,31 @@
 import '../models/user_model.dart';
+import '../database/local/session_local_service.dart';
 import 'api_service.dart';
 
 class AuthService {
   final ApiService api = ApiService();
 
-  Future<User> login(String username, String password) async {
-    final response = await api.post(
-      '/auth/login',
+  Future<User> login(
+    String username,
+    String password,
+  ) async {
+
+    final response = await api.post('/auth/login',
       {
         "username": username.trim().toLowerCase(),
         "password": password,
       },
     );
 
-    api.token = response['token'];
-    return User.fromJson(response['user']);
+    final token = response['token'];
+
+    api.token = token;
+
+    final user = User.fromJson(response['user']);
+
+    await SessionLocalService.saveSession(user, token,);
+
+    return user;
   }
 
   Future<User> register({
@@ -25,8 +36,7 @@ class AuthService {
     required String email,
     required String phone,
   }) async {
-    final response = await api.post(
-      '/auth/register',
+    final response = await api.post('/auth/register',
       {
         "username": username.trim().toLowerCase(),
         "password": password,
@@ -36,6 +46,16 @@ class AuthService {
         "phone": phone,
       },
     );
+
     return User.fromJson(response);
+  }
+
+  Future<Map<String, dynamic>?> getSavedSession() async {
+    return await SessionLocalService.getSession();
+  }
+
+  Future<void> logout() async {
+    api.token = null;
+    await SessionLocalService.clearSession();
   }
 }

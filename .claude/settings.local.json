@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\flutter_projects\\\\tocitech\\\\app_client\\\\lib\\\\\" -Recurse -Directory | Select-Object -ExpandProperty FullName | Sort-Object)",
+      "Bash(Get-ChildItem -Path \"c:\\\\flutter_projects\\\\tocitech\\\\\" -Directory | Select-Object Name)",
+      "PowerShell(ls \"c:\\\\flutter_projects\\\\tocitech\\\\backend\\\\src\" -Recurse | Where-Object {$_.PSIsContainer} | Select-Object Name)"
+    ]
+  }
+}

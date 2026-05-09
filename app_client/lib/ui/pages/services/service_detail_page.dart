@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/service_model.dart';
 import '../../../theme/app_theme.dart';
+import '../../widgets/app_network_image.dart';
 
 class ServiceDetailPage extends StatelessWidget {
   final ServiceModel service;
@@ -20,13 +21,17 @@ class ServiceDetailPage extends StatelessWidget {
             backgroundColor: AppColors.surface,
             iconTheme: const IconThemeData(color: AppColors.textPrimary),
             flexibleSpace: FlexibleSpaceBar(
-              background: service.hasImage
-                  ? Image.network(
-                      service.image,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _placeholderHeader(),
-                    )
-                  : _placeholderHeader(),
+              background: AppNetworkImage(
+                url:     service.image,
+                fit:     BoxFit.cover,
+                loading: Container(
+                  color: AppColors.surface,
+                  child: const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
+                ),
+                error: _placeholderHeader(),
+              ),
             ),
           ),
 

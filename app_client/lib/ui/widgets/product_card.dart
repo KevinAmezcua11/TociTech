@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../models/product_model.dart';
+import 'app_network_image.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -33,15 +34,12 @@ class ProductCard extends StatelessWidget {
               child: SizedBox(
                 height: 150,
                 width: double.infinity,
-                child: product.firstImage.isNotEmpty
-                    ? Image.network(
-                  product.firstImage,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _imagePlaceholder(),
-                  loadingBuilder: (_, child, progress) =>
-                  progress == null ? child : _imagePlaceholder(loading: true),
-                )
-                    : _imagePlaceholder(),
+                child: AppNetworkImage(
+                  url:     product.firstImage,
+                  fit:     BoxFit.cover,
+                  loading: _imagePlaceholder(loading: true),
+                  error:   _imagePlaceholder(),
+                ),
               ),
             ),
 
