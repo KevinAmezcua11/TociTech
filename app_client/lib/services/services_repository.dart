@@ -61,17 +61,37 @@ class ServicesRepository {
   }
 
   void _validateService(ServiceModel service) {
-    if (service.name.trim().isEmpty) {
+    final name = service.name.trim();
+    final description = service.description.trim();
+    final duration = service.duration.trim();
+
+    if (name.isEmpty) {
       throw ArgumentError('El nombre del servicio es obligatorio.');
     }
-    if (service.description.trim().isEmpty) {
+    if (name.length < 3 || name.length > 80) {
+      throw ArgumentError('El nombre debe tener entre 3 y 80 caracteres.');
+    }
+    if (description.isEmpty) {
       throw ArgumentError('La descripcion del servicio es obligatoria.');
     }
-    if (service.duration.trim().isEmpty) {
+    if (description.length < 10 || description.length > 300) {
+      throw ArgumentError(
+        'La descripcion debe tener entre 10 y 300 caracteres.',
+      );
+    }
+    if (duration.isEmpty) {
       throw ArgumentError('La duracion del servicio es obligatoria.');
     }
+    if (duration.length < 2 || duration.length > 60) {
+      throw ArgumentError('La duracion debe tener entre 2 y 60 caracteres.');
+    }
     if (service.price.isNaN || service.price < 0) {
-      throw ArgumentError('El precio debe ser un numero valido mayor o igual a cero.');
+      throw ArgumentError(
+        'El precio debe ser un numero valido mayor o igual a cero.',
+      );
+    }
+    if (service.price > 1000000) {
+      throw ArgumentError('El precio no debe superar 1,000,000 MXN.');
     }
   }
 }

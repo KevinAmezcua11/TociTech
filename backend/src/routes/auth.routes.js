@@ -7,6 +7,7 @@ const router = express.Router();
 // Público
 router.post("/register", controller.registerClient);
 router.post("/login", controller.login);
+router.post("/refresh", controller.refresh);
 
 // Protegido
 router.post("/register/admin", authenticate, controller.registerAdmin);

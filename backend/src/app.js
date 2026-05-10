@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 
 const authRoutes = require("./routes/auth.routes");
+const aiChatRoutes = require("./routes/aiChat.route");
 const productRoutes = require("./routes/product.routes");
 const servicesRoutes = require("./routes/services.route");
 const ordersRoutes = require("./routes/order.route");
@@ -24,6 +25,7 @@ app.get("/", (req, res) => {
 
 // Rutas públicas
 app.use("/api/auth", authRoutes);
+app.use("/api/ai-chat", aiChatRoutes);
 
 // Rutas protegidas
 app.use("/api/products", productRoutes);

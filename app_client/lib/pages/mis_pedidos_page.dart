@@ -153,8 +153,10 @@ class _MisPedidosPageState extends State<MisPedidosPage>
           indicatorWeight: 3,
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textSecondary,
-          labelStyle:
-          const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
           unselectedLabelStyle: const TextStyle(fontSize: 13),
           tabs: [
             _buildTab("Compras", _compras.length),
@@ -189,14 +191,20 @@ class _MisPedidosPageState extends State<MisPedidosPage>
                 return pedidos.isEmpty
                     ? _estadoVacio()
                     : Column(
-                  children: pedidos
-                      .map((p) => Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                        20, 0, 20, 12),
-                    child: _PedidoCard(pedido: p),
-                  ))
-                      .toList(),
-                );
+                        children: pedidos
+                            .map(
+                              (p) => Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  0,
+                                  20,
+                                  12,
+                                ),
+                                child: _PedidoCard(pedido: p),
+                              ),
+                            )
+                            .toList(),
+                      );
               },
             ),
 
@@ -222,7 +230,7 @@ class _MisPedidosPageState extends State<MisPedidosPage>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.2),
+              color: AppColors.primary.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
@@ -249,8 +257,11 @@ class _MisPedidosPageState extends State<MisPedidosPage>
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.inbox_outlined,
-                size: 52, color: AppColors.textSecondary.withOpacity(0.4)),
+            Icon(
+              Icons.inbox_outlined,
+              size: 52,
+              color: AppColors.textSecondary.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 12),
             const Text(
               "Sin pedidos aquí",
@@ -281,11 +292,14 @@ class _MisPedidosPageState extends State<MisPedidosPage>
                   Container(
                     padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF22C55E).withOpacity(0.12),
+                      color: const Color(0xFF22C55E).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(9),
                     ),
-                    child: const Icon(Icons.handyman_rounded,
-                        color: Color(0xFF22C55E), size: 16),
+                    child: const Icon(
+                      Icons.handyman_rounded,
+                      color: Color(0xFF22C55E),
+                      size: 16,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   const Text(
@@ -299,10 +313,9 @@ class _MisPedidosPageState extends State<MisPedidosPage>
                 ],
               ),
               Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF22C55E).withOpacity(0.12),
+                  color: const Color(0xFF22C55E).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -322,10 +335,12 @@ class _MisPedidosPageState extends State<MisPedidosPage>
           // Lista vertical de servicios
           Column(
             children: _servicios
-                .map((s) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _ServicioCard(servicio: s),
-            ))
+                .map(
+                  (s) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _ServicioCard(servicio: s),
+                  ),
+                )
                 .toList(),
           ),
         ],
@@ -350,7 +365,7 @@ class _PedidoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Row(
         children: [
@@ -383,13 +398,18 @@ class _PedidoCard extends StatelessWidget {
                 const SizedBox(height: 5),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today_outlined,
-                        size: 11, color: AppColors.textSecondary),
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 11,
+                      color: AppColors.textSecondary,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       pedido.fecha,
                       style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 11),
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
@@ -404,11 +424,14 @@ class _PedidoCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: _colorTipo(pedido.tipo).withOpacity(0.12),
+              color: _colorTipo(pedido.tipo).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(_iconoTipo(pedido.tipo),
-                color: _colorTipo(pedido.tipo), size: 18),
+            child: Icon(
+              _iconoTipo(pedido.tipo),
+              color: _colorTipo(pedido.tipo),
+              size: 18,
+            ),
           ),
         ],
       ),
@@ -440,9 +463,9 @@ class _PedidoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -452,7 +475,10 @@ class _PedidoCard extends StatelessWidget {
           Text(
             texto,
             style: TextStyle(
-                color: color, fontSize: 11, fontWeight: FontWeight.bold),
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -461,17 +487,23 @@ class _PedidoCard extends StatelessWidget {
 
   Color _colorTipo(String tipo) {
     switch (tipo) {
-      case "apartado":    return const Color(0xFFFFA726);
-      case "reservacion": return AppColors.primary;
-      default:            return AppColors.blue;
+      case "apartado":
+        return const Color(0xFFFFA726);
+      case "reservacion":
+        return AppColors.primary;
+      default:
+        return AppColors.blue;
     }
   }
 
   IconData _iconoTipo(String tipo) {
     switch (tipo) {
-      case "apartado":    return Icons.bookmark_rounded;
-      case "reservacion": return Icons.calendar_today_rounded;
-      default:            return Icons.shopping_bag_rounded;
+      case "apartado":
+        return Icons.bookmark_rounded;
+      case "reservacion":
+        return Icons.calendar_today_rounded;
+      default:
+        return Icons.shopping_bag_rounded;
     }
   }
 }
@@ -504,7 +536,7 @@ class _ServicioCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Row(
         children: [
@@ -537,37 +569,51 @@ class _ServicioCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.devices_outlined,
-                        size: 11, color: AppColors.textSecondary),
+                    const Icon(
+                      Icons.devices_outlined,
+                      size: 11,
+                      color: AppColors.textSecondary,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       servicio.equipo,
                       style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 11),
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today_outlined,
-                        size: 11, color: AppColors.textSecondary),
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 11,
+                      color: AppColors.textSecondary,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       servicio.fecha,
                       style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 11),
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 7),
                 Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
-                    color: colorEstado.withOpacity(0.12),
+                    color: colorEstado.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: colorEstado.withOpacity(0.4)),
+                    border: Border.all(
+                      color: colorEstado.withValues(alpha: 0.4),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -586,9 +632,10 @@ class _ServicioCard extends StatelessWidget {
                         servicio.estado[0].toUpperCase() +
                             servicio.estado.substring(1),
                         style: TextStyle(
-                            color: colorEstado,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold),
+                          color: colorEstado,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -602,11 +649,14 @@ class _ServicioCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF22C55E).withOpacity(0.12),
+              color: const Color(0xFF22C55E).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.handyman_rounded,
-                color: Color(0xFF22C55E), size: 18),
+            child: const Icon(
+              Icons.handyman_rounded,
+              color: Color(0xFF22C55E),
+              size: 18,
+            ),
           ),
         ],
       ),

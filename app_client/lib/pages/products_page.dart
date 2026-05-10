@@ -107,7 +107,10 @@ class _ProductsPageState extends State<ProductsPage> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        title: const Text("Filtros", style: TextStyle(color: AppColors.textPrimary)),
+        title: const Text(
+          "Filtros",
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -119,7 +122,7 @@ class _ProductsPageState extends State<ProductsPage> {
                 fit: StackFit.expand,
                 children: [
                   Image.asset("assets/fondo_productos.jpg", fit: BoxFit.cover),
-                  Container(color: Colors.black.withOpacity(0.4)),
+                  Container(color: Colors.black.withValues(alpha: 0.4)),
                   Padding(
                     padding: const EdgeInsets.all(20),
                     child: Align(
@@ -139,7 +142,10 @@ class _ProductsPageState extends State<ProductsPage> {
                           SizedBox(height: 8),
                           Text(
                             "Componentes y equipos con calidad y el mejor precio.",
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                            ),
                           ),
                         ],
                       ),
@@ -163,15 +169,19 @@ class _ProductsPageState extends State<ProductsPage> {
                 padding: const EdgeInsets.all(20),
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                children: _productos.map((p) => ProductCard(
-                  nombre: p.nombre,
-                  descripcion: p.descripcion,
-                  precio: p.precio,
-                  stock: p.stock,
-                  total: p.total,
-                  imagen: p.imagen,
-                  onTap: () => _irADetalle(context, p),
-                )).toList(),
+                children: _productos
+                    .map(
+                      (p) => ProductCard(
+                        nombre: p.nombre,
+                        descripcion: p.descripcion,
+                        precio: p.precio,
+                        stock: p.stock,
+                        total: p.total,
+                        imagen: p.imagen,
+                        onTap: () => _irADetalle(context, p),
+                      ),
+                    )
+                    .toList(),
               ),
             ),
           ],
@@ -188,8 +198,12 @@ class _ProductsPageState extends State<ProductsPage> {
           padding: const EdgeInsets.all(16),
           child: ListView(
             children: [
-              const Text("Ordenar por:",
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+              const Text(
+                "Ordenar por:",
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Container(
@@ -211,44 +225,90 @@ class _ProductsPageState extends State<ProductsPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text("Categoría:",
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+              const Text(
+                "Categoría:",
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              _radioItem("Procesadores (CPU)", categoriaSeleccionada,
-                      (val) => setState(() => categoriaSeleccionada = val)),
-              _radioItem("Tarjetas gráficas (GPU)", categoriaSeleccionada,
-                      (val) => setState(() => categoriaSeleccionada = val)),
-              _radioItem("Memoria RAM", categoriaSeleccionada,
-                      (val) => setState(() => categoriaSeleccionada = val)),
-              _radioItem("Almacenamiento (SSD / HDD)", categoriaSeleccionada,
-                      (val) => setState(() => categoriaSeleccionada = val)),
-              _radioItem("Fuentes de poder", categoriaSeleccionada,
-                      (val) => setState(() => categoriaSeleccionada = val)),
-              const SizedBox(height: 20),
-              const Text("Marca:",
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+              _radioItem(
+                "Procesadores (CPU)",
+                categoriaSeleccionada,
+                (val) => setState(() => categoriaSeleccionada = val),
               ),
-              _radioItem("Intel", marcaSeleccionada,
-                      (val) => setState(() => marcaSeleccionada = val)),
-              _radioItem("AMD", marcaSeleccionada,
-                      (val) => setState(() => marcaSeleccionada = val)),
-              _radioItem("NVIDIA", marcaSeleccionada,
-                      (val) => setState(() => marcaSeleccionada = val)),
-              _radioItem("ASUS", marcaSeleccionada,
-                      (val) => setState(() => marcaSeleccionada = val)),
-              _radioItem("Kingston", marcaSeleccionada,
-                      (val) => setState(() => marcaSeleccionada = val)),
+              _radioItem(
+                "Tarjetas gráficas (GPU)",
+                categoriaSeleccionada,
+                (val) => setState(() => categoriaSeleccionada = val),
+              ),
+              _radioItem(
+                "Memoria RAM",
+                categoriaSeleccionada,
+                (val) => setState(() => categoriaSeleccionada = val),
+              ),
+              _radioItem(
+                "Almacenamiento (SSD / HDD)",
+                categoriaSeleccionada,
+                (val) => setState(() => categoriaSeleccionada = val),
+              ),
+              _radioItem(
+                "Fuentes de poder",
+                categoriaSeleccionada,
+                (val) => setState(() => categoriaSeleccionada = val),
+              ),
               const SizedBox(height: 20),
-              const Text("Precios:",
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+              const Text(
+                "Marca:",
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              _radioItem(
+                "Intel",
+                marcaSeleccionada,
+                (val) => setState(() => marcaSeleccionada = val),
+              ),
+              _radioItem(
+                "AMD",
+                marcaSeleccionada,
+                (val) => setState(() => marcaSeleccionada = val),
+              ),
+              _radioItem(
+                "NVIDIA",
+                marcaSeleccionada,
+                (val) => setState(() => marcaSeleccionada = val),
+              ),
+              _radioItem(
+                "ASUS",
+                marcaSeleccionada,
+                (val) => setState(() => marcaSeleccionada = val),
+              ),
+              _radioItem(
+                "Kingston",
+                marcaSeleccionada,
+                (val) => setState(() => marcaSeleccionada = val),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "Precios:",
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               ...preciosSeleccionados.keys.map(
-                    (key) => CheckboxListTile(
+                (key) => CheckboxListTile(
                   value: preciosSeleccionados[key],
                   activeColor: AppColors.primary,
                   checkColor: AppColors.textPrimary,
-                  title: Text(key, style: const TextStyle(color: AppColors.textSecondary)),
-                  onChanged: (value) => setState(() => preciosSeleccionados[key] = value!),
+                  title: Text(
+                    key,
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                  onChanged: (value) =>
+                      setState(() => preciosSeleccionados[key] = value!),
                 ),
               ),
             ],
@@ -258,13 +318,26 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  Widget _radioItem(String title, String? groupValue, Function(String?) onChanged) {
-    return RadioListTile<String>(
-      value: title,
-      groupValue: groupValue,
-      activeColor: AppColors.primary,
-      title: Text(title, style: const TextStyle(color: AppColors.textSecondary)),
-      onChanged: onChanged,
+  Widget _radioItem(
+    String title,
+    String? groupValue,
+    Function(String?) onChanged,
+  ) {
+    final selected = title == groupValue;
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(
+        selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+        color: selected ? AppColors.primary : AppColors.textSecondary,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: selected ? AppColors.textPrimary : AppColors.textSecondary,
+        ),
+      ),
+      onTap: () => onChanged(selected ? null : title),
     );
   }
 }

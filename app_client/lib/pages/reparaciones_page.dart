@@ -15,13 +15,13 @@ class _ReparacionesPageState extends State<ReparacionesPage> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        iconTheme: IconThemeData(
-          color: Colors.white,
-        ),
-        title: Text("Reparaciones", style: TextStyle(
+        iconTheme: IconThemeData(color: Colors.white),
+        title: Text(
+          "Reparaciones",
+          style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
-            fontSize: 24
+            fontSize: 24,
           ),
         ),
       ),
@@ -32,7 +32,9 @@ class _ReparacionesPageState extends State<ReparacionesPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               decoration: const BoxDecoration(
                 color: Color(0xFF0F172A),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(20),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,7 +76,10 @@ class _ReparacionesPageState extends State<ReparacionesPage> {
                             children: [
                               Icon(Icons.search, color: Colors.white54),
                               SizedBox(width: 10),
-                              Text("Buscar reparación...", style: TextStyle(color: Colors.white54)),
+                              Text(
+                                "Buscar reparación...",
+                                style: TextStyle(color: Colors.white54),
+                              ),
                             ],
                           ),
                         ),
@@ -88,7 +93,10 @@ class _ReparacionesPageState extends State<ReparacionesPage> {
                           borderRadius: BorderRadius.circular(25),
                         ),
                         child: const Center(
-                          child: Text("Filtrar", style: TextStyle(color: AppColors.textPrimary)),
+                          child: Text(
+                            "Filtrar",
+                            style: TextStyle(color: AppColors.textPrimary),
+                          ),
                         ),
                       ),
                     ],
@@ -99,8 +107,13 @@ class _ReparacionesPageState extends State<ReparacionesPage> {
 
             const SizedBox(height: 20),
 
-            const Text("Lista de Dispositivos",
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 22, fontWeight: FontWeight.bold),
+            const Text(
+              "Lista de Dispositivos",
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
 
             const SizedBox(height: 20),

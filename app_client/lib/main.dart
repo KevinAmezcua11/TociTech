@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tocitech/pages/home_page.dart';
 import 'package:tocitech/pages/login_page.dart';
+import 'package:tocitech/services/auth_service.dart';
 import 'package:tocitech/services/firebase_bootstrap.dart';
 import 'package:tocitech/services/settings_preferences.dart';
 import 'package:tocitech/theme/app_theme.dart';
@@ -23,7 +25,7 @@ class TociTechClientApp extends StatelessWidget {
         final isLight = settings.themeMode == ClientThemeMode.light;
 
         return MaterialApp(
-          home: const LoginPage(),
+          home: const _AuthGate(),
           debugShowCheckedModeBanner: false,
           themeMode: isLight ? ThemeMode.light : ThemeMode.dark,
           theme: ThemeData(
@@ -35,6 +37,27 @@ class TociTechClientApp extends StatelessWidget {
             useMaterial3: true,
           ),
         );
+      },
+    );
+  }
+}
+
+class _AuthGate extends StatelessWidget {
+  const _AuthGate();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<AuthSession?>(
+      future: authService.loadSession(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return snapshot.data == null ? const LoginPage() : const TociTechApp();
       },
     );
   }

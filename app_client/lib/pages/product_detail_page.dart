@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_snackbar.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final String nombre;
@@ -49,7 +50,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   Image.asset(widget.imagen, fit: BoxFit.contain),
                   // Gradiente inferior para que el contenido se lea
                   Positioned(
-                    bottom: 0, left: 0, right: 0,
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
                     child: Container(
                       height: 80,
                       decoration: BoxDecoration(
@@ -72,7 +75,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   // Nombre y precio
                   Text(
                     widget.nombre,
@@ -86,7 +88,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   const SizedBox(height: 6),
                   Text(
                     widget.descripcion,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
                   ),
 
                   const SizedBox(height: 16),
@@ -134,16 +139,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     width: double.infinity,
                     height: 52,
                     child: FilledButton.icon(
-                      onPressed: hayStock ? () => _mostrarConfirmacion(context) : null,
+                      onPressed: hayStock
+                          ? () => _mostrarConfirmacion(context)
+                          : null,
                       style: FilledButton.styleFrom(
                         backgroundColor: _colorAccion(),
-                        disabledBackgroundColor: Colors.grey.withOpacity(0.3),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        disabledBackgroundColor: Colors.grey.withValues(
+                          alpha: 0.3,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                       icon: Icon(_iconoAccion(), size: 18),
                       label: Text(
                         _textoBoton(),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
                     ),
                   ),
@@ -183,7 +197,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,7 +215,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ),
               Text(
                 "${widget.stock} / ${widget.total}",
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
@@ -210,7 +227,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: porcentaje,
-              backgroundColor: Colors.white.withOpacity(0.08),
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
               valueColor: AlwaysStoppedAnimation<Color>(colorStock),
               minHeight: 8,
             ),
@@ -244,15 +261,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: activo ? _colorAccion().withOpacity(0.15) : AppColors.surface,
+            color: activo
+                ? _colorAccion().withValues(alpha: 0.15)
+                : AppColors.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: activo ? _colorAccion() : Colors.white.withOpacity(0.08),
+              color: activo
+                  ? _colorAccion()
+                  : Colors.white.withValues(alpha: 0.08),
             ),
           ),
           child: Column(
             children: [
-              Icon(icon, color: activo ? _colorAccion() : AppColors.textSecondary, size: 20),
+              Icon(
+                icon,
+                color: activo ? _colorAccion() : AppColors.textSecondary,
+                size: 20,
+              ),
               const SizedBox(height: 4),
               Text(
                 texto,
@@ -279,12 +304,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text("Unidades", style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+          const Text(
+            "Unidades",
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          ),
           Row(
             children: [
               _botonCantidad(Icons.remove, () {
@@ -317,7 +345,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.12),
+          color: AppColors.primary.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: AppColors.primary, size: 18),
@@ -336,15 +364,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
-          _filaResumen("Precio unitario", "\$${widget.precio.toStringAsFixed(0)} MXN"),
+          _filaResumen(
+            "Precio unitario",
+            "\$${widget.precio.toStringAsFixed(0)} MXN",
+          ),
           const SizedBox(height: 8),
-          _filaResumen("Cantidad", "$_cantidad unidad${_cantidad > 1 ? 'es' : ''}"),
-          Divider(color: Colors.white.withOpacity(0.1), height: 20),
-          _filaResumen("Total", "\$${total.toStringAsFixed(0)} MXN", destacado: true),
+          _filaResumen(
+            "Cantidad",
+            "$_cantidad unidad${_cantidad > 1 ? 'es' : ''}",
+          ),
+          Divider(color: Colors.white.withValues(alpha: 0.1), height: 20),
+          _filaResumen(
+            "Total",
+            "\$${total.toStringAsFixed(0)} MXN",
+            destacado: true,
+          ),
         ],
       ),
     );
@@ -354,7 +392,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+        Text(
+          label,
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
         Text(
           valor,
           style: TextStyle(
@@ -372,6 +413,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   // ================================
 
   void _mostrarConfirmacion(BuildContext context) {
+    final pageContext = context;
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1E1E2A),
@@ -384,9 +426,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -405,7 +448,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             const SizedBox(height: 6),
             Text(
               "$_cantidad x ${widget.nombre}",
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -413,12 +459,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               width: double.infinity,
               height: 50,
               child: FilledButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.pop(context);
+                  AppSnackBar.success(
+                    pageContext,
+                    'Solicitud registrada correctamente.',
+                  );
+                },
                 style: FilledButton.styleFrom(
                   backgroundColor: _colorAccion(),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
-                child: const Text("Confirmar", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                child: const Text(
+                  "Confirmar",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -428,10 +485,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               child: OutlinedButton(
                 onPressed: () => Navigator.pop(context),
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.white.withOpacity(0.15)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
-                child: const Text("Cancelar", style: TextStyle(color: AppColors.textSecondary)),
+                child: const Text(
+                  "Cancelar",
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
               ),
             ),
           ],
@@ -457,33 +519,45 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   Color _colorAccion() {
     switch (_accionSeleccionada) {
-      case "apartar":  return const Color(0xFFFFA726);
-      case "reservar": return AppColors.primary;
-      default:         return AppColors.blue;
+      case "apartar":
+        return const Color(0xFFFFA726);
+      case "reservar":
+        return AppColors.primary;
+      default:
+        return AppColors.blue;
     }
   }
 
   IconData _iconoAccion() {
     switch (_accionSeleccionada) {
-      case "apartar":  return Icons.bookmark_rounded;
-      case "reservar": return Icons.calendar_today_rounded;
-      default:         return Icons.shopping_bag_rounded;
+      case "apartar":
+        return Icons.bookmark_rounded;
+      case "reservar":
+        return Icons.calendar_today_rounded;
+      default:
+        return Icons.shopping_bag_rounded;
     }
   }
 
   String _textoBoton() {
     switch (_accionSeleccionada) {
-      case "apartar":  return "Apartar producto";
-      case "reservar": return "Reservar producto";
-      default:         return "Comprar ahora";
+      case "apartar":
+        return "Apartar producto";
+      case "reservar":
+        return "Reservar producto";
+      default:
+        return "Comprar ahora";
     }
   }
 
   String _textoConfirmacion() {
     switch (_accionSeleccionada) {
-      case "apartar":  return "¿Deseas apartar este producto?";
-      case "reservar": return "¿Deseas reservar este producto?";
-      default:         return "¿Confirmas tu compra?";
+      case "apartar":
+        return "¿Deseas apartar este producto?";
+      case "reservar":
+        return "¿Deseas reservar este producto?";
+      default:
+        return "¿Confirmas tu compra?";
     }
   }
 }

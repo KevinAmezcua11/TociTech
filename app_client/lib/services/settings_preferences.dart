@@ -25,12 +25,12 @@ class ClientSettings {
 
 class SettingsController extends ValueNotifier<ClientSettings> {
   SettingsController()
-      : super(
-          const ClientSettings(
-            themeMode: ClientThemeMode.dark,
-            notificationsEnabled: true,
-          ),
-        );
+    : super(
+        const ClientSettings(
+          themeMode: ClientThemeMode.dark,
+          notificationsEnabled: true,
+        ),
+      );
 
   static const _themeKey = 'client_theme';
   static const _notificationsKey = 'client_notifications';
@@ -43,7 +43,9 @@ class SettingsController extends ValueNotifier<ClientSettings> {
     final notifications = _preferences?.getBool(_notificationsKey);
 
     value = ClientSettings(
-      themeMode: theme == 'light' ? ClientThemeMode.light : ClientThemeMode.dark,
+      themeMode: theme == 'light'
+          ? ClientThemeMode.light
+          : ClientThemeMode.dark,
       notificationsEnabled: notifications ?? true,
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/service_model.dart';
 import '../services/services_repository.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_snackbar.dart';
 
 class ServiciosPage extends StatefulWidget {
   const ServiciosPage({super.key});
@@ -44,8 +45,9 @@ class _ServiciosPageState extends State<ServiciosPage> {
           return ListView.separated(
             padding: const EdgeInsets.only(bottom: 96),
             itemCount: services.length + 1,
-            separatorBuilder: (_, index) =>
-                index == 0 ? const SizedBox(height: 20) : const SizedBox(height: 14),
+            separatorBuilder: (_, index) => index == 0
+                ? const SizedBox(height: 20)
+                : const SizedBox(height: 14),
             itemBuilder: (context, index) {
               if (index == 0) return _buildHeader(services.length);
 
@@ -115,7 +117,9 @@ class _ServiciosPageState extends State<ServiciosPage> {
     );
 
     if (!mounted || saved != true) return;
-    _showMessage(service == null ? 'Servicio creado.' : 'Servicio actualizado.');
+    _showMessage(
+      service == null ? 'Servicio creado.' : 'Servicio actualizado.',
+    );
   }
 
   Future<void> _confirmDelete(ServiceModel service) async {
@@ -123,7 +127,10 @@ class _ServiciosPageState extends State<ServiciosPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: Text('Eliminar servicio', style: TextStyle(color: AppColors.textPrimary)),
+        title: Text(
+          'Eliminar servicio',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
         content: Text(
           'Deseas eliminar "${service.name}"? Esta accion no se puede deshacer.',
           style: TextStyle(color: AppColors.textSecondary),
@@ -131,7 +138,10 @@ class _ServiciosPageState extends State<ServiciosPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
@@ -153,12 +163,11 @@ class _ServiciosPageState extends State<ServiciosPage> {
   }
 
   void _showMessage(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.redAccent : AppColors.green,
-      ),
-    );
+    if (isError) {
+      AppSnackBar.error(context, message);
+    } else {
+      AppSnackBar.success(context, message);
+    }
   }
 }
 
@@ -180,13 +189,16 @@ class _ServiceFormState extends State<_ServiceForm> {
   late final TextEditingController _durationController;
   late bool _active;
   bool _saving = false;
+  AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
   @override
   void initState() {
     super.initState();
     final service = widget.service;
     _nameController = TextEditingController(text: service?.name ?? '');
-    _descriptionController = TextEditingController(text: service?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: service?.description ?? '',
+    );
     _priceController = TextEditingController(
       text: service == null ? '' : service.price.toStringAsFixed(2),
     );
@@ -211,6 +223,7 @@ class _ServiceFormState extends State<_ServiceForm> {
       padding: EdgeInsets.fromLTRB(20, 20, 20, bottom + 20),
       child: Form(
         key: _formKey,
+        autovalidateMode: _autovalidateMode,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -225,24 +238,48 @@ class _ServiceFormState extends State<_ServiceForm> {
                 ),
               ),
               const SizedBox(height: 18),
-              _field(_nameController, 'Nombre'),
+              _field(
+                _nameController,
+                'Nombre',
+                maxLength: 80,
+                validator: (value) => _validateText(value, 'El nombre', 3, 80),
+              ),
               const SizedBox(height: 12),
-              _field(_descriptionController, 'Descripcion', maxLines: 3),
+              _field(
+                _descriptionController,
+                'Descripcion',
+                maxLines: 3,
+                maxLength: 300,
+                validator: (value) =>
+                    _validateText(value, 'La descripcion', 10, 300),
+              ),
               const SizedBox(height: 12),
               _field(
                 _priceController,
                 'Precio',
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                maxLength: 12,
                 validator: _validatePrice,
               ),
               const SizedBox(height: 12),
-              _field(_durationController, 'Duracion'),
+              _field(
+                _durationController,
+                'Duracion',
+                maxLength: 60,
+                validator: (value) =>
+                    _validateText(value, 'La duracion', 2, 60),
+              ),
               const SizedBox(height: 12),
               SwitchListTile(
                 value: _active,
                 onChanged: (value) => setState(() => _active = value),
-                activeColor: AppColors.primary,
-                title: Text('Servicio activo', style: TextStyle(color: AppColors.textPrimary)),
+                activeThumbColor: AppColors.primary,
+                title: Text(
+                  'Servicio activo',
+                  style: TextStyle(color: AppColors.textPrimary),
+                ),
               ),
               const SizedBox(height: 10),
               SizedBox(
@@ -257,7 +294,11 @@ class _ServiceFormState extends State<_ServiceForm> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.save_rounded),
-                  label: Text(widget.service == null ? 'Crear servicio' : 'Guardar cambios'),
+                  label: Text(
+                    widget.service == null
+                        ? 'Crear servicio'
+                        : 'Guardar cambios',
+                  ),
                 ),
               ),
             ],
@@ -271,15 +312,18 @@ class _ServiceFormState extends State<_ServiceForm> {
     TextEditingController controller,
     String label, {
     int maxLines = 1,
+    int? maxLength,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
+      maxLength: maxLength,
       keyboardType: keyboardType,
       style: TextStyle(color: AppColors.textPrimary),
-      validator: validator ??
+      validator:
+          validator ??
           (value) {
             if (value == null || value.trim().isEmpty) {
               return '$label es obligatorio.';
@@ -289,6 +333,8 @@ class _ServiceFormState extends State<_ServiceForm> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: AppColors.textSecondary),
+        counterStyle: TextStyle(color: AppColors.textMuted),
+        errorMaxLines: 2,
         filled: true,
         fillColor: AppColors.background,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
@@ -297,14 +343,28 @@ class _ServiceFormState extends State<_ServiceForm> {
   }
 
   String? _validatePrice(String? value) {
-    final price = double.tryParse((value ?? '').trim());
+    final price = double.tryParse((value ?? '').trim().replaceAll(',', '.'));
     if (price == null || price < 0) {
       return 'El precio debe ser un numero valido mayor o igual a cero.';
+    }
+    if (price > 1000000) {
+      return 'El precio no debe superar 1,000,000 MXN.';
     }
     return null;
   }
 
+  String? _validateText(String? value, String label, int min, int max) {
+    final clean = value?.trim() ?? '';
+    if (clean.isEmpty) return '$label es obligatorio.';
+    if (clean.length < min) {
+      return '$label debe tener al menos $min caracteres.';
+    }
+    if (clean.length > max) return '$label no debe superar $max caracteres.';
+    return null;
+  }
+
   Future<void> _save() async {
+    setState(() => _autovalidateMode = AutovalidateMode.onUserInteraction);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _saving = true);
@@ -313,7 +373,7 @@ class _ServiceFormState extends State<_ServiceForm> {
       id: widget.service?.id ?? '',
       name: _nameController.text,
       description: _descriptionController.text,
-      price: double.parse(_priceController.text.trim()),
+      price: double.parse(_priceController.text.trim().replaceAll(',', '.')),
       duration: _durationController.text,
       active: _active,
     );
@@ -323,12 +383,7 @@ class _ServiceFormState extends State<_ServiceForm> {
       if (mounted) Navigator.pop(context, true);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_errorMessage(error)),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      AppSnackBar.error(context, _errorMessage(error));
       setState(() => _saving = false);
     }
   }
@@ -351,7 +406,7 @@ class _ServiceCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -362,10 +417,14 @@ class _ServiceCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.12),
+                  color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.handyman_rounded, color: AppColors.primary, size: 18),
+                child: Icon(
+                  Icons.handyman_rounded,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -384,36 +443,53 @@ class _ServiceCard extends StatelessWidget {
               ),
               IconButton(
                 onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.redAccent,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 10),
           Text(
             service.description,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.45),
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              height: 1.45,
+            ),
           ),
           const SizedBox(height: 14),
           Row(
             children: [
-              Icon(Icons.attach_money_rounded, color: AppColors.green, size: 16),
+              Icon(
+                Icons.attach_money_rounded,
+                color: AppColors.green,
+                size: 16,
+              ),
               Text(
                 '${service.price.toStringAsFixed(2)} MXN',
-                style: TextStyle(color: AppColors.green, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: AppColors.green,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(width: 14),
               Icon(Icons.schedule_rounded, color: AppColors.blue, size: 16),
               Expanded(
                 child: Text(
                   service.duration,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
                 ),
               ),
               Chip(
                 label: Text(service.active ? 'Activo' : 'Inactivo'),
                 backgroundColor: service.active
-                    ? AppColors.green.withOpacity(0.12)
-                    : Colors.white.withOpacity(0.08),
+                    ? AppColors.green.withValues(alpha: 0.12)
+                    : Colors.white.withValues(alpha: 0.08),
                 labelStyle: TextStyle(
                   color: service.active ? AppColors.green : AppColors.textMuted,
                   fontSize: 12,
@@ -441,7 +517,11 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off_rounded, color: Colors.redAccent, size: 42),
+            const Icon(
+              Icons.cloud_off_rounded,
+              color: Colors.redAccent,
+              size: 42,
+            ),
             const SizedBox(height: 12),
             Text(
               message,

@@ -34,7 +34,9 @@ class ProductCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(22),
+              ),
               child: Image.asset(
                 imagen,
                 height: 150,
@@ -61,7 +63,10 @@ class ProductCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       descripcion,
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -80,12 +85,17 @@ class ProductCard extends StatelessWidget {
                       children: [
                         Text(
                           "$stock / $total piezas",
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 11,
+                          ),
                         ),
                         Text(
                           stock > 0 ? "Disponible" : "Sin stock",
                           style: TextStyle(
-                            color: stock > 0 ? const Color(0xFF22C55E) : Colors.redAccent,
+                            color: stock > 0
+                                ? const Color(0xFF22C55E)
+                                : Colors.redAccent,
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                           ),

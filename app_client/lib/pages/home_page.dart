@@ -19,26 +19,25 @@ class TociTechApp extends StatefulWidget {
 class _TociTechAppState extends State<TociTechApp> {
   int _index = 0;
 
-  bool get _isLight => settingsController.value.themeMode == ClientThemeMode.light;
-  Color get _background => _isLight ? const Color(0xFFF7F8FC) : AppColors.background;
+  bool get _isLight =>
+      settingsController.value.themeMode == ClientThemeMode.light;
+  Color get _background =>
+      _isLight ? const Color(0xFFF7F8FC) : AppColors.background;
   Color get _surface => _isLight ? Colors.white : AppColors.surface;
-  Color get _controlSurface => _isLight ? const Color(0xFFF0F3FA) : AppColors.background;
-  Color get _textPrimary => _isLight ? const Color(0xFF171923) : AppColors.textPrimary;
+  Color get _controlSurface =>
+      _isLight ? const Color(0xFFF0F3FA) : AppColors.background;
+  Color get _textPrimary =>
+      _isLight ? const Color(0xFF171923) : AppColors.textPrimary;
   Color get _textSecondary =>
       _isLight ? const Color(0xB8171923) : AppColors.textSecondary;
 
-  final List _titulosAppBar = [
-    "TociTech",
-    "Productos",
-    "Servicios",
-    "Ajustes"
-  ];
+  final List _titulosAppBar = ["TociTech", "Productos", "Servicios", "Ajustes"];
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ClientSettings>(
       valueListenable: settingsController,
-      builder: (context, _, __) {
+      builder: (context, _, _) {
         return Scaffold(
           backgroundColor: _background,
           appBar: AppBar(
@@ -63,7 +62,10 @@ class _TociTechAppState extends State<TociTechApp> {
                   context,
                   MaterialPageRoute(builder: (_) => const NotificacionesPage()),
                 ),
-                icon: Icon(Icons.notifications_outlined, color: AppColors.primary),
+                icon: Icon(
+                  Icons.notifications_outlined,
+                  color: AppColors.primary,
+                ),
               ),
             ],
           ),
@@ -77,12 +79,14 @@ class _TociTechAppState extends State<TociTechApp> {
               decoration: BoxDecoration(
                 color: _surface,
                 borderRadius: BorderRadius.circular(20),
-                border: _isLight ? Border.all(color: const Color(0xFFE4E8F2)) : null,
+                border: _isLight
+                    ? Border.all(color: const Color(0xFFE4E8F2))
+                    : null,
                 boxShadow: [
                   BoxShadow(
                     color: _isLight
-                        ? const Color(0xFF1E293B).withOpacity(0.08)
-                        : Colors.black.withOpacity(0.4),
+                        ? const Color(0xFF1E293B).withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.4),
                     blurRadius: _isLight ? 18 : 10,
                     offset: _isLight ? const Offset(0, 8) : Offset.zero,
                   ),
@@ -92,10 +96,22 @@ class _TociTechAppState extends State<TociTechApp> {
                 currentIndex: _index,
                 onTap: (x) => setState(() => _index = x),
                 items: [
-                  BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: "Inicio"),
-                  BottomNavigationBarItem(icon: Icon(Icons.category_outlined), label: "Productos"),
-                  BottomNavigationBarItem(icon: Icon(Icons.handyman), label: "Servicios"),
-                  BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: "Ajustes"),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.home_outlined),
+                    label: "Inicio",
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.category_outlined),
+                    label: "Productos",
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.handyman),
+                    label: "Servicios",
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.settings_outlined),
+                    label: "Ajustes",
+                  ),
                 ],
                 iconSize: 24,
                 type: BottomNavigationBarType.fixed,
@@ -104,19 +120,24 @@ class _TociTechAppState extends State<TociTechApp> {
                 showUnselectedLabels: true,
                 selectedIconTheme: IconThemeData(color: AppColors.primary),
                 unselectedIconTheme: IconThemeData(
-                  color: _isLight ? const Color(0xFF6B7280) : const Color(0xFF8A8A93),
+                  color: _isLight
+                      ? const Color(0xFF6B7280)
+                      : const Color(0xFF8A8A93),
                 ),
                 selectedLabelStyle: TextStyle(fontSize: 12),
                 unselectedLabelStyle: TextStyle(fontSize: 12),
                 selectedItemColor: AppColors.primary,
-                unselectedItemColor: _isLight ? const Color(0xFF6B7280) : const Color(0xFFD6D6D6),
+                unselectedItemColor: _isLight
+                    ? const Color(0xFF6B7280)
+                    : const Color(0xFFD6D6D6),
               ),
             ),
           ),
 
           floatingActionButton: FloatingActionButton(
             onPressed: () => Navigator.push(
-              context,MaterialPageRoute(builder: (_) => const AiChatPage()),
+              context,
+              MaterialPageRoute(builder: (_) => const AiChatPage()),
             ),
             backgroundColor: AppColors.blue,
             child: Icon(Icons.smart_toy, size: 28, color: Colors.white),
@@ -128,11 +149,16 @@ class _TociTechAppState extends State<TociTechApp> {
 
   Widget? _contenido() {
     switch (_index) {
-      case 0:  return _buildHome();
-      case 1:  return const ProductsPage();
-      case 2:  return const ServiciosPage();
-      case 3:  return const AjustesPage();
-      default: return const Center(child: Text("Página no existe"));
+      case 0:
+        return _buildHome();
+      case 1:
+        return const ProductsPage();
+      case 2:
+        return const ServiciosPage();
+      case 3:
+        return const AjustesPage();
+      default:
+        return const Center(child: Text("Página no existe"));
     }
   }
 
@@ -145,7 +171,10 @@ class _TociTechAppState extends State<TociTechApp> {
         SizedBox(height: 28),
         _estadisticasSection(),
         SizedBox(height: 32),
-        _seccionTitulo("Nuestros Servicios", "Soluciones con precios claros y accesibles"),
+        _seccionTitulo(
+          "Nuestros Servicios",
+          "Soluciones con precios claros y accesibles",
+        ),
         SizedBox(height: 16),
         _serviciosHorizontal(),
         SizedBox(height: 32),
@@ -177,8 +206,10 @@ class _TociTechAppState extends State<TociTechApp> {
             children: [
               Icon(Icons.search, color: Color(0xFF8A8A93), size: 20),
               SizedBox(width: 10),
-              Text("Buscar producto...",
-                  style: TextStyle(color: Color(0xFF8A8A93), fontSize: 14)),
+              Text(
+                "Buscar producto...",
+                style: TextStyle(color: Color(0xFF8A8A93), fontSize: 14),
+              ),
             ],
           ),
         ),
@@ -197,7 +228,7 @@ class _TociTechAppState extends State<TociTechApp> {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundColor: AppColors.primary.withOpacity(0.15),
+                backgroundColor: AppColors.primary.withValues(alpha: 0.15),
                 child: Image.asset("assets/Logo-img.png"),
               ),
 
@@ -207,7 +238,8 @@ class _TociTechAppState extends State<TociTechApp> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("TociTech",
+                    Text(
+                      "TociTech",
                       style: TextStyle(
                         color: AppColors.primary,
                         fontSize: 13,
@@ -216,7 +248,8 @@ class _TociTechAppState extends State<TociTechApp> {
                       ),
                     ),
                     SizedBox(height: 2),
-                    Text("Soluciones tecnológicas\npara tu equipo",
+                    Text(
+                      "Soluciones tecnológicas\npara tu equipo",
                       style: TextStyle(
                         color: _textPrimary,
                         fontSize: 20,
@@ -232,12 +265,9 @@ class _TociTechAppState extends State<TociTechApp> {
 
           SizedBox(height: 14),
 
-          Text("Venta de hardware, reparación especializada y atención para que tu equipo rinda al máximo.",
-            style: TextStyle(
-                color: _textSecondary,
-                fontSize: 13,
-                height: 1.5
-            ),
+          Text(
+            "Venta de hardware, reparación especializada y atención para que tu equipo rinda al máximo.",
+            style: TextStyle(color: _textSecondary, fontSize: 13, height: 1.5),
           ),
 
           SizedBox(height: 20),
@@ -250,14 +280,14 @@ class _TociTechAppState extends State<TociTechApp> {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.blue,
                     padding: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   icon: Icon(Icons.grid_view_rounded, size: 16),
-                  label: Text("Ver productos",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13
-                      )
+                  label: Text(
+                    "Ver productos",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
                 ),
               ),
@@ -267,18 +297,25 @@ class _TociTechAppState extends State<TociTechApp> {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => setState(() => _index = 2),
-                  icon: Icon(Icons.handyman_rounded, size: 16, color: Colors.black87),
-                  label: Text("Ver servicios",
+                  icon: Icon(
+                    Icons.handyman_rounded,
+                    size: 16,
+                    color: Colors.black87,
+                  ),
+                  label: Text(
+                    "Ver servicios",
                     style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                        fontSize: 13
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      fontSize: 13,
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
                     backgroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     side: BorderSide.none,
                   ),
                 ),
@@ -295,38 +332,60 @@ class _TociTechAppState extends State<TociTechApp> {
       padding: EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          _statCard(Icons.star_rounded, "4.9", "Calificación", Color(0xFFFFD54F)),
+          _statCard(
+            Icons.star_rounded,
+            "4.9",
+            "Calificación",
+            Color(0xFFFFD54F),
+          ),
           SizedBox(width: 12),
-          _statCard(Icons.people_rounded, "500+", "Clientes", AppColors.primary),
+          _statCard(
+            Icons.people_rounded,
+            "500+",
+            "Clientes",
+            AppColors.primary,
+          ),
           SizedBox(width: 12),
-          _statCard(Icons.build_circle_rounded, "1000+", "Reparaciones", AppColors.blue),
+          _statCard(
+            Icons.build_circle_rounded,
+            "1000+",
+            "Reparaciones",
+            AppColors.blue,
+          ),
         ],
       ),
     );
   }
 
-  Widget _statCard(IconData icon, String titulo, String descripcion, Color color) {
+  Widget _statCard(
+    IconData icon,
+    String titulo,
+    String descripcion,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: _surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
             Icon(icon, color: color, size: 22),
             SizedBox(height: 6),
-            Text(titulo,
+            Text(
+              titulo,
               style: TextStyle(
-                  color: _textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14
+                color: _textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
               ),
             ),
             SizedBox(height: 2),
-            Text(descripcion,
+            Text(
+              descripcion,
               style: TextStyle(color: _textSecondary, fontSize: 11),
               textAlign: TextAlign.center,
             ),
@@ -342,7 +401,8 @@ class _TociTechAppState extends State<TociTechApp> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(titulo,
+          Text(
+            titulo,
             style: TextStyle(
               color: _textPrimary,
               fontSize: 20,
@@ -350,7 +410,8 @@ class _TociTechAppState extends State<TociTechApp> {
             ),
           ),
           SizedBox(height: 4),
-          Text(subtitulo,
+          Text(
+            subtitulo,
             style: TextStyle(color: _textSecondary, fontSize: 13),
           ),
         ],
@@ -363,14 +424,16 @@ class _TociTechAppState extends State<TociTechApp> {
     final servicios = [
       {
         "titulo": "Diagnóstico técnico",
-        "descripcion": "Revisión completa para detectar fallas de hardware o software.",
+        "descripcion":
+            "Revisión completa para detectar fallas de hardware o software.",
         "imagen": "assets/servicio1.png",
         "precio": 150,
         "tiempo": "1-2",
       },
       {
         "titulo": "Mantenimiento Preventivo",
-        "descripcion": "Limpieza y optimización para prolongar la vida útil del equipo.",
+        "descripcion":
+            "Limpieza y optimización para prolongar la vida útil del equipo.",
         "imagen": "assets/servicio2.png",
         "precio": 350,
         "tiempo": "1",
@@ -390,7 +453,7 @@ class _TociTechAppState extends State<TociTechApp> {
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 20),
         itemCount: servicios.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 14),
+        separatorBuilder: (_, _) => const SizedBox(width: 14),
         itemBuilder: (context, i) {
           final s = servicios[i];
           return SizedBox(
@@ -415,11 +478,26 @@ class _TociTechAppState extends State<TociTechApp> {
       padding: EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          _horarioRow(Icons.wb_sunny_outlined, "Lunes a Viernes", "9:00 AM – 7:00 PM", AppColors.primary),
+          _horarioRow(
+            Icons.wb_sunny_outlined,
+            "Lunes a Viernes",
+            "9:00 AM – 7:00 PM",
+            AppColors.primary,
+          ),
           SizedBox(height: 10),
-          _horarioRow(Icons.wb_twilight_outlined, "Sábado", "9:00 AM – 2:00 PM", AppColors.blue),
+          _horarioRow(
+            Icons.wb_twilight_outlined,
+            "Sábado",
+            "9:00 AM – 2:00 PM",
+            AppColors.blue,
+          ),
           SizedBox(height: 10),
-          _horarioRow(Icons.bedtime_outlined, "Domingo", "Cerrado", Colors.grey),
+          _horarioRow(
+            Icons.bedtime_outlined,
+            "Domingo",
+            "Cerrado",
+            Colors.grey,
+          ),
         ],
       ),
     );
@@ -431,14 +509,14 @@ class _TociTechAppState extends State<TociTechApp> {
       decoration: BoxDecoration(
         color: _surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.25)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
           Container(
             padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 20),
@@ -447,16 +525,18 @@ class _TociTechAppState extends State<TociTechApp> {
           SizedBox(width: 14),
 
           Expanded(
-            child: Text(dia,
+            child: Text(
+              dia,
               style: TextStyle(
-                  color: _textPrimary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14
+                color: _textPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
             ),
           ),
 
-          Text(horario,
+          Text(
+            horario,
             style: TextStyle(
               color: horario == "Cerrado" ? Colors.grey : _textSecondary,
               fontSize: 13,

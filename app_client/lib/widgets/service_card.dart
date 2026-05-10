@@ -60,7 +60,11 @@ class ServiceCard extends StatelessWidget {
 
                   Text(
                     descripcion,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -70,10 +74,18 @@ class ServiceCard extends StatelessWidget {
                   // Precio y tiempo
                   Row(
                     children: [
-                      const Icon(Icons.attach_money_rounded, color: Color(0xFF00E676), size: 16),
+                      const Icon(
+                        Icons.attach_money_rounded,
+                        color: Color(0xFF00E676),
+                        size: 16,
+                      ),
                       Text(
                         "Desde \$$precio MXN",
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -82,11 +94,18 @@ class ServiceCard extends StatelessWidget {
 
                   Row(
                     children: [
-                      const Icon(Icons.schedule_rounded, color: Color(0xFF42A5F5), size: 16),
+                      const Icon(
+                        Icons.schedule_rounded,
+                        color: Color(0xFF42A5F5),
+                        size: 16,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         "$tiempo días hábiles",
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -100,10 +119,18 @@ class ServiceCard extends StatelessWidget {
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.blue,
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       icon: const Icon(Icons.handyman_rounded, size: 14),
-                      label: Text(textoBoton, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      label: Text(
+                        textoBoton,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
                   ),
                 ],

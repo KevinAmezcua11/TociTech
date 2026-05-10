@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:tocitech/pages/mis_pedidos_page.dart';
 
+import '../services/auth_service.dart';
 import '../services/settings_preferences.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_snackbar.dart';
 import 'login_page.dart';
 
 class AjustesPage extends StatefulWidget {
@@ -15,15 +17,19 @@ class AjustesPage extends StatefulWidget {
 class _AjustesPageState extends State<AjustesPage> {
   bool _saving = false;
 
-  bool get _isLight => settingsController.value.themeMode == ClientThemeMode.light;
-  Color get _background => _isLight ? const Color(0xFFF7F8FC) : AppColors.background;
+  bool get _isLight =>
+      settingsController.value.themeMode == ClientThemeMode.light;
+  Color get _background =>
+      _isLight ? const Color(0xFFF7F8FC) : AppColors.background;
   Color get _surface => _isLight ? const Color(0xFFFFFFFF) : AppColors.surface;
-  Color get _controlSurface => _isLight ? const Color(0xFFF0F3FA) : AppColors.background;
-  Color get _textPrimary => _isLight ? const Color(0xFF171923) : AppColors.textPrimary;
+  Color get _controlSurface =>
+      _isLight ? const Color(0xFFF0F3FA) : AppColors.background;
+  Color get _textPrimary =>
+      _isLight ? const Color(0xFF171923) : AppColors.textPrimary;
   Color get _textSecondary =>
       _isLight ? const Color(0xB8171923) : AppColors.textSecondary;
   Color get _borderColor =>
-      _isLight ? const Color(0xFFE4E8F2) : Colors.white.withOpacity(0.07);
+      _isLight ? const Color(0xFFE4E8F2) : Colors.white.withValues(alpha: 0.07);
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +92,7 @@ class _AjustesPageState extends State<AjustesPage> {
                   child: SwitchListTile(
                     value: settings.notificationsEnabled,
                     onChanged: _updateNotifications,
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                     contentPadding: EdgeInsets.zero,
                     title: Text(
                       'Recibir notificaciones',
@@ -126,6 +132,8 @@ class _AjustesPageState extends State<AjustesPage> {
   }
 
   Widget _profileSection() {
+    final user = authService.currentUser;
+
     return _settingsCard(
       icon: Icons.person_outline_rounded,
       title: 'Perfil y seguridad',
@@ -136,7 +144,7 @@ class _AjustesPageState extends State<AjustesPage> {
             children: [
               CircleAvatar(
                 radius: 34,
-                backgroundColor: AppColors.primary.withOpacity(0.16),
+                backgroundColor: AppColors.primary.withValues(alpha: 0.16),
                 child: Icon(Icons.person, color: AppColors.primary, size: 42),
               ),
               const SizedBox(width: 16),
@@ -145,7 +153,7 @@ class _AjustesPageState extends State<AjustesPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Juanito03',
+                      user?.displayName ?? 'Usuario',
                       style: TextStyle(
                         color: _textPrimary,
                         fontSize: 18,
@@ -154,7 +162,9 @@ class _AjustesPageState extends State<AjustesPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Reparaciones: 3  Compras: 5',
+                      user?.email.isNotEmpty == true
+                          ? user!.email
+                          : 'Sesion activa',
                       style: TextStyle(color: _textSecondary, fontSize: 13),
                     ),
                   ],
@@ -173,7 +183,10 @@ class _AjustesPageState extends State<AjustesPage> {
                 );
               },
               icon: Icon(Icons.more_horiz, color: _textPrimary),
-              label: Text('Mas detalles', style: TextStyle(color: _textPrimary)),
+              label: Text(
+                'Mas detalles',
+                style: TextStyle(color: _textPrimary),
+              ),
             ),
           ),
         ],
@@ -197,7 +210,7 @@ class _AjustesPageState extends State<AjustesPage> {
         boxShadow: _isLight
             ? [
                 BoxShadow(
-                  color: const Color(0xFF1E293B).withOpacity(0.06),
+                  color: const Color(0xFF1E293B).withValues(alpha: 0.06),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
@@ -213,8 +226,8 @@ class _AjustesPageState extends State<AjustesPage> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: _isLight
-                      ? AppColors.primary.withOpacity(0.10)
-                      : AppColors.primary.withOpacity(0.12),
+                      ? AppColors.primary.withValues(alpha: 0.10)
+                      : AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: AppColors.primary, size: 18),
@@ -289,7 +302,9 @@ class _AjustesPageState extends State<AjustesPage> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: TextStyle(color: _textSecondary))),
+          Expanded(
+            child: Text(label, style: TextStyle(color: _textSecondary)),
+          ),
           Text(
             value,
             style: TextStyle(color: _textPrimary, fontWeight: FontWeight.w600),
@@ -306,10 +321,16 @@ class _AjustesPageState extends State<AjustesPage> {
       child: OutlinedButton.icon(
         onPressed: () => _confirmarCierreSesion(context),
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: Colors.red.withOpacity(0.5)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          side: BorderSide(color: Colors.red.withValues(alpha: 0.5)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
-        icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
+        icon: const Icon(
+          Icons.logout_rounded,
+          color: Colors.redAccent,
+          size: 20,
+        ),
         label: const Text(
           'Cerrar sesion',
           style: TextStyle(
@@ -323,7 +344,10 @@ class _AjustesPageState extends State<AjustesPage> {
   }
 
   Future<void> _updateTheme(ClientThemeMode themeMode) async {
-    await _saveSetting(() => settingsController.setTheme(themeMode), 'Tema aplicado.');
+    await _saveSetting(
+      () => settingsController.setTheme(themeMode),
+      'Tema aplicado.',
+    );
   }
 
   Future<void> _updateNotifications(bool enabled) async {
@@ -333,7 +357,10 @@ class _AjustesPageState extends State<AjustesPage> {
     );
   }
 
-  Future<void> _saveSetting(Future<void> Function() action, String message) async {
+  Future<void> _saveSetting(
+    Future<void> Function() action,
+    String message,
+  ) async {
     if (_saving) return;
     setState(() => _saving = true);
 
@@ -353,12 +380,11 @@ class _AjustesPageState extends State<AjustesPage> {
   }
 
   void _showMessage(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.redAccent : AppColors.green,
-      ),
-    );
+    if (isError) {
+      AppSnackBar.error(context, message);
+    } else {
+      AppSnackBar.success(context, message);
+    }
   }
 
   void _confirmarCierreSesion(BuildContext context) {
@@ -378,8 +404,11 @@ class _AjustesPageState extends State<AjustesPage> {
             child: Text('Cancelar', style: TextStyle(color: _textSecondary)),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
+              await authService.logout();
+              if (!context.mounted) return;
+              AppSnackBar.success(context, 'Sesion cerrada correctamente.');
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginPage()),

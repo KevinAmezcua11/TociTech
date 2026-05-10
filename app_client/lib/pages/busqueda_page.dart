@@ -11,8 +11,12 @@ class BusquedaPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
-        title: Text("Buscar",
-          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+        title: Text(
+          "Buscar",
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
@@ -20,7 +24,8 @@ class BusquedaPage extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(height: 30),
-            Text("¿En qué te podemos ayudar?",
+            Text(
+              "¿En qué te podemos ayudar?",
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 22,
@@ -39,7 +44,10 @@ class BusquedaPage extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 8),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.4),
+                      blurRadius: 8,
+                    ),
                   ],
                 ),
                 child: Row(
@@ -47,7 +55,10 @@ class BusquedaPage extends StatelessWidget {
                     SizedBox(width: 15),
                     Icon(Icons.search, color: Colors.grey),
                     SizedBox(width: 10),
-                    Text("Buscar producto...", style: TextStyle(color: Colors.grey)),
+                    Text(
+                      "Buscar producto...",
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ],
                 ),
               ),
@@ -55,7 +66,8 @@ class BusquedaPage extends StatelessWidget {
 
             SizedBox(height: 40),
 
-            Text("TENDENCIA EN VENTAS",
+            Text(
+              "TENDENCIA EN VENTAS",
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 18,
@@ -75,7 +87,8 @@ class BusquedaPage extends StatelessWidget {
                 children: [
                   _cardProducto(
                     imagen: "assets/asusdual.png",
-                    titulo: "Asus DUAL-RTX3050-06G GeForce 6GB GDDR6/PCI-E 4.0/HDMI/DP/Negro",
+                    titulo:
+                        "Asus DUAL-RTX3050-06G GeForce 6GB GDDR6/PCI-E 4.0/HDMI/DP/Negro",
                   ),
                   SizedBox(width: 20),
                   _cardProducto(
@@ -85,7 +98,8 @@ class BusquedaPage extends StatelessWidget {
                   SizedBox(width: 20),
                   _cardProducto(
                     imagen: "assets/mouseacteck.png",
-                    titulo: "Mouse Inalambrico Acteck Optimize MI240 / USB / Optico / 1600 DPI",
+                    titulo:
+                        "Mouse Inalambrico Acteck Optimize MI240 / USB / Optico / 1600 DPI",
                   ),
                 ],
               ),
@@ -95,7 +109,8 @@ class BusquedaPage extends StatelessWidget {
 
             // Categorías
             Wrap(
-              spacing: 15, runSpacing: 15,
+              spacing: 15,
+              runSpacing: 15,
               alignment: WrapAlignment.center,
               children: [
                 _categoriaButton("Teclado"),
