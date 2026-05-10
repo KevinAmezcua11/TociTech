@@ -104,21 +104,36 @@ function getProductEmailContent(order) {
           <!-- FOOTER -->
           <tr>
             <td style="background:#f8f9fc;padding:20px 30px;text-align:center;border-top:1px solid #eee;">
-              <div style="margin-bottom:14px;">
+
+              <div style="margin-bottom:14px;text-align:center;">
                 <a 
                   href="https://instagram.com/toci.tech"
                   target="_blank"
-                  style="text-decoration:none;"
+                  style="
+                    text-decoration:none;
+                    color:#E1306C;
+                    font-size:14px;
+                    font-weight:bold;
+                    display:inline-flex;
+                    align-items:center;
+                    gap:8px;
+                  "
                 >
                   <img
-                    src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png"
+                    src="https://www.svgrepo.com/show/452229/instagram-1.svg"
                     alt="Instagram"
-                    width="28"
-                    height="28"
-                    style="display:inline-block;"
+                    width="22"
+                    height="22"
+                    style="
+                      vertical-align:middle;
+                      border:0;
+                      outline:none;
+                    "
                   />
+                  <span>Síguenos en Instagram: @toci.tech</span>
                 </a>
               </div>
+
               <p style="margin:0;font-size:12px;color:#aaa;">
                 Este correo fue generado automáticamente · TociTech &copy; ${new Date().getFullYear()}
               </p>
