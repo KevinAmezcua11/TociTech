@@ -5,6 +5,7 @@ import '../../../models/order_model.dart';
 import '../../../services/api_service.dart';
 import '../../../services/order_service.dart';
 import '../../../theme/app_theme.dart';
+import '../../pages/main/home_page.dart';
 
 class MisPedidosPage extends StatefulWidget {
   const MisPedidosPage({super.key});
@@ -48,66 +49,74 @@ class _MisPedidosPageState extends State<MisPedidosPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        title: const Text(
-          'Mis Pedidos',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const TociTechApp(),
           ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: _fetchOrders,
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.primary),
+              (route) => false,
+        );
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.surface,
+          iconTheme: const IconThemeData(color: AppColors.textPrimary),
+          title: const Text(
+            'Mis Pedidos',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.primary,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.textMuted,
-          tabs: [
-            Tab(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.inventory_2_outlined, size: 16),
-                  const SizedBox(width: 6),
-                  Text('Productos (${_productOrders.length})'),
-                ],
-              ),
-            ),
-            Tab(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.handyman_outlined, size: 16),
-                  const SizedBox(width: 6),
-                  Text('Servicios (${_serviceOrders.length})'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      body: _controller.isLoading && _controller.orders.isEmpty
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary))
-          : _controller.errorMessage != null && _controller.orders.isEmpty
-              ? _errorView()
-              : TabBarView(
-                  controller: _tabController,
+          bottom: TabBar(
+            controller: _tabController,
+            indicatorColor: AppColors.primary,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textMuted,
+            tabs: [
+              Tab(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _OrderList(orders: _productOrders),
-                    _OrderList(orders: _serviceOrders),
+                    const Icon(Icons.inventory_2_outlined, size: 16),
+                    const SizedBox(width: 6),
+                    Text('Productos (${_productOrders.length})'),
                   ],
                 ),
+              ),
+              Tab(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.handyman_outlined, size: 16),
+                    const SizedBox(width: 6),
+                    Text('Servicios (${_serviceOrders.length})'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        body: _controller.isLoading && _controller.orders.isEmpty
+            ? const Center(
+                child: CircularProgressIndicator(color: AppColors.primary))
+            : _controller.errorMessage != null && _controller.orders.isEmpty
+                ? _errorView()
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _OrderList(orders: _productOrders),
+                      _OrderList(orders: _serviceOrders),
+                    ],
+                  ),
+      ),
     );
   }
 
