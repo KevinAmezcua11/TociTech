@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:tocitech/ui/pages/main/mis_pedidos_page.dart';
 import '../../../services/api_service.dart';
 import '../../../services/payment_service.dart';
 import '../../../database/local/cart_local_service.dart';
@@ -321,7 +322,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               const SizedBox(height: 32),
               FilledButton.icon(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MisPedidosPage())),
                 icon: const Icon(Icons.receipt_long_rounded),
                 label: const Text('Ver mis pedidos',
                     style: TextStyle(

@@ -128,6 +128,7 @@ function getProductEmailContent(order) {
                       vertical-align:middle;
                       border:0;
                       outline:none;
+                      margin-right:8px;
                     "
                   />
                   <span>Síguenos en Instagram: @toci.tech</span>
