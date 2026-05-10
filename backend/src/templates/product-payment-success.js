@@ -104,6 +104,21 @@ function getProductEmailContent(order) {
           <!-- FOOTER -->
           <tr>
             <td style="background:#f8f9fc;padding:20px 30px;text-align:center;border-top:1px solid #eee;">
+              <div style="margin-bottom:14px;">
+                <a 
+                  href="https://instagram.com/tocitech"
+                  target="_blank"
+                  style="text-decoration:none;"
+                >
+                  <img
+                    src="https://www.flaticon.es/icono-gratis/instagram_4138124?term=instagram&page=1&position=14&origin=search&related_id=4138124"
+                    alt="Instagram"
+                    width="28"
+                    height="28"
+                    style="display:inline-block;"
+                  />
+                </a>
+              </div>
               <p style="margin:0;font-size:12px;color:#aaa;">
                 Este correo fue generado automáticamente · TociTech &copy; ${new Date().getFullYear()}
               </p>
