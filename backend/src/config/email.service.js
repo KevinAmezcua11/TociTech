@@ -2,6 +2,9 @@ const sgMail = require('@sendgrid/mail');
 const { getProductEmailContent } = require('../templates/product-payment-success');
 const { getServiceEmailContent } = require('../templates/service-request');
 
+console.log("SENDGRID_API_KEY:", process.env.SENDGRID_API_KEY);
+console.log("SENDGRID_FROM_EMAIL:", process.env.SENDGRID_FROM_EMAIL);
+
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 async function sendEmail({ to, subject, html, text }) {
