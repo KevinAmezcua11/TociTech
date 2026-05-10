@@ -1,4 +1,5 @@
 const Order = require('../models/order.model');
+const emailService = require('../services/email.service');
 
 // Obtener pedidos del usuario autenticado (app client)
 async function getMyOrders(req, res) {
@@ -41,6 +42,10 @@ async function getById(req, res) {
 async function createOrder(req, res) {
     try {
         const created = await Order.createOrder(req.body);
+
+        if (created.type === 'service' && created.customer?.email) {
+            emailService.sendServiceRequestEmail(created).catch(() => {});
+        }
 
         res.status(201).json(created);
 

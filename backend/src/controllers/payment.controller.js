@@ -4,6 +4,7 @@ const db = require('../config/firebase');
 const Product = require('../models/product.model');
 const User = require('../models/user.model');
 const { EstadoPago, EstadoPedido } = require('../models/order.model');
+const emailService = require('../services/email.service');
 
 async function createPaymentIntent(req, res) {
     try {
@@ -226,6 +227,14 @@ async function manejarPagoExitoso(paymentIntent) {
         message: `Venta por $${pedido.total?.toFixed(2)} MXN confirmada. Pedido: ${pedidoDoc.id}`,
         orderId: pedidoDoc.id,
         amount: pedido.total
+    });
+
+    // Correo de confirmación de compra al cliente
+    await emailService.sendProductPurchaseEmail({
+        id: pedidoDoc.id,
+        customer: pedido.customer,
+        items: pedido.items,
+        total: pedido.total
     });
 }
 
