@@ -1,5 +1,5 @@
 const Order = require('../models/order.model');
-const emailService = require('../services/email.service');
+const emailService = require('../config/email.service');
 
 // Obtener pedidos del usuario autenticado (app client)
 async function getMyOrders(req, res) {
