@@ -34,7 +34,7 @@ export default function Customers() {
 
     const getActiveOrders = (clientId) => {
         return orders.filter(o =>
-            (o.status === "pending" || o.status === "in_progress") &&
+            (o.estadoPedido === "PENDIENTE" || o.estadoPedido === "EN_PROGRESO") &&
             o.customerId === clientId
         ).length;
     };

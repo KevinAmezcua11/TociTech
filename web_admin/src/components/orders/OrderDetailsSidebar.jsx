@@ -1,8 +1,11 @@
+import { useState } from "react";
 import {
     X, User, Package, Wrench, Calendar, DollarSign, Tag,
-    Cpu, AlertCircle, StickyNote, Clock, CreditCard,
+    Cpu, AlertCircle, Clock, CreditCard, Phone, Mail,
+    Zap, Lock, ChevronDown, Loader2,
 } from "lucide-react";
-import { PaymentBadge, PedidoBadge } from "./PaymentBadge";
+import { PaymentBadge, PedidoBadge, PAGO_CONFIG } from "./PaymentBadge";
+import { updateOrder } from "../../api/orderService";
 
 // Convierte Firestore Timestamp serializado { _seconds, _nanoseconds } o Date a Date
 const toDate = (v) => {
@@ -10,14 +13,6 @@ const toDate = (v) => {
     if (v instanceof Date) return v;
     if (v._seconds != null) return new Date(v._seconds * 1000);
     return new Date(v);
-};
-
-// Normaliza status en inglés a EstadoPedido en español (compatibilidad con pedidos anteriores)
-const STATUS_TO_PEDIDO = {
-    pending:     "PENDIENTE",
-    in_progress: "EN_PROGRESO",
-    completed:   "COMPLETADO",
-    cancelled:   "CANCELADO",
 };
 
 // Subcomponente de sección reutilizable (mantiene estilo existente)
@@ -33,13 +28,39 @@ const Section = ({ icon: Icon, label, children }) => (
 
 const Divider = () => <div className="h-px bg-white/5" />;
 
-export default function OrderDetailsSidebar({ order, onClose }) {
+export default function OrderDetailsSidebar({ order, onClose, onUpdated }) {
+    const [localEstadoPago, setLocalEstadoPago] = useState(
+        order?.estadoPago || "PENDIENTE"
+    );
+    const [savingPago, setSavingPago]     = useState(false);
+    const [pagoError,  setPagoError]      = useState(null);
+
     if (!order) return null;
 
+    const isProduct    = order.type === "product";
+    const isService    = order.type === "service";
     const total        = order.total ?? order.finalPrice ?? order.service?.basePrice;
-    const estadoPedido = order.estadoPedido || STATUS_TO_PEDIDO[order.status] || "PENDIENTE";
+    const estadoPedido = order.estadoPedido || "PENDIENTE";
     const paidAt       = toDate(order.paidAt);
-    const hasPayment   = Boolean(order.estadoPago || order.paymentIntentId);
+    // Productos: mostrar sección solo si tiene datos de Stripe
+    // Servicios: mostrar siempre para permitir gestión manual
+    const showPaymentCard = isService || Boolean(order.estadoPago || order.paymentIntentId);
+
+    const handlePagoChange = async (nuevoEstado) => {
+        if (!isService || savingPago || nuevoEstado === localEstadoPago) return;
+        setSavingPago(true);
+        setPagoError(null);
+        try {
+            await updateOrder(order.id, { estadoPago: nuevoEstado });
+            setLocalEstadoPago(nuevoEstado);
+            onUpdated?.();
+        } catch (err) {
+            console.error(err);
+            setPagoError("No se pudo actualizar el estado de pago.");
+        } finally {
+            setSavingPago(false);
+        }
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex">
@@ -65,14 +86,28 @@ export default function OrderDetailsSidebar({ order, onClose }) {
                     {/* Información general */}
                     <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 space-y-4">
                         <Section icon={User} label="Cliente">
-                            {order.customer?.name || "—"}
+                            <div className="space-y-1.5">
+                                <span>{order.customer?.name || "—"}</span>
+                                {order.customer?.email && (
+                                    <div className="flex items-center gap-1.5">
+                                        <Mail size={12} className="text-muted flex-shrink-0" />
+                                        <span className="text-secondary text-xs">{order.customer.email}</span>
+                                    </div>
+                                )}
+                                {order.customer?.phone && (
+                                    <div className="flex items-center gap-1.5">
+                                        <Phone size={12} className="text-muted flex-shrink-0" />
+                                        <span className="text-secondary text-xs">{order.customer.phone}</span>
+                                    </div>
+                                )}
+                            </div>
                         </Section>
 
                         <Divider />
 
                         <Section icon={Tag} label="Tipo">
                             <span className="inline-flex items-center gap-1.5">
-                                {order.type === "product"
+                                {isProduct
                                     ? <><Package size={13} className="text-primary" /> Producto</>
                                     : <><Wrench  size={13} className="text-primary" /> Servicio</>
                                 }
@@ -102,25 +137,91 @@ export default function OrderDetailsSidebar({ order, onClose }) {
                         </Section>
                     </div>
 
-                    {/* ── Información de pago (solo cuando existe estadoPago o paymentIntentId) ── */}
-                    {hasPayment && (
+                    {/* ── Información de pago ── */}
+                    {showPaymentCard && (
                         <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 space-y-4">
+
                             {/* Encabezado de sección */}
-                            <div className="flex items-center gap-2">
-                                <div className="p-1.5 bg-primary/10 rounded-md border border-primary/20">
-                                    <CreditCard size={13} className="text-primary" />
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 bg-primary/10 rounded-md border border-primary/20">
+                                        <CreditCard size={13} className="text-primary" />
+                                    </div>
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-white">
+                                        Información de pago
+                                    </p>
                                 </div>
-                                <p className="text-xs font-semibold uppercase tracking-wider text-white">
-                                    Información de pago
-                                </p>
+                                {/* Badge que indica el origen del pago */}
+                                {isProduct && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#635bff]/10 border border-[#635bff]/20 text-[10px] font-medium text-[#a09bff]">
+                                        <Zap size={9} /> Stripe
+                                    </span>
+                                )}
+                                {isService && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-medium text-muted">
+                                        Pago presencial
+                                    </span>
+                                )}
                             </div>
 
                             <Divider />
 
-                            <Section icon={CreditCard} label="Estado del pago">
-                                <PaymentBadge estadoPago={order.estadoPago} />
-                            </Section>
+                            {/* ── PRODUCTO: solo lectura, Stripe controla ── */}
+                            {isProduct && (
+                                <>
+                                    <Section icon={CreditCard} label="Estado del pago">
+                                        <PaymentBadge estadoPago={order.estadoPago} />
+                                    </Section>
 
+                                    <div className="flex items-center gap-2.5 px-3 py-2.5 bg-[#635bff]/[0.06] border border-[#635bff]/15 rounded-lg mt-1">
+                                        <Lock size={12} className="text-[#a09bff] flex-shrink-0" />
+                                        <p className="text-xs text-[#c0bbff] leading-relaxed">
+                                            Gestionado automáticamente por Stripe.
+                                            El admin no puede modificar este estado.
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* ── SERVICIO: editable por el admin ── */}
+                            {isService && (
+                                <Section icon={CreditCard} label="Estado del pago">
+                                    <div className="space-y-2">
+                                        <div className="relative">
+                                            <select
+                                                value={localEstadoPago}
+                                                onChange={(e) => handlePagoChange(e.target.value)}
+                                                disabled={savingPago}
+                                                className="w-full bg-white/5 border border-white/10 text-white text-xs p-2.5 pl-3 pr-8 rounded-lg outline-none focus:border-primary/50 transition-colors appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {Object.entries(PAGO_CONFIG).map(([key, cfg]) => (
+                                                    <option key={key} value={key} className="bg-[#1A1A22] text-white">
+                                                        {cfg.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
+                                                {savingPago
+                                                    ? <Loader2 size={13} className="animate-spin" />
+                                                    : <ChevronDown size={13} />
+                                                }
+                                            </div>
+                                        </div>
+
+                                        {pagoError && (
+                                            <p className="text-xs text-red-400">{pagoError}</p>
+                                        )}
+
+                                        {/* Preview del badge seleccionado */}
+                                        <div className="flex items-center gap-2 text-xs text-muted">
+                                            <span>Vista previa:</span>
+                                            <PaymentBadge estadoPago={localEstadoPago} />
+                                        </div>
+                                    </div>
+                                </Section>
+                            )}
+
+                            {/* ── Datos de Stripe (solo productos con paymentIntentId) ── */}
                             {order.paymentIntentId && (
                                 <>
                                     <Divider />
@@ -143,7 +244,7 @@ export default function OrderDetailsSidebar({ order, onClose }) {
                                 </>
                             )}
 
-                            {order.estadoPago === "PAGADO" && total != null && (
+                            {(order.estadoPago === "PAGADO" || localEstadoPago === "PAGADO") && total != null && (
                                 <>
                                     <Divider />
                                     <Section icon={DollarSign} label="Total pagado">
@@ -157,7 +258,7 @@ export default function OrderDetailsSidebar({ order, onClose }) {
                     )}
 
                     {/* ── Productos comprados ── */}
-                    {order.type === "product" && (
+                    {isProduct && (
                         <div className="space-y-3">
                             <div className="flex items-center gap-1.5 text-muted">
                                 <Package size={12} />
@@ -188,7 +289,6 @@ export default function OrderDetailsSidebar({ order, onClose }) {
                                 ))}
                             </div>
 
-                            {/* Total de productos */}
                             {total != null && (
                                 <div className="flex items-center justify-between px-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl">
                                     <span className="text-sm text-secondary font-medium">Total</span>
@@ -201,7 +301,7 @@ export default function OrderDetailsSidebar({ order, onClose }) {
                     )}
 
                     {/* ── Detalle de servicio ── */}
-                    {order.type === "service" && (
+                    {isService && (
                         <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 space-y-4">
                             <Section icon={Wrench} label="Servicio">
                                 {order.service?.name || "—"}
@@ -218,15 +318,6 @@ export default function OrderDetailsSidebar({ order, onClose }) {
                             <Section icon={AlertCircle} label="Problema">
                                 {order.problem || "—"}
                             </Section>
-
-                            {order.notes && (
-                                <>
-                                    <Divider />
-                                    <Section icon={StickyNote} label="Notas">
-                                        {order.notes}
-                                    </Section>
-                                </>
-                            )}
 
                             {order.scheduledDate && (
                                 <>

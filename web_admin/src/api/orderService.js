@@ -27,7 +27,7 @@ export const updateOrder = async (id, data) => {
 // Cancelar pedido
 export const cancelOrder = async (id) => {
     const res = await api.put(`/orders/${id}`, {
-        status: "cancelled"
+        estadoPedido: "CANCELADO"
     });
     return res.data;
 };

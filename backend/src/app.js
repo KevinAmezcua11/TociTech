@@ -10,6 +10,7 @@ const ordersRoutes = require("./routes/order.route");
 const usersRoutes = require("./routes/user.route");
 const aiRoute = require("./routes/ai.routes");
 const paymentRoutes = require("./routes/payment.routes");
+const notificationRoutes = require("./routes/notification.route");
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use("/api/orders", ordersRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/chat", aiRoute);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

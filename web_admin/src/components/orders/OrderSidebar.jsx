@@ -7,14 +7,13 @@ import CustomSelect from "../CustomSelect";
 import {
     X, ShoppingBag, User, Users, UserPlus, Package, Wrench,
     Plus, Trash2, Phone, Mail, Hash, Loader2,
-    Laptop, AlertCircle, FileText, Calendar,
+    Laptop, AlertCircle, Calendar,
 } from "lucide-react";
 
 const DEFAULT_SERVICE_FORM = {
     serviceId:     "",
     equipment:     "",
     problem:       "",
-    notes:         "",
     scheduledDate: "",
 };
 
@@ -91,7 +90,6 @@ export default function OrderSidebar({ onClose, onCreated }) {
                 payload.serviceId     = serviceForm.serviceId;
                 payload.equipment     = serviceForm.equipment;
                 payload.problem       = serviceForm.problem;
-                payload.notes         = serviceForm.notes;
                 payload.scheduledDate = serviceForm.scheduledDate || null;
             }
 
@@ -331,23 +329,6 @@ export default function OrderSidebar({ onClose, onCreated }) {
                                 />
                             </div>
 
-                            {/* Notas */}
-                            <div className="space-y-1.5">
-                                <span className="text-xs text-muted flex items-center gap-1.5">
-                                    <FileText size={11} /> Notas adicionales
-                                    <span className="text-white/20 font-normal normal-case tracking-normal">(opcional)</span>
-                                </span>
-                                <div className="relative">
-                                    <FileText size={14} className="absolute left-3 top-3 text-muted" />
-                                    <textarea
-                                        rows={2}
-                                        placeholder="Observaciones, instrucciones especiales..."
-                                        value={serviceForm.notes}
-                                        onChange={(e) => setSF("notes", e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 text-white text-sm p-2.5 pl-9 rounded-lg outline-none placeholder:text-muted focus:border-primary/50 transition-colors resize-none"
-                                    />
-                                </div>
-                            </div>
                         </div>
                     )}
                 </div>

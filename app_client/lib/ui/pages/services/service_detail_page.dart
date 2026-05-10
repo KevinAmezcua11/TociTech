@@ -16,7 +16,10 @@ class ServiceDetailPage extends StatefulWidget {
 }
 
 class _ServiceDetailPageState extends State<ServiceDetailPage> {
+  final TextEditingController _equipmentController = TextEditingController();
   final TextEditingController _problemController = TextEditingController();
+  bool _equipmentError = false;
+  String? _equipmentErrorMsg;
   bool _problemError = false;
   String? _problemErrorMsg;
   bool _loading = false;
@@ -25,8 +28,25 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
 
   @override
   void dispose() {
+    _equipmentController.dispose();
     _problemController.dispose();
     super.dispose();
+  }
+
+  bool _validateEquipment() {
+    final text = _equipmentController.text.trim();
+    if (text.isEmpty) {
+      setState(() {
+        _equipmentError = true;
+        _equipmentErrorMsg = 'Este campo es obligatorio.';
+      });
+      return false;
+    }
+    setState(() {
+      _equipmentError = false;
+      _equipmentErrorMsg = null;
+    });
+    return true;
   }
 
   bool _validateProblem() {
@@ -54,7 +74,8 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
   }
 
   Future<void> _solicitarServicio() async {
-    if (!_validateProblem()) return;
+    final equipmentOk = _validateEquipment();
+    if (!_validateProblem() | !equipmentOk) return;
 
     setState(() => _loading = true);
 
@@ -76,6 +97,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
         'type': 'service',
         'serviceId': service.id,
         'customerId': session['user_id'],
+        'equipment': _equipmentController.text.trim(),
         'problem': _problemController.text.trim(),
       });
 
@@ -225,8 +247,12 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                     color: AppColors.blue,
                   ),
 
-                  // ── Campo: Descripción del problema ──────────────
+                  // ── Campo: Nombre del equipo ──────────────────────
                   const SizedBox(height: 16),
+                  _equipmentField(),
+
+                  // ── Campo: Descripción del problema ──────────────
+                  const SizedBox(height: 12),
                   _problemField(),
                 ],
               ),
@@ -268,6 +294,99 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // ── Campo de nombre del equipo ────────────────────────────────────
+  Widget _equipmentField() {
+    final borderColor = _equipmentError
+        ? Colors.redAccent
+        : Colors.white.withValues(alpha: 0.06);
+    final accentColor = _equipmentError ? Colors.redAccent : AppColors.primary;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.devices_rounded, color: accentColor, size: 18),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Nombre del equipo',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              const Text(
+                ' *',
+                style: TextStyle(
+                    color: Colors.redAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _equipmentController,
+            maxLines: 1,
+            textInputAction: TextInputAction.next,
+            style: const TextStyle(
+                color: AppColors.textPrimary, fontSize: 14),
+            onChanged: (_) {
+              if (_equipmentError) {
+                setState(() {
+                  _equipmentError = false;
+                  _equipmentErrorMsg = null;
+                });
+              }
+            },
+            decoration: const InputDecoration(
+              hintText: 'Ej. Laptop HP Pavilion, iPhone 13, PC de escritorio...',
+              hintStyle: TextStyle(
+                  color: AppColors.textMuted, fontSize: 13),
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          if (_equipmentErrorMsg != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(Icons.error_outline_rounded,
+                    color: Colors.redAccent, size: 14),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    _equipmentErrorMsg!,
+                    style: const TextStyle(
+                        color: Colors.redAccent, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }

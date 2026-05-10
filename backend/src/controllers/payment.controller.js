@@ -83,11 +83,9 @@ async function createPaymentIntent(req, res) {
             },
             items: itemsValidados,
             total,
-            status: 'pending',
             estadoPedido: EstadoPedido.PENDIENTE,
             estadoPago: EstadoPago.PENDIENTE,
             paymentIntentId: paymentIntent.id,
-            notes: '',
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
@@ -205,7 +203,6 @@ async function manejarPagoExitoso(paymentIntent) {
     await pedidoDoc.ref.update({
         estadoPago: EstadoPago.PAGADO,
         estadoPedido: EstadoPedido.EN_PROGRESO,
-        status: 'in_progress',
         paidAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });

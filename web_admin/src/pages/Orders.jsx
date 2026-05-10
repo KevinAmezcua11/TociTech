@@ -5,35 +5,28 @@ import { getOrders, updateOrder } from "../api/orderService";
 import OrderSidebar from "../components/orders/OrderSidebar";
 import CustomSelect from "../components/CustomSelect";
 import OrderDetailsSidebar from "../components/orders/OrderDetailsSidebar";
-import { PaymentBadge } from "../components/orders/PaymentBadge";
+import { PaymentBadge, PEDIDO_CONFIG } from "../components/orders/PaymentBadge";
 import {
     ShoppingBag, Clock, History, CreditCard, Search, Plus, User, Tag, DollarSign,
     Calendar, Package, Wrench, SlidersHorizontal, X, ArrowUpDown, ArrowUp,
     ArrowDown, RotateCcw,
 } from "lucide-react";
 
-// ─── Configuración de estados del pedido (backend usa inglés) ────────────────
-const STATUS_OPTIONS = [
-    { value: "pending",     label: "Pendiente",   dot: "bg-yellow-400" },
-    { value: "in_progress", label: "En progreso", dot: "bg-orange-400" },
-    { value: "completed",   label: "Completado",  dot: "bg-green-400"  },
-    { value: "cancelled",   label: "Cancelado",   dot: "bg-red-400"    },
+// ─── Opciones para el selector de estadoPedido en la tabla ──────────────────
+const ESTADO_OPTIONS = [
+    { value: "PENDIENTE",   label: "Pendiente",   dot: "bg-yellow-400" },
+    { value: "EN_PROGRESO", label: "En progreso", dot: "bg-orange-400" },
+    { value: "COMPLETADO",  label: "Completado",  dot: "bg-green-400"  },
+    { value: "CANCELADO",   label: "Cancelado",   dot: "bg-red-400"    },
 ];
 
-const STATUS_CONFIG = {
-    pending:     { label: "Pendiente",   color: "bg-yellow-500/15 text-yellow-400 border border-yellow-500/25", dot: "bg-yellow-400" },
-    in_progress: { label: "En progreso", color: "bg-orange-500/15 text-orange-400 border border-orange-500/25", dot: "bg-orange-400" },
-    completed:   { label: "Completado",  color: "bg-green-500/15  text-green-400  border border-green-500/25",  dot: "bg-green-400"  },
-    cancelled:   { label: "Cancelado",   color: "bg-red-500/15    text-red-400    border border-red-500/25",    dot: "bg-red-400"    },
-};
-
 // ─── Opciones para filtros avanzados ─────────────────────────────────────────
-const FILTER_STATUS_OPTIONS = [
+const FILTER_ESTADO_OPTIONS = [
     { value: "",            label: "Todos los estados" },
-    { value: "pending",     label: "Pendiente",         dot: "bg-yellow-400" },
-    { value: "in_progress", label: "En progreso",       dot: "bg-orange-400" },
-    { value: "completed",   label: "Completado",        dot: "bg-green-400"  },
-    { value: "cancelled",   label: "Cancelado",         dot: "bg-red-400"    },
+    { value: "PENDIENTE",   label: "Pendiente",         dot: "bg-yellow-400" },
+    { value: "EN_PROGRESO", label: "En progreso",       dot: "bg-orange-400" },
+    { value: "COMPLETADO",  label: "Completado",        dot: "bg-green-400"  },
+    { value: "CANCELADO",   label: "Cancelado",         dot: "bg-red-400"    },
 ];
 
 const FILTER_PAGO_OPTIONS = [
@@ -57,10 +50,10 @@ const SORT_OPTIONS = [
     { value: "total_asc",  label: "Total: menor a mayor" },
 ];
 
-const DEFAULT_FILTERS = { status: "", pago: "", type: "", dateFrom: "", dateTo: "", sort: "date_desc" };
+const DEFAULT_FILTERS = { estadoPedido: "", pago: "", type: "", dateFrom: "", dateTo: "", sort: "date_desc" };
 
 function countActiveFilters(f) {
-    return [f.status, f.pago, f.type, f.dateFrom, f.dateTo, f.sort !== "date_desc" ? f.sort : ""]
+    return [f.estadoPedido, f.pago, f.type, f.dateFrom, f.dateTo, f.sort !== "date_desc" ? f.sort : ""]
         .filter(Boolean).length;
 }
 
@@ -111,22 +104,22 @@ export default function Orders() {
     }, []);
 
     // ─── Cambiar estadoPedido ───────────────────────────────────────────────
-    const handleStatusChange = (id, newStatus) => {
-        if (newStatus === "completed" || newStatus === "cancelled") {
+    const handleStatusChange = (id, newEstado) => {
+        if (newEstado === "COMPLETADO" || newEstado === "CANCELADO") {
             setSelectedOrder(id);
-            setPendingStatus(newStatus);
+            setPendingStatus(newEstado);
             setShowConfirmModal(true);
             return;
         }
-        updateOrder(id, { status: newStatus });
-        setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+        updateOrder(id, { estadoPedido: newEstado });
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, estadoPedido: newEstado } : o));
     };
 
     const confirmStatusChange = async () => {
         try {
-            await updateOrder(selectedOrder, { status: pendingStatus });
+            await updateOrder(selectedOrder, { estadoPedido: pendingStatus });
             setOrders(prev =>
-                prev.map(o => o.id === selectedOrder ? { ...o, status: pendingStatus } : o)
+                prev.map(o => o.id === selectedOrder ? { ...o, estadoPedido: pendingStatus } : o)
             );
             setShowConfirmModal(false);
         } catch (err) {
@@ -137,14 +130,14 @@ export default function Orders() {
 
     // ─── Contadores por categoría ──────────────────────────────────────────
     const counts = useMemo(() => {
-        const activos   = orders.filter(o => o.status !== "completed" && o.status !== "cancelled");
-        const historial = orders.filter(o => o.status === "completed" || o.status === "cancelled");
+        const activos   = orders.filter(o => o.estadoPedido !== "COMPLETADO" && o.estadoPedido !== "CANCELADO");
+        const historial = orders.filter(o => o.estadoPedido === "COMPLETADO" || o.estadoPedido === "CANCELADO");
         return {
             // Sub-tabs de pedidos activos
             all:           activos.length,
             pendientePago: activos.filter(o => o.estadoPago === "PENDIENTE").length,
             pagados:       activos.filter(o => o.estadoPago === "PAGADO").length,
-            enProceso:     activos.filter(o => o.status === "in_progress").length,
+            enProceso:     activos.filter(o => o.estadoPedido === "EN_PROGRESO").length,
             // Vista historial
             historial:     historial.length,
         };
@@ -157,14 +150,14 @@ export default function Orders() {
         // Vista principal: solo pedidos activos (no completados ni cancelados)
         // Vista historial: solo completados y cancelados
         if (viewMode === "pedidos") {
-            result = result.filter(o => o.status !== "completed" && o.status !== "cancelled");
+            result = result.filter(o => o.estadoPedido !== "COMPLETADO" && o.estadoPedido !== "CANCELADO");
             switch (activeTab) {
                 case "pago_pend":  result = result.filter(o => o.estadoPago === "PENDIENTE"); break;
                 case "pagado":     result = result.filter(o => o.estadoPago === "PAGADO"); break;
-                case "en_proceso": result = result.filter(o => o.status === "in_progress"); break;
+                case "en_proceso": result = result.filter(o => o.estadoPedido === "EN_PROGRESO"); break;
             }
         } else {
-            result = result.filter(o => o.status === "completed" || o.status === "cancelled");
+            result = result.filter(o => o.estadoPedido === "COMPLETADO" || o.estadoPedido === "CANCELADO");
         }
 
         // Búsqueda por cliente
@@ -174,7 +167,7 @@ export default function Orders() {
         }
 
         // Filtros avanzados
-        if (filters.status) result = result.filter(o => o.status === filters.status);
+        if (filters.estadoPedido) result = result.filter(o => o.estadoPedido === filters.estadoPedido);
         if (filters.pago)   result = result.filter(o => o.estadoPago === filters.pago);
         if (filters.type)   result = result.filter(o => o.type === filters.type);
 
@@ -367,7 +360,7 @@ export default function Orders() {
                                     <label className="text-xs text-muted font-medium uppercase tracking-wider flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 rounded-full bg-orange-400" /> Estado
                                     </label>
-                                    <CustomSelect value={filters.status} onChange={(v) => setFilter("status", v)} options={FILTER_STATUS_OPTIONS} placeholder="Todos" />
+                                    <CustomSelect value={filters.estadoPedido} onChange={(v) => setFilter("estadoPedido", v)} options={FILTER_ESTADO_OPTIONS} placeholder="Todos" />
                                 </div>
 
                                 {/* Estado pago */}
@@ -447,10 +440,10 @@ export default function Orders() {
                     {hasFilters && (
                         <div className="flex flex-wrap gap-2 items-center">
                             <span className="text-xs text-muted">Filtros activos:</span>
-                            {filters.status && (
-                                <Chip label={FILTER_STATUS_OPTIONS.find(o => o.value === filters.status)?.label}
-                                    dot={FILTER_STATUS_OPTIONS.find(o => o.value === filters.status)?.dot}
-                                    onRemove={() => setFilter("status", "")} />
+                            {filters.estadoPedido && (
+                                <Chip label={FILTER_ESTADO_OPTIONS.find(o => o.value === filters.estadoPedido)?.label}
+                                    dot={FILTER_ESTADO_OPTIONS.find(o => o.value === filters.estadoPedido)?.dot}
+                                    onRemove={() => setFilter("estadoPedido", "")} />
                             )}
                             {filters.pago && (
                                 <Chip label={FILTER_PAGO_OPTIONS.find(o => o.value === filters.pago)?.label}
@@ -536,7 +529,7 @@ export default function Orders() {
 
                                 <tbody className="divide-y divide-white/5">
                                     {filteredOrders.map((order, index) => {
-                                        const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
+                                        const cfg = PEDIDO_CONFIG[order.estadoPedido] || PEDIDO_CONFIG.PENDIENTE;
                                         return (
                                             <tr key={order.id} className="hover:bg-white/[0.02] transition-colors">
                                                 <td className="px-4 py-3 text-center align-middle text-muted text-xs font-medium tabular-nums">
@@ -567,18 +560,18 @@ export default function Orders() {
                                                     <PaymentBadge estadoPago={order.estadoPago} />
                                                 </td>
 
-                                                {/* Columna ESTADO — admin puede modificar estadoPedido */}
+                                                {/* Columna ESTADO — admin modifica estadoPedido */}
                                                 <td className="px-4 py-3">
-                                                    {order.status === "completed" || order.status === "cancelled" ? (
+                                                    {order.estadoPedido === "COMPLETADO" || order.estadoPedido === "CANCELADO" ? (
                                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${cfg.color}`}>
                                                             <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
                                                             {cfg.label}
                                                         </span>
                                                     ) : (
                                                         <CustomSelect
-                                                            value={order.status}
+                                                            value={order.estadoPedido || "PENDIENTE"}
                                                             onChange={(val) => handleStatusChange(order.id, val)}
-                                                            options={STATUS_OPTIONS}
+                                                            options={ESTADO_OPTIONS}
                                                             className="w-40"
                                                         />
                                                     )}
@@ -628,10 +621,10 @@ export default function Orders() {
                         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                             <div className="bg-surface p-6 rounded-xl w-full max-w-sm border border-white/10">
                                 <h2 className="text-white text-lg font-semibold mb-2">
-                                    {pendingStatus === "cancelled" ? "Cancelar pedido" : "Completar pedido"}
+                                    {pendingStatus === "CANCELADO" ? "Cancelar pedido" : "Completar pedido"}
                                 </h2>
                                 <p className="text-secondary text-sm mb-6">
-                                    {pendingStatus === "cancelled"
+                                    {pendingStatus === "CANCELADO"
                                         ? "¿Seguro que deseas cancelar este pedido? Esta acción no se puede deshacer."
                                         : "¿Seguro que deseas marcar este pedido como completado?"}
                                 </p>
@@ -642,7 +635,7 @@ export default function Orders() {
                                     </button>
                                     <button onClick={confirmStatusChange}
                                         className={`px-4 py-2 rounded-lg text-white ${
-                                            pendingStatus === "cancelled"
+                                            pendingStatus === "CANCELADO"
                                                 ? "bg-red-500 hover:bg-red-600"
                                                 : "bg-brand-green hover:bg-green-600"
                                         }`}>
@@ -654,7 +647,7 @@ export default function Orders() {
                     )}
 
                     {showDetails && (
-                        <OrderDetailsSidebar order={selectedOrderDetails} onClose={() => setShowDetails(false)} />
+                        <OrderDetailsSidebar order={selectedOrderDetails} onClose={() => setShowDetails(false)} onUpdated={fetchOrders} />
                     )}
                 </main>
             </div>

@@ -43,7 +43,6 @@ class OrderServiceInfo {
 class Order {
   final String id;
   final String type;
-  final String status;
   final String estadoPedido;
   final String? estadoPago;
   final String? paymentIntentId;
@@ -53,14 +52,12 @@ class Order {
   final OrderServiceInfo? service;
   final String? equipment;
   final String? problem;
-  final String? notes;
   final DateTime? createdAt;
   final DateTime? paidAt;
 
   const Order({
     required this.id,
     required this.type,
-    required this.status,
     required this.estadoPedido,
     this.estadoPago,
     this.paymentIntentId,
@@ -70,18 +67,15 @@ class Order {
     this.service,
     this.equipment,
     this.problem,
-    this.notes,
     this.createdAt,
     this.paidAt,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
-    final status = json['status'] ?? 'pending';
     return Order(
       id: json['id'] ?? '',
       type: json['type'] ?? '',
-      status: status,
-      estadoPedido: json['estadoPedido'] ?? _statusToEstado(status),
+      estadoPedido: json['estadoPedido'] ?? 'PENDIENTE',
       estadoPago: json['estadoPago'],
       paymentIntentId: json['paymentIntentId'],
       total: (json['total'] as num?)?.toDouble(),
@@ -95,23 +89,9 @@ class Order {
           : null,
       equipment: json['equipment'],
       problem: json['problem'],
-      notes: json['notes'],
       createdAt: _parseDate(json['createdAt']),
       paidAt: _parseDate(json['paidAt']),
     );
-  }
-
-  static String _statusToEstado(String status) {
-    switch (status) {
-      case 'in_progress':
-        return 'EN_PROGRESO';
-      case 'completed':
-        return 'COMPLETADO';
-      case 'cancelled':
-        return 'CANCELADO';
-      default:
-        return 'PENDIENTE';
-    }
   }
 
   static DateTime? _parseDate(dynamic v) {

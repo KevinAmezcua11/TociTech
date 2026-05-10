@@ -57,7 +57,7 @@ async function getById(id) {
 }
 
 // Insertar nuevo pedido
-async function createOrder({ type, customerId, customer: manualCustomer, items, serviceId, problem, equipment, scheduledDate, notes }) {
+async function createOrder({ type, customerId, customer: manualCustomer, items, serviceId, problem, equipment, scheduledDate }) {
     try {
         if (!["product", "service"].includes(type)) {
             throw new Error("Invalid order type");
@@ -88,11 +88,9 @@ async function createOrder({ type, customerId, customer: manualCustomer, items, 
         let orderData = {
             type,
             customer,
-            status: "pending",
             estadoPedido: EstadoPedido.PENDIENTE,
             estadoPago: EstadoPago.PENDIENTE,
             scheduledDate: scheduledDate || null,
-            notes: notes || "",
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
@@ -187,7 +185,6 @@ async function createOrder({ type, customerId, customer: manualCustomer, items, 
 
             orderData.problem = problem;
             orderData.equipment = equipment || "";
-            orderData.diagnosis = "";
             orderData.finalPrice = null;
         }
 
@@ -210,8 +207,8 @@ async function updateOrder(id, data) {
 
     if (!orderSnap.exists) return null;
 
-    const allowedStatus = ["pending", "in_progress", "completed", "cancelled"];
-    if (data.status && !allowedStatus.includes(data.status)) throw new Error("Invalid status");
+    const allowedEstadoPedido = ["PENDIENTE", "EN_PROGRESO", "COMPLETADO", "CANCELADO"];
+    if (data.estadoPedido && !allowedEstadoPedido.includes(data.estadoPedido)) throw new Error("Invalid estadoPedido");
 
     if (data.finalPrice != null && data.finalPrice < 0) throw new Error("Invalid final price");
 
