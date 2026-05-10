@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:tocitech/ui/pages/services/servicios_page.dart';
+import '../../../database/local/cart_local_service.dart';
 import '../../../models/service_model.dart';
 import '../../../theme/app_theme.dart';
 import '../../widgets/service_card.dart';
+import '../cart/cart_page.dart';
 import '../services/service_detail_page.dart';
 import 'ajustes_page.dart';
 import 'notificaciones_page.dart';
@@ -19,6 +21,7 @@ class TociTechApp extends StatefulWidget {
 
 class _TociTechAppState extends State<TociTechApp> {
   int _index = 0;
+  int _cartCount = 0;
 
   final List _titulosAppBar = [
     "TociTech",
@@ -26,6 +29,17 @@ class _TociTechAppState extends State<TociTechApp> {
     "Servicios",
     "Ajustes"
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCartCount();
+  }
+
+  Future<void> _loadCartCount() async {
+    final count = await CartLocalService.getCartItemCount();
+    if (mounted) setState(() => _cartCount = count);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,9 +68,42 @@ class _TociTechAppState extends State<TociTechApp> {
             ),
             icon: Icon(Icons.notifications_outlined, color: AppColors.primary),
           ),
-          IconButton(
-            onPressed: () => (),
-            icon: Icon(Icons.shopping_cart_outlined, color: AppColors.primary),
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CartPage()),
+                  );
+                  _loadCartCount();
+                },
+                icon: const Icon(Icons.shopping_cart_outlined,
+                    color: AppColors.primary),
+              ),
+              if (_cartCount > 0)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    width: 18,
+                    height: 18,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        _cartCount > 99 ? '99+' : '$_cartCount',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),

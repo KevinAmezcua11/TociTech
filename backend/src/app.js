@@ -9,6 +9,7 @@ const servicesRoutes = require("./routes/services.route");
 const ordersRoutes = require("./routes/order.route");
 const usersRoutes = require("./routes/user.route");
 const aiRoute = require("./routes/ai.routes");
+const paymentRoutes = require("./routes/payment.routes");
 
 const app = express();
 
@@ -21,6 +22,8 @@ app.use(cors({
     ],
     credentials: true
 }));
+
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 
 app.use(express.json());
 
@@ -37,6 +40,7 @@ app.use("/api/services", servicesRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/chat", aiRoute);
+app.use("/api/payments", paymentRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

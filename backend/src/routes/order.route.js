@@ -5,6 +5,7 @@ const { authenticate } = require('../middleware/auth.middleware');
 const router = express.Router();
 
 router.get("/", authenticate, controller.getAllOrders);
+router.get("/my", authenticate, controller.getMyOrders);
 router.get("/:id", authenticate, controller.getById);
 router.post("/", authenticate, controller.createOrder);
 router.put("/:id", authenticate, controller.updateOrder);

@@ -1,5 +1,16 @@
 const Order = require('../models/order.model');
 
+// Obtener pedidos del usuario autenticado (app client)
+async function getMyOrders(req, res) {
+    try {
+        const orders = await Order.getMyOrders(req.user.id);
+        res.json(orders);
+    } catch(err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
 // Obtener todos los pedidos
 async function getAllOrders(req, res) {
     try {
@@ -36,7 +47,14 @@ async function createOrder(req, res) {
     } catch (err) {
         console.error(err);
 
-        if (err.message.includes("Invalid") || err.message.includes("required")) {
+        const isClientError =
+            err.message.includes("Invalid") ||
+            err.message.includes("required") ||
+            err.message.includes("solicitudes activas") ||
+            err.message.includes("not found") ||
+            err.message.includes("Not enough");
+
+        if (isClientError) {
             return res.status(400).json({ message: err.message });
         }
 
@@ -79,4 +97,4 @@ async function deleteOrder(req, res) {
     }
 }
 
-module.exports = { getAllOrders, getById, createOrder, updateOrder, deleteOrder };
+module.exports = { getMyOrders, getAllOrders, getById, createOrder, updateOrder, deleteOrder };

@@ -7,7 +7,7 @@ class OrderService {
   OrderService(this.api);
 
   Future<List<Order>> getOrders() async {
-    final response = await api.get('/orders');
+    final response = await api.get('/orders/my');
 
     final data = response is List ? response : (response['data'] ?? []);
 

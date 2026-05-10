@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/product_model.dart';
+import '../../../database/local/cart_local_service.dart';
 import '../../widgets/app_network_image.dart';
 
 class ProductDetailPage extends StatefulWidget {
@@ -43,7 +44,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
           child: FilledButton.icon(
-            onPressed: hayStock ? () {} : null,
+            onPressed: hayStock
+                ? () async {
+                    await CartLocalService.addToCart(p);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${p.name} agregado al carrito'),
+                          backgroundColor: AppColors.primary,
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                : null,
             icon: const Icon(Icons.shopping_cart_outlined),
             label: const Text(
               'Agregar al carrito',

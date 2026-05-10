@@ -1,89 +1,50 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../controllers/order_controller.dart';
+import '../../../models/order_model.dart';
+import '../../../services/api_service.dart';
+import '../../../services/order_service.dart';
 import '../../../theme/app_theme.dart';
 
-class _Pedido {
-  final String nombre;
-  final String imagen;
-  final String fecha;
-  final String estado;
-
-  const _Pedido({
-    required this.nombre,
-    required this.imagen,
-    required this.fecha,
-    required this.estado,
-  });
-}
-
-class _Servicio {
-  final String nombre;
-  final String imagen;
-  final String fecha;
-  final String estado;
-  final String equipo;
-
-  const _Servicio({
-    required this.nombre,
-    required this.imagen,
-    required this.fecha,
-    required this.estado,
-    required this.equipo,
-  });
-}
-
-class MisPedidosPage extends StatelessWidget {
+class MisPedidosPage extends StatefulWidget {
   const MisPedidosPage({super.key});
 
-  static const List<_Pedido> _pedidos = [
-    _Pedido(
-      nombre: "Memoria RAM Kingston Fury 16GB",
-      imagen: "assets/img-1.png",
-      fecha: "10 Abr 2026",
-      estado: "completado",
-    ),
-    _Pedido(
-      nombre: "NVIDIA GeForce RTX 3060 12GB",
-      imagen: "assets/img-3.png",
-      fecha: "08 Abr 2026",
-      estado: "pendiente",
-    ),
-    _Pedido(
-      nombre: "Procesador AMD Ryzen 5 5600G",
-      imagen: "assets/img-2.png",
-      fecha: "05 Abr 2026",
-      estado: "pendiente",
-    ),
-    _Pedido(
-      nombre: "Corsair Vengeance 16GB DDR4",
-      imagen: "assets/img-4.jpg",
-      fecha: "01 Abr 2026",
-      estado: "cancelado",
-    ),
-  ];
+  @override
+  State<MisPedidosPage> createState() => _MisPedidosPageState();
+}
 
-  static const List<_Servicio> _servicios = [
-    _Servicio(
-      nombre: "Diagnóstico técnico",
-      imagen: "assets/servicio1.png",
-      fecha: "09 Abr 2026",
-      estado: "pendiente",
-      equipo: "Laptop HP Pavilion 15",
-    ),
-    _Servicio(
-      nombre: "Mantenimiento Preventivo",
-      imagen: "assets/servicio2.png",
-      fecha: "02 Abr 2026",
-      estado: "completado",
-      equipo: "PC de escritorio",
-    ),
-    _Servicio(
-      nombre: "Reparación de Hardware",
-      imagen: "assets/servicio3.png",
-      fecha: "25 Mar 2026",
-      estado: "cancelado",
-      equipo: "MacBook Air M1",
-    ),
-  ];
+class _MisPedidosPageState extends State<MisPedidosPage>
+    with SingleTickerProviderStateMixin {
+  late final OrderController _controller;
+  late final TabController _tabController;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = OrderController(OrderService(ApiService()));
+    _tabController = TabController(length: 2, vsync: this);
+    _fetchOrders();
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) => _fetchOrders());
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchOrders() async {
+    await _controller.fetchOrders();
+    if (mounted) setState(() {});
+  }
+
+  List<Order> get _productOrders =>
+      _controller.orders.where((o) => o.type == 'product').toList();
+
+  List<Order> get _serviceOrders =>
+      _controller.orders.where((o) => o.type == 'service').toList();
 
   @override
   Widget build(BuildContext context) {
@@ -93,286 +54,303 @@ class MisPedidosPage extends StatelessWidget {
         backgroundColor: AppColors.surface,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
         title: const Text(
-          "Mis Pedidos",
+          'Mis Pedidos',
           style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-
-            _pedidos.isEmpty
-                ? _estadoVacio()
-                : Column(
-              children: _pedidos
-                  .map((p) => Padding(
-                padding:
-                const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: _PedidoCard(pedido: p),
-              ))
-                  .toList(),
+        actions: [
+          IconButton(
+            onPressed: _fetchOrders,
+            icon: const Icon(Icons.refresh_rounded, color: AppColors.primary),
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: AppColors.primary,
+          labelColor: AppColors.primary,
+          unselectedLabelColor: AppColors.textMuted,
+          tabs: [
+            Tab(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.inventory_2_outlined, size: 16),
+                  const SizedBox(width: 6),
+                  Text('Productos (${_productOrders.length})'),
+                ],
+              ),
             ),
+            Tab(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.handyman_outlined, size: 16),
+                  const SizedBox(width: 6),
+                  Text('Servicios (${_serviceOrders.length})'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: _controller.isLoading && _controller.orders.isEmpty
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary))
+          : _controller.errorMessage != null && _controller.orders.isEmpty
+              ? _errorView()
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _OrderList(orders: _productOrders),
+                    _OrderList(orders: _serviceOrders),
+                  ],
+                ),
+    );
+  }
 
-            const SizedBox(height: 28),
-
-            _seccionServicios(),
-
-            const SizedBox(height: 40),
+  Widget _errorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.cloud_off_rounded,
+                size: 52, color: AppColors.textMuted),
+            const SizedBox(height: 16),
+            Text(
+              _controller.errorMessage ?? 'Error al cargar pedidos',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: AppColors.textSecondary, fontSize: 14),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: _fetchOrders,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Reintentar'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _estadoVacio() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40),
-      child: Column(
-        children: [
-          Icon(Icons.inbox_outlined,
-              size: 52,
-              color: AppColors.textSecondary.withOpacity(0.4)),
-          const SizedBox(height: 12),
-          const Text(
-            "Sin pedidos",
-            style:
-            TextStyle(color: AppColors.textSecondary, fontSize: 15),
-          ),
-        ],
-      ),
+class _OrderList extends StatelessWidget {
+  final List<Order> orders;
+
+  const _OrderList({required this.orders});
+
+  @override
+  Widget build(BuildContext context) {
+    if (orders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox_outlined,
+                size: 52,
+                color: AppColors.textSecondary.withValues(alpha: 0.4)),
+            const SizedBox(height: 12),
+            const Text('Sin pedidos',
+                style: TextStyle(
+                    color: AppColors.textSecondary, fontSize: 15)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: orders.length,
+      separatorBuilder: (_, idx) => const SizedBox(height: 10),
+      itemBuilder: (_, i) => _OrderCard(order: orders[i]),
     );
   }
+}
 
-  Widget _seccionServicios() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+class _OrderCard extends StatelessWidget {
+  final Order order;
+
+  const _OrderCard({required this.order});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Text(
-                "Servicios Solicitados",
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
+              Expanded(
                 child: Text(
-                  "${_servicios.length}",
+                  order.type == 'product'
+                      ? _productTitle()
+                      : (order.service?.name ?? 'Servicio'),
                   style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 12,
+                    color: AppColors.textPrimary,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
+              _PedidoBadge(estadoPedido: order.estadoPedido),
             ],
           ),
-
-          const SizedBox(height: 14),
-
-          Column(
-            children: _servicios
-                .map((s) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _ServicioCard(servicio: s),
-            ))
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PedidoCard extends StatelessWidget {
-  final _Pedido pedido;
-
-  const _PedidoCard({required this.pedido});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              pedido.imagen,
-              width: 68,
-              height: 68,
-              fit: BoxFit.cover,
+          if (order.type == 'service' && order.equipment != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              order.equipment!,
+              style: const TextStyle(
+                  color: AppColors.textSecondary, fontSize: 11),
             ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          ],
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              if (order.createdAt != null)
                 Text(
-                  pedido.nombre,
+                  _formatDate(order.createdAt!),
+                  style: const TextStyle(
+                      color: AppColors.textMuted, fontSize: 11),
+                ),
+              const Spacer(),
+              if (order.estadoPago != null)
+                _PaymentBadge(estadoPago: order.estadoPago!),
+              if (order.total != null) ...[
+                const SizedBox(width: 8),
+                Text(
+                  '\$${order.total!.toStringAsFixed(2)}',
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  pedido.fecha,
-                  style: const TextStyle(
-                      color: AppColors.textSecondary, fontSize: 11),
-                ),
-                const SizedBox(height: 7),
-                _badgeEstado(pedido.estado),
               ],
-            ),
+            ],
           ),
+          if (order.type == 'product' && order.items.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            const Divider(color: Colors.white10, height: 1),
+            const SizedBox(height: 8),
+            ...order.items.take(2).map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    '${item.quantity}x ${item.name}',
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 11),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )),
+            if (order.items.length > 2)
+              Text(
+                '+ ${order.items.length - 2} más',
+                style: const TextStyle(
+                    color: AppColors.textMuted, fontSize: 11),
+              ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _badgeEstado(String estado) {
-    Color color;
-    String texto;
+  String _productTitle() {
+    if (order.items.isEmpty) return 'Pedido de productos';
+    if (order.items.length == 1) return order.items.first.name;
+    return '${order.items.first.name} y ${order.items.length - 1} más';
+  }
 
-    switch (estado) {
-      case "completado":
-        color = const Color(0xFF22C55E);
-        texto = "Completado";
-        break;
-      case "cancelado":
-        color = Colors.redAccent;
-        texto = "Cancelado";
-        break;
-      default:
-        color = const Color(0xFFFFA726);
-        texto = "Pendiente";
-    }
+  String _formatDate(DateTime dt) {
+    final local = dt.toLocal();
+    return '${local.day.toString().padLeft(2, '0')}/'
+        '${local.month.toString().padLeft(2, '0')}/'
+        '${local.year}';
+  }
+}
+
+class _PedidoBadge extends StatelessWidget {
+  final String estadoPedido;
+
+  const _PedidoBadge({required this.estadoPedido});
+
+  @override
+  Widget build(BuildContext context) {
+    final (color, label) = switch (estadoPedido) {
+      'EN_PROGRESO' => (const Color(0xFF3B82F6), 'En progreso'),
+      'COMPLETADO' => (const Color(0xFF22C55E), 'Completado'),
+      'CANCELADO' => (Colors.redAccent, 'Cancelado'),
+      _ => (const Color(0xFFFFA726), 'Pendiente'),
+    };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Text(
-        texto,
+        label,
         style: TextStyle(
-          color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-        ),
+            color: color, fontSize: 11, fontWeight: FontWeight.bold),
       ),
     );
   }
 }
 
-class _ServicioCard extends StatelessWidget {
-  final _Servicio servicio;
+class _PaymentBadge extends StatelessWidget {
+  final String estadoPago;
 
-  const _ServicioCard({required this.servicio});
+  const _PaymentBadge({required this.estadoPago});
 
   @override
   Widget build(BuildContext context) {
-    Color colorEstado;
-
-    switch (servicio.estado) {
-      case "completado":
-        colorEstado = const Color(0xFF22C55E);
-        break;
-      case "cancelado":
-        colorEstado = Colors.redAccent;
-        break;
-      default:
-        colorEstado = const Color(0xFFFFA726);
-    }
+    final (color, label) = switch (estadoPago) {
+      'PAGADO' => (const Color(0xFF22C55E), 'Pagado'),
+      'FALLIDO' => (Colors.redAccent, 'Fallido'),
+      'REEMBOLSADO' => (const Color(0xFF8B5CF6), 'Reembolsado'),
+      _ => (const Color(0xFFFFA726), 'Pend. pago'),
+    };
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              servicio.imagen,
-              width: 68,
-              height: 68,
-              fit: BoxFit.cover,
-            ),
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  servicio.nombre,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  servicio.equipo,
-                  style: const TextStyle(
-                      color: AppColors.textSecondary, fontSize: 11),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  servicio.fecha,
-                  style: const TextStyle(
-                      color: AppColors.textSecondary, fontSize: 11),
-                ),
-                const SizedBox(height: 7),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: colorEstado.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    servicio.estado,
-                    style: TextStyle(
-                      color: colorEstado,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(width: 4),
+          Text(label,
+              style: TextStyle(
+                  color: color, fontSize: 10, fontWeight: FontWeight.bold)),
         ],
       ),
     );

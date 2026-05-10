@@ -7,21 +7,14 @@ import CustomSelect from "../CustomSelect";
 import {
     X, ShoppingBag, User, Users, UserPlus, Package, Wrench,
     Plus, Trash2, Phone, Mail, Hash, Loader2,
-    Laptop, AlertCircle, FileText, Calendar, Flag,
+    Laptop, AlertCircle, FileText, Calendar,
 } from "lucide-react";
-
-const PRIORITY_OPTIONS = [
-    { value: "low",    label: "Baja",   dot: "bg-green-400"  },
-    { value: "medium", label: "Media",  dot: "bg-yellow-400" },
-    { value: "high",   label: "Alta",   dot: "bg-red-400"    },
-];
 
 const DEFAULT_SERVICE_FORM = {
     serviceId:     "",
     equipment:     "",
     problem:       "",
     notes:         "",
-    priority:      "medium",
     scheduledDate: "",
 };
 
@@ -99,7 +92,6 @@ export default function OrderSidebar({ onClose, onCreated }) {
                 payload.equipment     = serviceForm.equipment;
                 payload.problem       = serviceForm.problem;
                 payload.notes         = serviceForm.notes;
-                payload.priority      = serviceForm.priority;
                 payload.scheduledDate = serviceForm.scheduledDate || null;
             }
 
@@ -326,31 +318,17 @@ export default function OrderSidebar({ onClose, onCreated }) {
                                 </div>
                             </div>
 
-                            {/* Prioridad + Fecha en grid */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1.5">
-                                    <span className="text-xs text-muted flex items-center gap-1.5">
-                                        <Flag size={11} /> Prioridad
-                                    </span>
-                                    <CustomSelect
-                                        value={serviceForm.priority}
-                                        onChange={(v) => setSF("priority", v)}
-                                        options={PRIORITY_OPTIONS}
-                                        placeholder="Prioridad"
-                                    />
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <span className="text-xs text-muted flex items-center gap-1.5">
-                                        <Calendar size={11} /> Fecha programada
-                                    </span>
-                                    <input
-                                        type="date"
-                                        value={serviceForm.scheduledDate}
-                                        onChange={(e) => setSF("scheduledDate", e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 text-white text-sm p-2.5 rounded-lg outline-none focus:border-primary/50 transition-colors [color-scheme:dark]"
-                                    />
-                                </div>
+                            {/* Fecha programada */}
+                            <div className="space-y-1.5">
+                                <span className="text-xs text-muted flex items-center gap-1.5">
+                                    <Calendar size={11} /> Fecha programada
+                                </span>
+                                <input
+                                    type="date"
+                                    value={serviceForm.scheduledDate}
+                                    onChange={(e) => setSF("scheduledDate", e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 text-white text-sm p-2.5 rounded-lg outline-none focus:border-primary/50 transition-colors [color-scheme:dark]"
+                                />
                             </div>
 
                             {/* Notas */}
