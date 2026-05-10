@@ -4,7 +4,7 @@ const db = require('../config/firebase');
 const Product = require('../models/product.model');
 const User = require('../models/user.model');
 const { EstadoPago, EstadoPedido } = require('../models/order.model');
-const emailService = require('../services/email.service');
+const emailService = require('../config/email.service');
 
 async function createPaymentIntent(req, res) {
     try {
