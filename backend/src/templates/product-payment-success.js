@@ -106,12 +106,12 @@ function getProductEmailContent(order) {
             <td style="background:#f8f9fc;padding:20px 30px;text-align:center;border-top:1px solid #eee;">
               <div style="margin-bottom:14px;">
                 <a 
-                  href="https://instagram.com/tocitech"
+                  href="https://instagram.com/toci.tech"
                   target="_blank"
                   style="text-decoration:none;"
                 >
                   <img
-                    src="https://www.flaticon.es/icono-gratis/instagram_4138124?term=instagram&page=1&position=14&origin=search&related_id=4138124"
+                    src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png"
                     alt="Instagram"
                     width="28"
                     height="28"
