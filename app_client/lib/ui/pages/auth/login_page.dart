@@ -3,6 +3,7 @@ import 'package:tocitech/controllers/auth_controller.dart';
 import 'package:tocitech/services/auth_service.dart';
 import 'package:tocitech/ui/pages/main/home_page.dart';
 import '../../../theme/app_theme.dart';
+import '../../widgets/app_snackbar.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -28,33 +29,48 @@ class _LoginPageState extends State<LoginPage> {
     authController = AuthController(AuthService());
   }
 
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _login() async {
     final username = _usernameController.text;
     final password = _passwordController.text;
 
     if (username.isEmpty || password.isEmpty) {
-      _showMessage("Completa todos los campos");
+      AppSnackbar.info(context, 'Completa todos los campos');
       return;
     }
 
     final success = await authController.login(username, password);
 
+    if (!mounted) return;
     setState(() {});
 
     if (success) {
+      // Registra el callback de sesión expirada apuntando a esta misma pantalla
+      authController.authService.api.onSessionExpired = () async {
+        await authController.authService.logout();
+        if (mounted) {
+          AppSnackbar.sessionExpired(context);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+            (route) => false,
+          );
+        }
+      };
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => TociTechApp()),
       );
     } else {
-      _showMessage(authController.errorMessage ?? "Error al iniciar sesión");
+      AppSnackbar.error(context, authController.errorMessage ?? 'Error al iniciar sesión');
     }
-  }
-
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 
   @override

@@ -3,6 +3,7 @@ import 'login_page.dart';
 import 'package:tocitech/theme/app_theme.dart';
 import '../../../services/auth_service.dart';
 import '../../../controllers/auth_controller.dart';
+import '../../widgets/app_snackbar.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -84,9 +85,8 @@ class _RegisterPageState extends State<RegisterPage> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cuenta creada correctamente")),
-      );
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      AppSnackbar.success(context, 'Cuenta creada correctamente');
 
       Navigator.pushReplacement(
         context,
@@ -100,9 +100,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    AppSnackbar.error(context, msg);
   }
 
   @override
