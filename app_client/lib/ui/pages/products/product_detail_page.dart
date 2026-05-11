@@ -3,6 +3,7 @@ import '../../../theme/app_theme.dart';
 import '../../../models/product_model.dart';
 import '../../../database/local/cart_local_service.dart';
 import '../../widgets/app_network_image.dart';
+import '../../widgets/app_snackbar.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -48,14 +49,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ? () async {
                     await CartLocalService.addToCart(p);
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${p.name} agregado al carrito'),
-                          backgroundColor: AppColors.primary,
-                          behavior: SnackBarBehavior.floating,
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
+                      AppSnackbar.success(context, '${p.name} agregado al carrito');
                     }
                   }
                 : null,

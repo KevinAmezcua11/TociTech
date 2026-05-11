@@ -3,6 +3,7 @@ import '../../../database/local/session_local_service.dart';
 import '../../../models/service_model.dart';
 import '../../../services/api_service.dart';
 import '../../../services/order_service.dart';
+import '../../widgets/app_snackbar.dart';
 import '../../../theme/app_theme.dart';
 import '../../widgets/app_network_image.dart';
 
@@ -83,12 +84,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
       final session = await SessionLocalService.getSession();
       if (session == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Debes iniciar sesión para solicitar un servicio.'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
+          AppSnackbar.info(context, 'Debes iniciar sesión para solicitar un servicio.');
         }
         return;
       }
@@ -166,13 +162,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppSnackbar.error(context, e.toString());
       }
     } finally {
       if (mounted) setState(() => _loading = false);

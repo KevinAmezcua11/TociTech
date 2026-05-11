@@ -95,18 +95,13 @@ class _AiChatPageState extends State<AiChatPage> {
       });
 
     } catch (e) {
-
-      final errorMsg = e.toString().replaceAll('Exception: ', '');
-
       setState(() {
-
         _mensajes.add(
           _Mensaje(
-            texto: "Ocurrió un error al conectar con el asistente.\n$errorMsg",
+            texto: 'Lo siento, no pude conectarme al asistente en este momento. Intenta de nuevo.',
             esUsuario: false,
           ),
         );
-
       });
 
     } finally {
