@@ -348,6 +348,20 @@ https://github.com/KevinAmezcua11/TociTech
 
 ---
 
+# 🚀 Despliegue del Proyecto
+
+## ⚙️ Backend desplegado en Render
+
+```bash
+https://tocitech-backend.onrender.com/
+```
+
+## 💻 Panel administrativo desplegado en Vercel
+
+```bash
+https://toci-tech.vercel.app/
+```
+
 <div align="center">
 
 ### 📘 Proyecto Final para la materia de Taller de Full Stack
