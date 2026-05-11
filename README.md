@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./documentation/assets/Logo-img.png" width="120"/>
+<img src="./documentation/assets/Logo-img.png" width="80"/>
 
 # TociTech
 
