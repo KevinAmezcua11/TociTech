@@ -53,13 +53,6 @@ class _TociTechAppState extends State<TociTechApp> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Bienvenido",
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-              ),
-            ),
-            Text(
               _titulosAppBar[_index],
               style: TextStyle(
                 color: AppColors.textPrimary,
@@ -71,11 +64,7 @@ class _TociTechAppState extends State<TociTechApp> {
         ),
         actions: [
           Container(
-            margin: const EdgeInsets.only(right: 10),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-            ),
+            margin: const EdgeInsets.only(right: 6),
             child: IconButton(
               onPressed: () => Navigator.push(
                 context,
@@ -92,11 +81,7 @@ class _TociTechAppState extends State<TociTechApp> {
           Stack(
             children: [
               Container(
-                margin: const EdgeInsets.only(right: 20),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                margin: const EdgeInsets.only(right: 6),
                 child: IconButton(
                   onPressed: () async {
                     await Navigator.push(
@@ -106,20 +91,20 @@ class _TociTechAppState extends State<TociTechApp> {
                     _loadCartCount();
                   },
                   icon: const Icon(
-                    Icons.shopping_bag_outlined,
+                    Icons.shopping_cart_outlined,
                     color: AppColors.primary,
                   ),
                 ),
               ),
               if (_cartCount > 0)
                 Positioned(
-                  right: 16,
-                  top: 2,
+                  right: 6,
+                  top: 6,
                   child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: const BoxDecoration(
-                      color: Colors.redAccent,
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -127,7 +112,7 @@ class _TociTechAppState extends State<TociTechApp> {
                         _cartCount > 99 ? '99+' : '$_cartCount',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -289,15 +274,16 @@ class _TociTechAppState extends State<TociTechApp> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: const Icon(
-                  Icons.memory_rounded,
-                  color: Colors.white,
-                  size: 34,
+                child: Image.asset(
+                  "assets/Logo-img.png",
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.contain,
                 ),
               ),
               const Spacer(),
@@ -311,7 +297,7 @@ class _TociTechAppState extends State<TociTechApp> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
-                  "TOP TECH",
+                  "TociTech",
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -344,7 +330,7 @@ class _TociTechAppState extends State<TociTechApp> {
           Row(
             children: [
               Expanded(
-                child: FilledButton(
+                child: FilledButton.icon(
                   onPressed: () => setState(() => _index = 1),
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -354,24 +340,26 @@ class _TociTechAppState extends State<TociTechApp> {
                       borderRadius: BorderRadius.circular(18),
                     ),
                   ),
-                  child: const Text("Explorar productos"),
+                  iconAlignment: IconAlignment.start,
+                  icon: const Icon(Icons.devices_rounded, size: 18),
+                  label: const Text("Productos"),
                 ),
               ),
               const SizedBox(width: 14),
               Expanded(
-                child: OutlinedButton(
+                child: OutlinedButton.icon(
                   onPressed: () => setState(() => _index = 2),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Colors.white),
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
                   ),
-                  child: const Text(
-                    "Servicios",
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  iconAlignment: IconAlignment.start,
+                  icon: const Icon(Icons.build_rounded, size: 18),
+                  label: const Text("Servicios"),
                 ),
               ),
             ],

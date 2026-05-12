@@ -72,13 +72,6 @@ class _AjustesPageState extends State<AjustesPage> {
                         label: "Reparaciones",
                       ),
                     ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: _ProfileStat(
-                        value: "12",
-                        label: "Favoritos",
-                      ),
-                    ),
                   ],
                 ),
               ],
@@ -89,8 +82,6 @@ class _AjustesPageState extends State<AjustesPage> {
           const SizedBox(height: 14),
           _tile(Icons.person_outline_rounded, "Editar perfil"),
           _tile(Icons.lock_outline_rounded, "Cambiar contraseña"),
-          _tile(Icons.verified_user_outlined, "Seguridad"),
-          _tile(Icons.notifications_none_rounded, "Notificaciones"),
           const SizedBox(height: 28),
           const _SectionTitle(title: "Actividad"),
           const SizedBox(height: 14),
@@ -106,13 +97,12 @@ class _AjustesPageState extends State<AjustesPage> {
               "Mis pedidos",
             ),
           ),
-          _tile(Icons.build_outlined, "Historial de reparaciones"),
           const SizedBox(height: 40),
           SizedBox(
             height: 58,
             child: FilledButton.icon(
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.redAccent,
+                backgroundColor: const Color(0xFF7F1D1D),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
@@ -164,35 +154,96 @@ class _AjustesPageState extends State<AjustesPage> {
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
         ),
-        title: Text(
-          "¿Cerrar sesión?",
-          style: TextStyle(color: AppColors.textPrimary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              "Cancelar",
-              style: TextStyle(color: AppColors.textSecondary),
+        contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceDark,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.primary.withOpacity(0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: const Icon(
+                Icons.logout_rounded,
+                color: AppColors.primary,
+                size: 26,
+              ),
             ),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-                (route) => false,
-              );
-            },
-            child: const Text("Salir"),
-          ),
-        ],
+            const SizedBox(height: 16),
+            const Text(
+              '¿Cerrar sesión?',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Tu sesión actual se cerrará y tendrás que volver a iniciar sesión.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textSecondary,
+                      side: const BorderSide(
+                        color: AppColors.textMuted,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginPage()),
+                            (route) => false,
+                      );
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.textPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Salir'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
-}
+  }
 
 class _SectionTitle extends StatelessWidget {
   final String title;
