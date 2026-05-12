@@ -95,15 +95,15 @@ class _AiChatPageState extends State<AiChatPage> {
       });
 
     } catch (e) {
+      print("❌ ERROR: $e"); // ← ver en consola
       setState(() {
         _mensajes.add(
           _Mensaje(
-            texto: 'Lo siento, no pude conectarme al asistente en este momento. Intenta de nuevo.',
+            texto: 'Error: $e', // ← ver en el chat
             esUsuario: false,
           ),
         );
       });
-
     } finally {
 
       setState(() {

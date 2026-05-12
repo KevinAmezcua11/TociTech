@@ -4,13 +4,8 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-/// Callback que se invoca cuando el backend devuelve 401.
-/// La capa superior (AuthService) debe intentar refrescar el token.
-/// Devuelve el nuevo token, o null si no fue posible renovarlo.
 typedef TokenRefreshCallback = Future<String?> Function();
 
-/// Callback que se invoca cuando la sesión expiró definitivamente
-/// (refresh falló o no hay callback registrado).
 typedef SessionExpiredCallback = Future<void> Function();
 
 class ApiService {
@@ -62,10 +57,12 @@ class ApiService {
   // ──────────────────────────────────────────────────────────────────────────
   Future<dynamic> post(String endpoint, dynamic data) async {
     try {
+      final timeoutSeconds = endpoint == '/chat' ? 120 : 15;
+
       final response = await http
           .post(Uri.parse('$baseUrl$endpoint'),
               headers: headers, body: jsonEncode(data))
-          .timeout(const Duration(seconds: 15));
+          .timeout(Duration(seconds: timeoutSeconds));
 
       if (response.statusCode == 401 && endpoint != '/auth/login') {
         return await _handleUnauthorized(() => post(endpoint, data));

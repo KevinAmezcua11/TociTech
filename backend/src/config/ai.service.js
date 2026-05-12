@@ -50,7 +50,7 @@ function needsServices(message) {
 // MAIN FUNCTION
 // =========================
 
-async function askAI(message, retries = 3) {
+async function askAI(message, retries = 5) {
     const cacheKey = message.toLowerCase().trim();
 
     if (cache.has(cacheKey)) {
@@ -136,7 +136,7 @@ Respuesta:`;
         if (isRateLimit && canRetry) {
             const delay = getRetryDelay(error);
             console.log(`⏳ Delay recibido de Gemini: ${delay}ms`);
-            if (delay <= 15000) {
+            if (delay <= 45000) {
                 console.log(`⏳ Rate limit. Reintentando en ${delay / 1000}s... (intentos restantes: ${retries - 1})`);
                 await sleep(delay);
                 return askAI(message, retries - 1);
