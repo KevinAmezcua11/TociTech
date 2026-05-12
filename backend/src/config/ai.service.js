@@ -135,6 +135,7 @@ Respuesta:`;
 
         if (isRateLimit && canRetry) {
             const delay = getRetryDelay(error);
+            console.log(`⏳ Delay recibido de Gemini: ${delay}ms`);
             if (delay <= 8000) {
                 console.log(`⏳ Rate limit. Reintentando en ${delay / 1000}s... (intentos restantes: ${retries - 1})`);
                 await sleep(delay);
