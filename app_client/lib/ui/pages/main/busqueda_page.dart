@@ -9,145 +9,189 @@ class BusquedaPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text("Buscar",
-          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-        ),
         iconTheme: IconThemeData(color: AppColors.textPrimary),
+        title: Text(
+          "Buscador",
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(height: 30),
-            Text("¿En qué te podemos ayudar?",
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text(
+            "Encuentra lo que necesitas",
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
             ),
-            SizedBox(height: 20),
-
-            // Barra de búsqueda
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 30),
-              child: Container(
-                height: 55,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 8),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    SizedBox(width: 15),
-                    Icon(Icons.search, color: Colors.grey),
-                    SizedBox(width: 10),
-                    Text("Buscar producto...", style: TextStyle(color: Colors.grey)),
-                  ],
-                ),
-              ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "Productos, componentes y servicios tecnológicos.",
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
             ),
-
-            SizedBox(height: 40),
-
-            Text("TENDENCIA EN VENTAS",
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1,
-              ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            height: 60,
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(20),
             ),
-
-            SizedBox(height: 20),
-
-            // Productos en tendencia
-            SizedBox(
-              height: 260,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                children: [
-                  _cardProducto(
-                    imagen: "assets/asusdual.png",
-                    titulo: "Asus DUAL-RTX3050-06G GeForce 6GB GDDR6/PCI-E 4.0/HDMI/DP/Negro",
-                  ),
-                  SizedBox(width: 20),
-                  _cardProducto(
-                    imagen: "assets/amdradeon.png",
-                    titulo: "AMD RADEON PRO W7900",
-                  ),
-                  SizedBox(width: 20),
-                  _cardProducto(
-                    imagen: "assets/mouseacteck.png",
-                    titulo: "Mouse Inalambrico Acteck Optimize MI240 / USB / Optico / 1600 DPI",
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 30),
-
-            // Categorías
-            Wrap(
-              spacing: 15, runSpacing: 15,
-              alignment: WrapAlignment.center,
+            child: Row(
               children: [
-                _categoriaButton("Teclado"),
-                _categoriaButton("Tarjeta Grafica"),
-                _categoriaButton("Audifonos"),
-                _categoriaButton("Mouse"),
-                _categoriaButton("Procesador"),
-                _categoriaButton("Soporte"),
+                Icon(Icons.search_rounded, color: AppColors.primary),
+                const SizedBox(width: 12),
+                Text(
+                  "Buscar productos...",
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+                const Spacer(),
+                Icon(Icons.tune_rounded, color: AppColors.textSecondary),
               ],
             ),
-
-            SizedBox(height: 40),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _cardProducto({required String imagen, required String titulo}) {
-    return Container(
-      width: 200,
-      padding: EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Column(
-        children: [
-          Expanded(child: Image.asset(imagen, fit: BoxFit.contain)),
-          SizedBox(height: 10),
+          ),
+          const SizedBox(height: 28),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: const [
+              _ChipWidget(label: "Gaming"),
+              _ChipWidget(label: "Laptops"),
+              _ChipWidget(label: "Mouse"),
+              _ChipWidget(label: "Teclados"),
+              _ChipWidget(label: "Redes"),
+              _ChipWidget(label: "Reparación"),
+            ],
+          ),
+          const SizedBox(height: 34),
           Text(
-            titulo,
-            style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
+            "Tendencias",
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            height: 280,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: const [
+                _ProductCard(
+                  title: "RTX 3050 ASUS",
+                  image: "assets/asusdual.png",
+                ),
+                SizedBox(width: 18),
+                _ProductCard(
+                  title: "AMD Radeon PRO",
+                  image: "assets/amdradeon.png",
+                ),
+                SizedBox(width: 18),
+                _ProductCard(
+                  title: "Mouse Gamer",
+                  image: "assets/mouseacteck.png",
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _categoriaButton(String texto) {
+class _ChipWidget extends StatelessWidget {
+  final String label;
+
+  const _ChipWidget({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade300,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Text(
-        texto,
-        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        label,
+        style: TextStyle(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _ProductCard extends StatelessWidget {
+  final String title;
+  final String image;
+
+  const _ProductCard({
+    required this.title,
+    required this.image,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 220,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Text(
+              "Popular",
+              style: TextStyle(
+                color: Colors.greenAccent,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: Image.asset(image),
+            ),
+          ),
+          Text(
+            title,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Disponible ahora",
+            style: TextStyle(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }

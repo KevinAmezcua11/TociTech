@@ -1,155 +1,155 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 
-class ReparacionesPage extends StatefulWidget {
-  const ReparacionesPage({super.key});
+class NotificacionesPage extends StatelessWidget {
+  const NotificacionesPage({super.key});
 
-  @override
-  State<ReparacionesPage> createState() => _ReparacionesPageState();
-}
-
-class _ReparacionesPageState extends State<ReparacionesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        iconTheme: IconThemeData(
-          color: Colors.white,
-        ),
-        title: Text("Reparaciones", style: TextStyle(
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
+        title: Text(
+          "Notificaciones",
+          style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
-            fontSize: 24
           ),
         ),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              decoration: const BoxDecoration(
-                color: Color(0xFF0F172A),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      _tabButton("Pendientes", true),
-                      const SizedBox(width: 10),
-                      _tabButton("Completadas", false),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _filterChip("Todas", true),
-                        const SizedBox(width: 10),
-                        _filterChip("Teléfonos", false),
-                        const SizedBox(width: 10),
-                        _filterChip("Computadoras", false),
-                        const SizedBox(width: 10),
-                        _filterChip("Consolas", false),
-                      ],
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: const [
+          _SectionTitle(title: "Hoy"),
+          SizedBox(height: 16),
+          _NotificationCard(
+            icon: Icons.shopping_bag_rounded,
+            title: "Compra confirmada",
+            subtitle: "Tu pedido fue procesado correctamente.",
+            time: "Hace 5 min",
+          ),
+          SizedBox(height: 14),
+          _NotificationCard(
+            icon: Icons.build_circle_rounded,
+            title: "Equipo reparado",
+            subtitle: "Tu laptop ya está lista para recoger.",
+            time: "Hace 20 min",
+          ),
+          SizedBox(height: 28),
+          _SectionTitle(title: "Ayer"),
+          SizedBox(height: 16),
+          _NotificationCard(
+            icon: Icons.local_offer_rounded,
+            title: "Nueva promoción",
+            subtitle: "Descuentos en componentes gaming.",
+            time: "Ayer",
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String title;
+
+  const _SectionTitle({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: TextStyle(
+        color: AppColors.textPrimary,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+}
+
+class _NotificationCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String time;
+
+  const _NotificationCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.time,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(icon, color: AppColors.primary),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
-                          height: 45,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1E293B),
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.search, color: Colors.white54),
-                              SizedBox(width: 10),
-                              Text("Buscar reparación...", style: TextStyle(color: Colors.white54)),
-                            ],
-                          ),
-                        ),
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                        color: Colors.blueAccent,
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(width: 10),
-                      Container(
-                        height: 45,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        decoration: BoxDecoration(
-                          color: AppColors.blue,
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                        child: const Center(
-                          child: Text("Filtrar", style: TextStyle(color: AppColors.textPrimary)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            const Text("Lista de Dispositivos",
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-
-            const SizedBox(height: 20),
-
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: 3,
-                itemBuilder: (context, index) => Container(
-                  margin: const EdgeInsets.only(bottom: 20),
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: AppColors.blue,
-                    borderRadius: BorderRadius.circular(40),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    height: 1.5,
                   ),
                 ),
-              ),
+                const SizedBox(height: 10),
+                Text(
+                  time,
+                  style: TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _tabButton(String text, bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF1E293B) : Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: isActive ? AppColors.textPrimary : Colors.white54,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-
-  Widget _filterChip(String text, bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(
-        color: isActive ? AppColors.blue : const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Text(text, style: const TextStyle(color: AppColors.textPrimary)),
     );
   }
 }
