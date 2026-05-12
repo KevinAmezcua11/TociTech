@@ -24,10 +24,10 @@ class _TociTechAppState extends State<TociTechApp> {
   int _cartCount = 0;
 
   final List _titulosAppBar = [
-    "TociTech",
+    "Inicio",
     "Productos",
     "Servicios",
-    "Ajustes"
+    "Perfil"
   ];
 
   @override
@@ -46,59 +46,90 @@ class _TociTechAppState extends State<TociTechApp> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        toolbarHeight: 70,
-        title: Padding(
-          padding: EdgeInsets.only(left: 8),
-          child: Text(
-            _titulosAppBar[_index],
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+        elevation: 0,
+        backgroundColor: AppColors.background,
+        titleSpacing: 20,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Bienvenido",
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+              ),
             ),
-          ),
+            Text(
+              _titulosAppBar[_index],
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
-
         actions: [
-          IconButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const NotificacionesPage()),
+          Container(
+            margin: const EdgeInsets.only(right: 10),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
             ),
-            icon: Icon(Icons.notifications_outlined, color: AppColors.primary),
+            child: IconButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const NotificacionesPage(),
+                ),
+              ),
+              icon: Icon(
+                Icons.notifications_none_rounded,
+                color: AppColors.primary,
+              ),
+            ),
           ),
           Stack(
             children: [
-              IconButton(
-                onPressed: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CartPage()),
-                  );
-                  _loadCartCount();
-                },
-                icon: const Icon(Icons.shopping_cart_outlined,
-                    color: AppColors.primary),
+              Container(
+                margin: const EdgeInsets.only(right: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: IconButton(
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CartPage()),
+                    );
+                    _loadCartCount();
+                  },
+                  icon: const Icon(
+                    Icons.shopping_bag_outlined,
+                    color: AppColors.primary,
+                  ),
+                ),
               ),
               if (_cartCount > 0)
                 Positioned(
-                  right: 6,
-                  top: 6,
+                  right: 16,
+                  top: 2,
                   child: Container(
-                    width: 18,
-                    height: 18,
+                    width: 20,
+                    height: 20,
                     decoration: const BoxDecoration(
-                      color: AppColors.primary,
+                      color: Colors.redAccent,
                       shape: BoxShape.circle,
                     ),
                     child: Center(
                       child: Text(
                         _cartCount > 99 ? '99+' : '$_cartCount',
                         style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -107,107 +138,129 @@ class _TociTechAppState extends State<TociTechApp> {
           ),
         ],
       ),
-
       body: _contenido(),
-
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        child: Container(
-          padding: EdgeInsets.only(top: 8),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 10),
-            ],
-          ),
-          child: BottomNavigationBar(
-            currentIndex: _index,
-            onTap: (x) => setState(() => _index = x),
-            items: [
-              BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: "Inicio"),
-              BottomNavigationBarItem(icon: Icon(Icons.category_outlined), label: "Productos"),
-              BottomNavigationBarItem(icon: Icon(Icons.handyman), label: "Servicios"),
-              BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: "Ajustes"),
-            ],
-            iconSize: 24,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            showUnselectedLabels: true,
-            selectedIconTheme: IconThemeData(color: AppColors.primary),
-            unselectedIconTheme: IconThemeData(color: Color(0xFF8A8A93)),
-            selectedLabelStyle: TextStyle(fontSize: 12),
-            unselectedLabelStyle: TextStyle(fontSize: 12),
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor: Color(0xFFD6D6D6),
-          ),
-        ),
-      ),
-
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(
-          context,MaterialPageRoute(builder: (_) => const AiChatPage()),
-        ),
         backgroundColor: AppColors.blue,
-        child: Icon(Icons.smart_toy, size: 28, color: Colors.white),
+        elevation: 10,
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AiChatPage()),
+        ),
+        child: const Icon(Icons.smart_toy_rounded, color: Colors.white),
+      ),
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.4),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _index,
+          onTap: (x) => setState(() => _index = x),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: Colors.white54,
+          showUnselectedLabels: true,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_rounded),
+              label: "Inicio",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_bag_rounded),
+              label: "Productos",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.handyman_rounded),
+              label: "Servicios",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_rounded),
+              label: "Perfil",
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget? _contenido() {
     switch (_index) {
-      case 0:  return _buildHome();
-      case 1:  return const ProductsPage();
-      case 2:  return const ServiciosPage();
-      case 3:  return const AjustesPage();
-      default: return const Center(child: Text("Página no existe"));
+      case 0:
+        return _buildHome();
+      case 1:
+        return const ProductsPage();
+      case 2:
+        return const ServiciosPage();
+      case 3:
+        return const AjustesPage();
+      default:
+        return const SizedBox();
     }
   }
 
   Widget _buildHome() {
     return ListView(
+      padding: const EdgeInsets.only(bottom: 120),
       children: [
         _searchBar(),
-        SizedBox(height: 1),
+        const SizedBox(height: 20),
         _heroSection(),
-        SizedBox(height: 28),
+        const SizedBox(height: 28),
         _estadisticasSection(),
-        SizedBox(height: 32),
-        _seccionTitulo("Nuestros Servicios", "Soluciones con precios claros y accesibles"),
-        SizedBox(height: 16),
+        const SizedBox(height: 34),
+        _sectionTitle(
+          "Servicios Destacados",
+          "Soluciones rápidas para tus dispositivos",
+        ),
+        const SizedBox(height: 18),
         _serviciosHorizontal(),
-        SizedBox(height: 32),
-        _seccionTitulo("Horarios de Atención", "Disponibles para ayudarte"),
-        SizedBox(height: 16),
+        const SizedBox(height: 34),
+        _sectionTitle(
+          "Horarios",
+          "Estamos listos para ayudarte",
+        ),
+        const SizedBox(height: 18),
         _horariosSection(),
-        SizedBox(height: 40),
       ],
     );
   }
 
   Widget _searchBar() {
-    return Container(
-      height: 56,
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: AppColors.surface,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GestureDetector(
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const BusquedaPage()),
         ),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+          height: 58,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
           decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(18),
           ),
           child: Row(
             children: [
-              Icon(Icons.search, color: Color(0xFF8A8A93), size: 20),
-              SizedBox(width: 10),
-              Text("Buscar producto...",
-                  style: TextStyle(color: Color(0xFF8A8A93), fontSize: 14)),
+              Icon(Icons.search_rounded, color: AppColors.textSecondary),
+              const SizedBox(width: 12),
+              Text(
+                "Buscar productos o servicios",
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
         ),
@@ -217,98 +270,107 @@ class _TociTechAppState extends State<TociTechApp> {
 
   Widget _heroSection() {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 24, 20, 28),
-      color: AppColors.surface,
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF2563EB),
+            Color(0xFF1E3A8A),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: AppColors.primary.withOpacity(0.15),
-                child: Image.asset("assets/Logo-img.png"),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Icon(
+                  Icons.memory_rounded,
+                  color: Colors.white,
+                  size: 34,
+                ),
               ),
-
-              SizedBox(width: 12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("TociTech",
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text("Soluciones tecnológicas\npara tu equipo",
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  "TOP TECH",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
                 ),
               ),
             ],
           ),
-
-          SizedBox(height: 14),
-
-          Text("Venta de hardware, reparación especializada y atención para que tu equipo rinda al máximo.",
+          const SizedBox(height: 26),
+          const Text(
+            "Tecnología y reparación profesional",
             style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-                height: 1.5
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              height: 1.2,
             ),
           ),
-
-          SizedBox(height: 20),
-
+          const SizedBox(height: 12),
+          Text(
+            "Productos, reparación y soporte técnico en un solo lugar.",
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.85),
+              fontSize: 15,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 28),
           Row(
             children: [
               Expanded(
-                child: FilledButton.icon(
+                child: FilledButton(
                   onPressed: () => setState(() => _index = 1),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.blue,
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  icon: Icon(Icons.grid_view_rounded, size: 16),
-                  label: Text("Ver productos",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13
-                      )
-                  ),
-                ),
-              ),
-
-              SizedBox(width: 10),
-
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => setState(() => _index = 2),
-                  icon: Icon(Icons.handyman_rounded, size: 16, color: Colors.black87),
-                  label: Text("Ver servicios",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                        fontSize: 13
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
                     ),
                   ),
+                  child: const Text("Explorar productos"),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => setState(() => _index = 2),
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    side: BorderSide.none,
+                    side: const BorderSide(color: Colors.white),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  child: const Text(
+                    "Servicios",
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
               ),
@@ -321,43 +383,46 @@ class _TociTechAppState extends State<TociTechApp> {
 
   Widget _estadisticasSection() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          _statCard(Icons.star_rounded, "4.9", "Calificación", Color(0xFFFFD54F)),
-          SizedBox(width: 12),
-          _statCard(Icons.people_rounded, "500+", "Clientes", AppColors.primary),
-          SizedBox(width: 12),
-          _statCard(Icons.build_circle_rounded, "1000+", "Reparaciones", AppColors.blue),
+          _statCard(Icons.star_rounded, "4.9", "Calificación"),
+          const SizedBox(width: 14),
+          _statCard(Icons.people_alt_rounded, "500+", "Clientes"),
+          const SizedBox(width: 14),
+          _statCard(Icons.build_circle_rounded, "1000+", "Servicios"),
         ],
       ),
     );
   }
 
-  Widget _statCard(IconData icon, String titulo, String descripcion, Color color) {
+  Widget _statCard(IconData icon, String value, String label) {
     return Expanded(
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(22),
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 22),
-            SizedBox(height: 6),
-            Text(titulo,
+            Icon(icon, color: AppColors.primary, size: 28),
+            const SizedBox(height: 10),
+            Text(
+              value,
               style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
               ),
             ),
-            SizedBox(height: 2),
-            Text(descripcion,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
-              textAlign: TextAlign.center,
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
             ),
           ],
         ),
@@ -365,53 +430,57 @@ class _TociTechAppState extends State<TociTechApp> {
     );
   }
 
-  Widget _seccionTitulo(String titulo, String subtitulo) {
+  Widget _sectionTitle(String title, String subtitle) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(titulo,
+          Text(
+            title,
             style: TextStyle(
               color: AppColors.textPrimary,
-              fontSize: 20,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 4),
-          Text(subtitulo,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
           ),
         ],
       ),
     );
   }
 
-  // Seccion Servicios
   Widget _serviciosHorizontal() {
     final servicios = [
       ServiceModel(
         id: '',
-        name: 'Diagnóstico técnico',
-        description: 'Revisión completa para detectar fallas de hardware o software.',
+        name: 'Diagnóstico Técnico',
+        description: 'Revisión completa para detectar fallas.',
         price: 150,
-        duration: '1-2 días hábiles',
+        duration: '1 día',
         active: true,
       ),
       ServiceModel(
         id: '',
         name: 'Mantenimiento Preventivo',
-        description: 'Limpieza y optimización para prolongar la vida útil del equipo.',
+        description: 'Optimización y limpieza profesional.',
         price: 350,
-        duration: '1 día hábil',
+        duration: '1 día',
         active: true,
       ),
       ServiceModel(
         id: '',
         name: 'Reparación de Hardware',
-        description: 'Solución de fallas físicas en laptop o PC.',
-        price: 400,
-        duration: '1-15 días hábiles',
+        description: 'Solución de fallas físicas.',
+        price: 450,
+        duration: '2 días',
         active: true,
       ),
     ];
@@ -422,16 +491,19 @@ class _TociTechAppState extends State<TociTechApp> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: servicios.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 14),
-        itemBuilder: (context, i) {
-          final s = servicios[i];
+        separatorBuilder: (_, __) => const SizedBox(width: 18),
+        itemBuilder: (context, index) {
+          final s = servicios[index];
+
           return SizedBox(
-            width: 240,
+            width: 260,
             child: ServiceCard(
               service: s,
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => ServiceDetailPage(service: s)),
+                MaterialPageRoute(
+                  builder: (_) => ServiceDetailPage(service: s),
+                ),
               ),
             ),
           );
@@ -440,58 +512,71 @@ class _TociTechAppState extends State<TociTechApp> {
     );
   }
 
-  // Seccion Horarios
   Widget _horariosSection() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          _horarioRow(Icons.wb_sunny_outlined, "Lunes a Viernes", "9:00 AM – 7:00 PM", AppColors.primary),
-          SizedBox(height: 10),
-          _horarioRow(Icons.wb_twilight_outlined, "Sábado", "9:00 AM – 2:00 PM", AppColors.blue),
-          SizedBox(height: 10),
-          _horarioRow(Icons.bedtime_outlined, "Domingo", "Cerrado", Colors.grey),
+          _scheduleTile(
+            Icons.calendar_today_rounded,
+            "Lunes a Viernes",
+            "9:00 AM - 7:00 PM",
+          ),
+          const SizedBox(height: 14),
+          _scheduleTile(
+            Icons.weekend_rounded,
+            "Sábados",
+            "9:00 AM - 2:00 PM",
+          ),
+          const SizedBox(height: 14),
+          _scheduleTile(
+            Icons.nights_stay_rounded,
+            "Domingos",
+            "Cerrado",
+          ),
         ],
       ),
     );
   }
 
-  Widget _horarioRow(IconData icon, String dia, String horario, Color color) {
+  Widget _scheduleTile(IconData icon, String title, String time) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.25)),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(10),
+              color: AppColors.primary.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: AppColors.primary),
           ),
-
-          SizedBox(width: 14),
-
+          const SizedBox(width: 16),
           Expanded(
-            child: Text(dia,
-              style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14
-              ),
-            ),
-          ),
-
-          Text(horario,
-            style: TextStyle(
-              color: horario == "Cerrado" ? Colors.grey : AppColors.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  time,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
