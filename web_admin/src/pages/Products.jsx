@@ -12,6 +12,12 @@ import ConfirmModal from "../components/ConfirmModal";
 import {
     getProducts, createProduct, updateProduct, deleteProduct
 } from "../api/productService";
+import {
+    trackPageView,
+    trackCreateProduct,
+    trackUpdateProduct,
+    trackDeleteProduct
+} from "../utils/dataLayer";
 
 /* ─── Opciones ─────────────────────────────────────── */
 const CATEGORY_OPTIONS = [
@@ -117,7 +123,10 @@ export default function Products() {
         }
     };
 
-    useEffect(() => { fetchProducts(); }, []);
+    useEffect(() => { 
+        trackPageView("Products");
+        fetchProducts(); 
+    }, []);
 
     /* ── feedback ── */
     useEffect(() => {
@@ -206,10 +215,22 @@ export default function Products() {
         try {
             setSaving(true);
             if (modalMode === "create") {
-                await createProduct(payload);
+                const created = await createProduct(payload);
+
+                trackCreateProduct({
+                    id: created?.id || payload.sku || payload.name,
+                    name: payload.name
+                });
+
                 showFeedback("success", "Producto creado correctamente.");
             } else {
                 await updateProduct(selected.id, payload);
+
+                trackUpdateProduct({
+                    id: selected.id,
+                    name: payload.name
+                });
+
                 showFeedback("success", "Producto actualizado correctamente.");
             }
             closeModal();
@@ -225,6 +246,7 @@ export default function Products() {
         try {
             setSaving(true);
             await deleteProduct(toDelete.id);
+            trackDeleteProduct(toDelete.id);
             showFeedback("success", `"${toDelete.name}" eliminado.`);
             setConfirmDelete(false);
             setToDelete(null);

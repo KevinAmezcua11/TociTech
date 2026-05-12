@@ -8,6 +8,7 @@ import { getProducts }      from "../api/productService";
 import { getServices }      from "../api/serviceService";
 import { getClients }       from "../api/userService";
 import { getNotifications, markAllAsRead } from "../api/notificationService";
+import { trackSearch } from "../utils/dataLayer";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -121,6 +122,8 @@ export default function Header() {
     const handleSearch = (value) => {
         setSearch(value);
         if (!value.trim()) { setResults([]); setShowResults(false); return; }
+
+        trackSearch(value);
 
         const q = value.toLowerCase();
         const found = [

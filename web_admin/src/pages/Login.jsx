@@ -3,6 +3,7 @@ import api from "../api/api";
 import { useNavigate } from "react-router-dom";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
 import logo from "../assets/Logo-img.png";
+import { trackLogin } from "../utils/dataLayer";
 
 export default function Login() {
     const [username, setUsername] = useState("");
@@ -23,6 +24,8 @@ export default function Login() {
 
             localStorage.setItem("token", res.data.token);
             localStorage.setItem("user", JSON.stringify(res.data.user));
+
+            trackLogin("email");
 
             navigate("/dashboard");
 

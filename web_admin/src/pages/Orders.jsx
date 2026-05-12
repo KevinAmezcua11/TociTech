@@ -11,6 +11,10 @@ import {
     Calendar, Package, Wrench, SlidersHorizontal, X, ArrowUpDown, ArrowUp,
     ArrowDown, RotateCcw,
 } from "lucide-react";
+import {
+    trackPageView,
+    trackUpdateOrderStatus
+} from "../utils/dataLayer";
 
 // ─── Opciones para el selector de estadoPedido en la tabla ──────────────────
 const ESTADO_OPTIONS = [
@@ -97,6 +101,7 @@ export default function Orders() {
     };
 
     useEffect(() => {
+        trackPageView("Orders");
         fetchOrders();
         // Polling cada 8 s para reflejar cambios del webhook Stripe en Firestore
         intervalRef.current = setInterval(fetchOrders, 8000);

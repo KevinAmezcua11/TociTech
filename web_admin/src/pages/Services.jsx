@@ -21,6 +21,12 @@ import {
     Trash2,
     X,
 } from "lucide-react";
+import {
+    trackPageView,
+    trackCreateService,
+    trackUpdateService,
+    trackDeleteService
+} from "../utils/dataLayer";
 
 const emptyForm = {
     name: "",
@@ -44,6 +50,7 @@ export default function Services() {
     const [success, setSuccess] = useState("");
 
     useEffect(() => {
+        trackPageView("Services");
         fetchServices();
     }, []);
 

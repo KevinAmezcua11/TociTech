@@ -10,6 +10,7 @@ import {
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { getDashboardData } from "../api/dashboardService";
+import { trackPageView } from "../utils/dataLayer";
 
 const tickStyle = { fill: "rgba(255,255,255,0.35)", fontSize: 11 };
 
@@ -75,7 +76,10 @@ export default function Dashboard() {
     const [barData, setBarData] = useState([]);
     const [totalSales, setTotalSales] = useState(0);
 
-    useEffect(() => { loadData(); }, []);
+    useEffect(() => { 
+        trackPageView("Dashboard"); 
+        loadData(); 
+    }, []);
 
     const loadData = async () => {
         try {
