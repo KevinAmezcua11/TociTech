@@ -3,6 +3,8 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Product = require("../models/product.model");
 const Service = require("../models/services.model");
 
+const cache = new Map();
+
 const genAI = new GoogleGenerativeAI(
     process.env.GEMINI_API_KEY
 );
@@ -49,19 +51,22 @@ function needsServices(message) {
 // =========================
 
 async function askAI(message, retries = 3) {
+    const cacheKey = message.toLowerCase().trim();
+
+    if (cache.has(cacheKey)) {
+        console.log("✅ Respuesta desde caché");
+        return cache.get(cacheKey);
+    }
 
     const lower = message.toLowerCase();
 
-    // Solo cargar datos si la pregunta los necesita
     const loadProducts = needsProducts(message);
     const loadServices = needsServices(message);
 
     const products = loadProducts ? await Product.getAllProducts() : [];
     const services = loadServices ? await Service.getAllServices() : [];
 
-    // Filtrar productos relevantes
     const filteredProducts = products.filter(product => {
-
         const text = `
             ${product.name}
             ${product.category}
@@ -72,12 +77,9 @@ async function askAI(message, retries = 3) {
         return lower
             .split(" ")
             .some(word => word.length > 2 && text.includes(word));
-
     }).slice(0, 3);
 
-    // Filtrar servicios relevantes
     const filteredServices = services.filter(service => {
-
         const text = `
             ${service.name}
             ${service.description}
@@ -86,24 +88,20 @@ async function askAI(message, retries = 3) {
         return lower
             .split(" ")
             .some(word => word.length > 2 && text.includes(word));
-
     }).slice(0, 3);
 
-    // Contexto compacto productos
     const productsContext = filteredProducts.length > 0
         ? filteredProducts.map(p =>
             `• ${p.name} (${p.brand}) - $${p.price} - Stock: ${p.stock}`
         ).join("\n")
         : loadProducts ? "Sin productos relacionados." : "";
 
-    // Contexto compacto servicios
     const servicesContext = filteredServices.length > 0
         ? filteredServices.map(s =>
             `• ${s.name} - $${s.price} - ${s.duration}`
         ).join("\n")
         : loadServices ? "Sin servicios relacionados." : "";
 
-    // Prompt minimalista
     const prompt = `Eres el asistente de TociTech, tienda de tecnología en Tepic, Nayarit.
 Horario: lunes a viernes 9:00am-7:00pm, sábado 9:00am-2:00pm, domingo cerrado.
 Responde breve y profesional.
@@ -122,7 +120,13 @@ Respuesta:`;
     try {
 
         const result = await model.generateContent(prompt);
-        return result.response.text();
+        const reply = result.response.text();
+
+        // Guardar en caché
+        cache.set(cacheKey, reply);
+        console.log("💾 Respuesta guardada en caché");
+
+        return reply;
 
     } catch (error) {
 
@@ -131,8 +135,7 @@ Respuesta:`;
 
         if (isRateLimit && canRetry) {
             const delay = getRetryDelay(error);
-            // Solo reintentar si la espera es corta (<=15s), si no, fallar rápido
-            if (delay <= 15000) {
+            if (delay <= 8000) {
                 console.log(`⏳ Rate limit. Reintentando en ${delay / 1000}s... (intentos restantes: ${retries - 1})`);
                 await sleep(delay);
                 return askAI(message, retries - 1);
