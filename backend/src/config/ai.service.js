@@ -8,7 +8,7 @@ const genAI = new GoogleGenerativeAI(
 );
 
 const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     generationConfig: {
         temperature: 0.5,
         maxOutputTokens: 300,
@@ -131,8 +131,8 @@ Respuesta:`;
 
         if (isRateLimit && canRetry) {
             const delay = getRetryDelay(error);
-            // Solo reintentar si la espera es corta (<=8s), si no, fallar rápido
-            if (delay <= 8000) {
+            // Solo reintentar si la espera es corta (<=15s), si no, fallar rápido
+            if (delay <= 15000) {
                 console.log(`⏳ Rate limit. Reintentando en ${delay / 1000}s... (intentos restantes: ${retries - 1})`);
                 await sleep(delay);
                 return askAI(message, retries - 1);
