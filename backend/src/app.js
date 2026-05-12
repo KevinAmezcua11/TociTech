@@ -15,12 +15,18 @@ const notificationRoutes = require("./routes/notification.route");
 const app = express();
 
 app.use(cors({
-    origin: [
-        "http://localhost:5173",
-        "http://10.0.2.2:3000",  // Android emulator
-        "http://localhost:3000",  // iOS simulator
-        "https://toci-tech.vercel.app"
-    ],
+    origin: function(origin, callback) {
+        const allowed = [
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "https://toci-tech.vercel.app"
+        ];
+        if (!origin || allowed.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true
 }));
 
