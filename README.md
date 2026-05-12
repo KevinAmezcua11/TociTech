@@ -332,14 +332,6 @@ La documentación del proyecto se encuentra organizada por sprint dentro de la c
 
 ---
 
-# 👨‍💻 Integrantes
-
-- Kevin Elias Amezcua
-- José Luis Encarnación García
-- Ricardo Said Ramírez Cortez
-
----
-
 # 🌐 Repositorio
 
 ```bash
@@ -361,6 +353,16 @@ https://tocitech-backend.onrender.com/
 ```bash
 https://toci-tech.vercel.app/
 ```
+
+---
+
+# 👨‍💻 Integrantes
+
+- Kevin Elias Amezcua
+- José Luis Encarnación García
+- Ricardo Said Ramírez Cortez
+
+---
 
 <div align="center">
 
