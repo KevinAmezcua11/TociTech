@@ -17,6 +17,7 @@ import '../products/products_page.dart';
 import 'busqueda_page.dart';
 import '../ai/ai_chat_page.dart';
 
+
 class TociTechApp extends StatefulWidget {
   const TociTechApp({super.key});
 
