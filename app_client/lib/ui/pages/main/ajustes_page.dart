@@ -4,6 +4,7 @@ import '../../../database/local/session_local_service.dart';
 import '../../../models/order_model.dart';
 import '../../../models/user_model.dart';
 import '../../../services/api_service.dart';
+import '../../../services/order_notification_sync_service.dart';
 import '../../../services/order_service.dart';
 import '../../../services/user_profile_service.dart';
 import '../../../theme/app_theme.dart';
@@ -19,9 +20,6 @@ class AjustesPage extends StatefulWidget {
 }
 
 class _AjustesPageState extends State<AjustesPage> {
-  String notificacionSeleccionada = 'ninguna';
-  String aparienciaSeleccionada = 'oscuro';
-
   late final UserProfileService _profileService;
   late final OrderService _orderService;
 
@@ -67,6 +65,7 @@ class _AjustesPageState extends State<AjustesPage> {
         _user = results[0] as User;
         _orders = results[1] as List<Order>;
       });
+      await OrderNotificationSyncService.syncPurchaseNotifications(_orders);
     } catch (e) {
       await _loadLocalSessionFallback();
       if (!mounted) return;
@@ -143,8 +142,8 @@ class _AjustesPageState extends State<AjustesPage> {
               ),
               _settingsTile(
                 icon: Icons.lock_outline_rounded,
-                title: 'Cambiar contrasena',
-                subtitle: 'Valida tu contrasena actual antes de guardar',
+                title: 'Cambiar contraseña',
+                subtitle: 'Valida tu contraseña actual antes de guardar',
                 onTap: _showChangePasswordSheet,
               ),
               _settingsTile(
@@ -157,18 +156,6 @@ class _AjustesPageState extends State<AjustesPage> {
                 ),
               ),
             ]),
-            const SizedBox(height: 24),
-            _sectionTitle('Preferencia de notificacion'),
-            const SizedBox(height: 12),
-            _settingsCard([
-              _radioNotificacion('reparaciones', 'Reparaciones'),
-              _radioNotificacion('compras', 'Compras'),
-              _radioNotificacion('ninguna', 'Ninguna'),
-            ]),
-            const SizedBox(height: 24),
-            _sectionTitle('Apariencia'),
-            const SizedBox(height: 12),
-            _appearanceSelector(),
             const SizedBox(height: 28),
             _logoutButton(),
           ],
@@ -440,107 +427,6 @@ class _AjustesPageState extends State<AjustesPage> {
     );
   }
 
-  Widget _radioNotificacion(String valor, String texto) {
-    final selected = notificacionSeleccionada == valor;
-
-    return InkWell(
-      onTap: () => setState(() => notificacionSeleccionada = valor),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-        child: Row(
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: selected ? AppColors.primary : AppColors.textMuted,
-                  width: 2,
-                ),
-              ),
-              child: Center(
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  width: selected ? 10 : 0,
-                  height: selected ? 10 : 0,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(texto, style: const TextStyle(color: AppColors.textPrimary)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _appearanceSelector() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
-      child: Row(
-        children: [
-          Expanded(child: _appearanceOption('oscuro', 'Oscuro')),
-          const SizedBox(width: 12),
-          Expanded(child: _appearanceOption('claro', 'Claro')),
-        ],
-      ),
-    );
-  }
-
-  Widget _appearanceOption(String value, String label) {
-    final selected = aparienciaSeleccionada == value;
-
-    return InkWell(
-      onTap: () => setState(() => aparienciaSeleccionada = value),
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.primary.withValues(alpha: 0.16)
-              : Colors.white.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: selected ? AppColors.primary : Colors.transparent,
-          ),
-        ),
-        child: Column(
-          children: [
-            Container(
-              height: 58,
-              decoration: BoxDecoration(
-                color: value == 'oscuro'
-                    ? AppColors.background
-                    : const Color(0xFFE5E7EB),
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _logoutButton() {
     return SizedBox(
       width: double.infinity,
@@ -736,7 +622,7 @@ class _AjustesPageState extends State<AjustesPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Cambiar contrasena',
+                        'Cambiar contraseña',
                         style: TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 20,
@@ -745,7 +631,7 @@ class _AjustesPageState extends State<AjustesPage> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Por seguridad validamos tu contrasena actual.',
+                        'Por seguridad validamos tu contraseña actual.',
                         style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
@@ -754,24 +640,24 @@ class _AjustesPageState extends State<AjustesPage> {
                       const SizedBox(height: 18),
                       _formField(
                         currentController,
-                        'Contrasena actual',
+                        'Contraseña actual',
                         obscureText: true,
                       ),
                       const SizedBox(height: 12),
                       _formField(
                         newController,
-                        'Nueva contrasena',
+                        'Nueva contraseña',
                         obscureText: true,
                         validator: _validatePassword,
                       ),
                       const SizedBox(height: 12),
                       _formField(
                         confirmController,
-                        'Confirmar contrasena',
+                        'Confirmar contraseña',
                         obscureText: true,
                         validator: (value) {
                           if ((value ?? '') != newController.text) {
-                            return 'Las contrasenas no coinciden.';
+                            return 'Las contraseñas no coinciden.';
                           }
                           return null;
                         },
@@ -805,7 +691,7 @@ class _AjustesPageState extends State<AjustesPage> {
                                     Navigator.pop(sheetContext);
                                     AppSnackbar.success(
                                       context,
-                                      'Contrasena actualizada correctamente.',
+                                      'Contraseña actualizada correctamente.',
                                     );
                                   } catch (e) {
                                     if (context.mounted) {
@@ -827,7 +713,7 @@ class _AjustesPageState extends State<AjustesPage> {
                                   ),
                                 )
                               : const Icon(Icons.lock_reset_rounded),
-                          label: const Text('Actualizar contrasena'),
+                          label: const Text('Cambiar contraseña'),
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(
@@ -909,7 +795,8 @@ class _AjustesPageState extends State<AjustesPage> {
   String? _validatePassword(String? value) {
     final text = value ?? '';
     if (text.length < 8) return 'Minimo 8 caracteres.';
-    if (!RegExp(r'[A-Za-z]').hasMatch(text) || !RegExp(r'\d').hasMatch(text)) {
+    if (!RegExp(r'[A-Za-zñÑ]').hasMatch(text) ||
+        !RegExp(r'\d').hasMatch(text)) {
       return 'Usa letras y numeros.';
     }
     return null;
