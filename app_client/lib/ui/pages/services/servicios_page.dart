@@ -44,12 +44,6 @@ class _ServiciosPageState extends State<ServiciosPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'add-service',
-        backgroundColor: AppColors.blue,
-        onPressed: () => _openServiceForm(),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
       body: RefreshIndicator(
         color: AppColors.primary,
         backgroundColor: AppColors.surface,

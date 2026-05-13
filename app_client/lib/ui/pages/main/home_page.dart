@@ -208,15 +208,6 @@ class _TociTechAppState extends State<TociTechApp> {
         ],
       ),
       body: _contenido(),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.blue,
-        elevation: 10,
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const AiChatPage()),
-        ),
-        child: const Icon(Icons.smart_toy_rounded, color: Colors.white),
-      ),
       bottomNavigationBar: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 18),
         decoration: BoxDecoration(
@@ -531,8 +522,6 @@ class _TociTechAppState extends State<TociTechApp> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          _syncStatusCard(),
         ],
       ),
     );
@@ -581,49 +570,6 @@ class _TociTechAppState extends State<TociTechApp> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _syncStatusCard() {
-    final message = _homeLoading
-        ? 'Actualizando informacion desde Firebase...'
-        : 'Metricas cargadas desde la base de datos y servicios activos.';
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.green.withValues(alpha: 0.13),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.cloud_done_outlined,
-              color: AppColors.green,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12,
-                height: 1.35,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

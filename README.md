@@ -20,7 +20,7 @@ TociTech es un proyecto Full Stack compuesto por:
 - ⚙️ Backend API REST desarrollado con Node.js y Express
 - 💻 Panel administrativo web desarrollado con React y Vite
 
-El sistema permite administrar productos, servicios, pedidos y usuarios, además de integrar servicios externos como Stripe, Firebase, Gemini AI y SendGrid.
+El sistema permite administrar productos, servicios, pedidos y usuarios, además de integrar servicios externos como Stripe, Firebase y SendGrid.
 
 ---
 
@@ -107,7 +107,6 @@ El sistema permite administrar productos, servicios, pedidos y usuarios, además
 # ☁️ Servicios Externos Integrados
 
 - 🔥 Firebase
-- 🤖 Gemini AI
 - 💳 Stripe
 - 📧 SendGrid
 
@@ -122,7 +121,6 @@ El sistema permite administrar productos, servicios, pedidos y usuarios, además
 ⚙️ API REST (Node.js + Express)
         │
         ├── Firebase
-        ├── Gemini AI
         ├── Stripe
         └── SendGrid
 
@@ -234,7 +232,6 @@ PORT=
 JWT_SECRET=
 STRIPE_SECRET_KEY=
 SENDGRID_API_KEY=
-GEMINI_API_KEY=
 FIREBASE_PROJECT_ID=
 ```
 
@@ -326,7 +323,6 @@ La documentación del proyecto se encuentra organizada por sprint dentro de la c
 | Servicio | Uso |
 |---|---|
 | Firebase | Servicios externos y administración |
-| Gemini AI | Funcionalidades inteligentes |
 | Stripe | Procesamiento de pagos |
 | SendGrid | Envío de correos electrónicos |
 

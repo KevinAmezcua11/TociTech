@@ -12,7 +12,6 @@ El sprint incluyó el desarrollo de:
 - 💳 Integración de pagos con Stripe
 - 📧 Envío automático de correos con SendGrid
 - ☁️ Base de datos en Firebase Firestore
-- 🤖 Integración de inteligencia artificial con Gemini AI
 
 La arquitectura implementada sigue un enfoque modular y escalable, permitiendo la comunicación entre cliente, servidor y servicios externos mediante peticiones HTTP y manejo de JSON.
 
