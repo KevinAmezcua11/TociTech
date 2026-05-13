@@ -208,15 +208,6 @@ class _TociTechAppState extends State<TociTechApp> {
         ],
       ),
       body: _contenido(),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.blue,
-        elevation: 10,
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const AiChatPage()),
-        ),
-        child: const Icon(Icons.smart_toy_rounded, color: Colors.white),
-      ),
       bottomNavigationBar: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 18),
         decoration: BoxDecoration(
