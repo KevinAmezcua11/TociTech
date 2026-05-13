@@ -713,7 +713,7 @@ class _AjustesPageState extends State<AjustesPage> {
                                   ),
                                 )
                               : const Icon(Icons.lock_reset_rounded),
-                          label: const Text('Cambiar contraseña'),
+                          label: const Text('Actualizar contraseña'),
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(
