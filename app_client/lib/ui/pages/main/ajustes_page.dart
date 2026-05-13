@@ -143,8 +143,8 @@ class _AjustesPageState extends State<AjustesPage> {
               ),
               _settingsTile(
                 icon: Icons.lock_outline_rounded,
-                title: 'Cambiar contrasena',
-                subtitle: 'Valida tu contrasena actual antes de guardar',
+                title: 'Cambiar contraseña',
+                subtitle: 'Valida tu contraseña actual antes de guardar',
                 onTap: _showChangePasswordSheet,
               ),
               _settingsTile(
@@ -736,7 +736,7 @@ class _AjustesPageState extends State<AjustesPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Cambiar contrasena',
+                        'Cambiar contraseña',
                         style: TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 20,
@@ -745,7 +745,7 @@ class _AjustesPageState extends State<AjustesPage> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Por seguridad validamos tu contrasena actual.',
+                        'Por seguridad validamos tu contraseña actual.',
                         style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
@@ -754,24 +754,24 @@ class _AjustesPageState extends State<AjustesPage> {
                       const SizedBox(height: 18),
                       _formField(
                         currentController,
-                        'Contrasena actual',
+                        'Contraseña actual',
                         obscureText: true,
                       ),
                       const SizedBox(height: 12),
                       _formField(
                         newController,
-                        'Nueva contrasena',
+                        'Nueva contraseña',
                         obscureText: true,
                         validator: _validatePassword,
                       ),
                       const SizedBox(height: 12),
                       _formField(
                         confirmController,
-                        'Confirmar contrasena',
+                        'Confirmar contraseña',
                         obscureText: true,
                         validator: (value) {
                           if ((value ?? '') != newController.text) {
-                            return 'Las contrasenas no coinciden.';
+                            return 'Las contraseñas no coinciden.';
                           }
                           return null;
                         },
@@ -827,7 +827,7 @@ class _AjustesPageState extends State<AjustesPage> {
                                   ),
                                 )
                               : const Icon(Icons.lock_reset_rounded),
-                          label: const Text('Actualizar contrasena'),
+                          label: const Text('Actualizar contraseña'),
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(
