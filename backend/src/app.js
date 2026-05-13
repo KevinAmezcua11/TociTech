@@ -11,6 +11,7 @@ const usersRoutes = require("./routes/user.route");
 const aiRoute = require("./routes/ai.routes");
 const paymentRoutes = require("./routes/payment.routes");
 const notificationRoutes = require("./routes/notification.route");
+const homeRoutes = require("./routes/home.route");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.get("/", (req, res) => {
 
 // Rutas públicas
 app.use("/api/auth", authRoutes);
+app.use("/api/home", homeRoutes);
 
 // Rutas protegidas
 app.use("/api/products", productRoutes);
