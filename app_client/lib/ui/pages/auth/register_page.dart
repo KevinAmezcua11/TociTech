@@ -20,19 +20,57 @@ class _RegisterPageState extends State<RegisterPage> {
 
   late AuthController authController;
 
-  final _usernameController = TextEditingController();
-  final _namesController = TextEditingController();
+  final _usernameController  = TextEditingController();
+  final _namesController     = TextEditingController();
   final _lastnamesController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmController = TextEditingController();
+  final _emailController     = TextEditingController();
+  final _phoneController     = TextEditingController();
+  final _passwordController  = TextEditingController();
+  final _confirmController   = TextEditingController();
+
+  // ── Errores por campo ──────────────────────────────────────────
+  String? _usernameError;
+  String? _namesError;
+  String? _lastnamesError;
+  String? _emailError;
+  String? _phoneError;
+  String? _passwordError;
+  String? _confirmError;
+
+  // ── Fortaleza de contraseña (0–4) ──────────────────────────────
+  int get _passwordStrength {
+    final p = _passwordController.text;
+    if (p.isEmpty) return 0;
+    int s = 0;
+    if (p.length >= 8) s++;
+    if (RegExp(r'[A-Z]').hasMatch(p)) s++;
+    if (RegExp(r'[0-9]').hasMatch(p)) s++;
+    if (RegExp(r'[!@#\$%^&*(),.?":{}|<>_\-]').hasMatch(p)) s++;
+    return s;
+  }
+
+  Color get _strengthColor => switch (_passwordStrength) {
+        0 => Colors.transparent,
+        1 => Colors.redAccent,
+        2 => Colors.orange,
+        3 => const Color(0xFFFFD54F),
+        _ => AppColors.green,
+      };
+
+  String get _strengthLabel => switch (_passwordStrength) {
+        0 => '',
+        1 => 'Muy débil',
+        2 => 'Débil',
+        3 => 'Buena',
+        _ => 'Fuerte',
+      };
 
   @override
   void initState() {
     super.initState();
-
     authController = AuthController(AuthService());
+    // Recalcula la fortaleza en tiempo real
+    _passwordController.addListener(() => setState(() {}));
   }
 
   @override
@@ -47,23 +85,94 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
+  /// Valida todos los campos y retorna true si todo es correcto.
+  bool _validateAll() {
+    String? usernameErr, namesErr, lastnamesErr, emailErr, phoneErr,
+        passwordErr, confirmErr;
+
+    final username  = _usernameController.text.trim();
+    final names     = _namesController.text.trim();
+    final lastnames = _lastnamesController.text.trim();
+    final email     = _emailController.text.trim();
+    final phone     = _phoneController.text.trim();
+    final password  = _passwordController.text;
+    final confirm   = _confirmController.text;
+
+    if (username.isEmpty) {
+      usernameErr = 'El nombre de usuario es obligatorio';
+    } else if (username.length < 3) {
+      usernameErr = 'Mínimo 3 caracteres';
+    } else if (username.contains(' ')) {
+      usernameErr = 'No puede contener espacios';
+    } else if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(username)) {
+      usernameErr = 'Solo letras, números y guion bajo ( _ )';
+    }
+
+    if (names.isEmpty) {
+      namesErr = 'El nombre es obligatorio';
+    } else if (names.length < 2) {
+      namesErr = 'Nombre demasiado corto';
+    } else if (RegExp(r'[0-9]').hasMatch(names)) {
+      namesErr = 'El nombre no puede contener números';
+    }
+
+    if (lastnames.isEmpty) {
+      lastnamesErr = 'Los apellidos son obligatorios';
+    } else if (lastnames.length < 2) {
+      lastnamesErr = 'Apellidos demasiado cortos';
+    } else if (RegExp(r'[0-9]').hasMatch(lastnames)) {
+      lastnamesErr = 'Los apellidos no pueden contener números';
+    }
+
+    if (email.isEmpty) {
+      emailErr = 'El correo es obligatorio';
+    } else if (!RegExp(
+            r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
+        .hasMatch(email)) {
+      emailErr = 'Ingresa un correo válido (ej. usuario@mail.com)';
+    }
+
+    if (phone.isEmpty) {
+      phoneErr = 'El teléfono es obligatorio';
+    } else if (!RegExp(r'^\d+$').hasMatch(phone)) {
+      phoneErr = 'Solo se permiten números';
+    } else if (phone.length < 10 || phone.length > 15) {
+      phoneErr = 'Debe tener entre 10 y 15 dígitos';
+    }
+
+    if (password.isEmpty) {
+      passwordErr = 'La contraseña es obligatoria';
+    } else if (password.length < 8) {
+      passwordErr = 'Mínimo 8 caracteres';
+    } else if (_passwordStrength < 2) {
+      passwordErr = 'La contraseña es muy débil. Agrega mayúsculas o números';
+    }
+
+    if (confirm.isEmpty) {
+      confirmErr = 'Confirma tu contraseña';
+    } else if (confirm != password) {
+      confirmErr = 'Las contraseñas no coinciden';
+    }
+
+    setState(() {
+      _usernameError  = usernameErr;
+      _namesError     = namesErr;
+      _lastnamesError = lastnamesErr;
+      _emailError     = emailErr;
+      _phoneError     = phoneErr;
+      _passwordError  = passwordErr;
+      _confirmError   = confirmErr;
+    });
+
+    return [usernameErr, namesErr, lastnamesErr, emailErr, phoneErr,
+            passwordErr, confirmErr].every((e) => e == null);
+  }
+
   void _register() async {
-    if (_usernameController.text.isEmpty ||
-        _namesController.text.isEmpty ||
-        _lastnamesController.text.isEmpty ||
-        _emailController.text.isEmpty ||
-        _passwordController.text.isEmpty) {
-      _showError("Completa todos los campos obligatorios");
-      return;
-    }
+    if (!_validateAll()) return;
 
-    if (_passwordController.text.length < 8) {
-      _showError("La contraseña debe tener al menos 8 caracteres");
-      return;
-    }
-
-    if (_passwordController.text != _confirmController.text) {
-      _showError("Las contraseñas no coinciden");
+    if (!_aceptaTerminos) {
+      AppSnackbar.info(context, 'Debes aceptar los términos y condiciones');
       return;
     }
 
@@ -71,31 +180,28 @@ class _RegisterPageState extends State<RegisterPage> {
       setState(() => _loading = true);
 
       final success = await authController.register(
-        username: _usernameController.text.trim().toLowerCase(),
-        password: _passwordController.text,
-        names: _namesController.text,
-        lastnames: _lastnamesController.text,
-        email: _emailController.text,
-        phone: _phoneController.text,
+        username:  _usernameController.text.trim().toLowerCase(),
+        password:  _passwordController.text,
+        names:     _namesController.text.trim(),
+        lastnames: _lastnamesController.text.trim(),
+        email:     _emailController.text.trim(),
+        phone:     _phoneController.text.trim(),
       );
 
       if (!success) {
         setState(() => _loading = false);
-        _showError(authController.errorMessage ?? "Error al registrar");
+        _showError(authController.errorMessage ?? 'Error al registrar');
         return;
       }
 
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       AppSnackbar.success(context, 'Cuenta creada correctamente');
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginPage()),
       );
-
     } catch (e) {
       setState(() => _loading = false);
-      _showError("Error al registrar usuario");
+      _showError('Error al registrar usuario');
     }
   }
 
@@ -168,6 +274,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       hint: "Nombre de usuario",
                       icon: Icons.person,
                       controller: _usernameController,
+                      errorText: _usernameError,
+                      onChanged: (_) => setState(() => _usernameError = null),
+                      textInputAction: TextInputAction.next,
                     ),
 
                     const SizedBox(height: 18),
@@ -179,6 +288,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       hint: "Nombre",
                       icon: Icons.person_outline,
                       controller: _namesController,
+                      errorText: _namesError,
+                      onChanged: (_) => setState(() => _namesError = null),
+                      textInputAction: TextInputAction.next,
                     ),
 
                     const SizedBox(height: 18),
@@ -190,6 +302,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       hint: "Apellidos",
                       icon: Icons.person_outline,
                       controller: _lastnamesController,
+                      errorText: _lastnamesError,
+                      onChanged: (_) =>
+                          setState(() => _lastnamesError = null),
+                      textInputAction: TextInputAction.next,
                     ),
 
                     const SizedBox(height: 18),
@@ -201,6 +317,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       hint: "Correo electrónico",
                       icon: Icons.email_outlined,
                       controller: _emailController,
+                      errorText: _emailError,
+                      keyboardType: TextInputType.emailAddress,
+                      onChanged: (_) => setState(() => _emailError = null),
+                      textInputAction: TextInputAction.next,
                     ),
 
                     const SizedBox(height: 18),
@@ -209,9 +329,13 @@ class _RegisterPageState extends State<RegisterPage> {
                     _label("Teléfono"),
                     const SizedBox(height: 8),
                     _inputField(
-                      hint: "Teléfono",
+                      hint: "10 dígitos",
                       icon: Icons.phone_outlined,
                       controller: _phoneController,
+                      errorText: _phoneError,
+                      keyboardType: TextInputType.phone,
+                      onChanged: (_) => setState(() => _phoneError = null),
+                      textInputAction: TextInputAction.next,
                     ),
 
                     const SizedBox(height: 18),
@@ -224,14 +348,48 @@ class _RegisterPageState extends State<RegisterPage> {
                       icon: Icons.lock_outline,
                       obscure: _obscurePassword,
                       controller: _passwordController,
+                      errorText: _passwordError,
+                      onChanged: (_) => setState(() => _passwordError = null),
+                      textInputAction: TextInputAction.next,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: AppColors.textSecondary,
                         ),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
                       ),
                     ),
+                    // ── Indicador de fortaleza ──────────────────────
+                    if (_passwordController.text.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: _passwordStrength / 4,
+                                backgroundColor:
+                                    Colors.white.withOpacity(0.08),
+                                color: _strengthColor,
+                                minHeight: 5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            _strengthLabel,
+                            style: TextStyle(
+                                color: _strengthColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ],
 
                     const SizedBox(height: 18),
 
@@ -243,12 +401,19 @@ class _RegisterPageState extends State<RegisterPage> {
                       icon: Icons.lock_outline,
                       obscure: _obscureConfirm,
                       controller: _confirmController,
+                      errorText: _confirmError,
+                      onChanged: (_) =>
+                          setState(() => _confirmError = null),
+                      textInputAction: TextInputAction.done,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                          _obscureConfirm
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: AppColors.textSecondary,
                         ),
-                        onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                        onPressed: () => setState(
+                            () => _obscureConfirm = !_obscureConfirm),
                       ),
                     ),
 
@@ -371,25 +536,62 @@ class _RegisterPageState extends State<RegisterPage> {
     bool obscure = false,
     Widget? suffixIcon,
     TextEditingController? controller,
+    String? errorText,
+    ValueChanged<String>? onChanged,
+    TextInputAction? textInputAction,
+    TextInputType? keyboardType,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscure,
-        textAlignVertical: TextAlignVertical.center,
-        style: const TextStyle(color: AppColors.textPrimary),
-        decoration: InputDecoration(
-          hintText: hint,
-          prefixIcon: Icon(icon, color: AppColors.textSecondary),
-          suffixIcon: suffixIcon,
-          border: InputBorder.none,
+    final hasError = errorText != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: hasError
+                  ? Colors.redAccent
+                  : Colors.white.withOpacity(0.08),
+            ),
+          ),
+          child: TextField(
+            controller: controller,
+            obscureText: obscure,
+            onChanged: onChanged,
+            textInputAction: textInputAction,
+            keyboardType: keyboardType,
+            textAlignVertical: TextAlignVertical.center,
+            style:
+                const TextStyle(color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              hintText: hint,
+              prefixIcon:
+                  Icon(icon, color: AppColors.textSecondary),
+              suffixIcon: suffixIcon,
+              border: InputBorder.none,
+            ),
+          ),
         ),
-      ),
+        if (hasError) ...[
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              const Icon(Icons.error_outline_rounded,
+                  color: Colors.redAccent, size: 13),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  errorText,
+                  style: const TextStyle(
+                      color: Colors.redAccent, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 }

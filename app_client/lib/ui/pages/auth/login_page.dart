@@ -18,6 +18,12 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  final FocusNode _usernameFocus = FocusNode();
+  final FocusNode _passwordFocus = FocusNode();
+
+  String? _usernameError;
+  String? _passwordError;
+
   bool _obscurePassword = true;
 
   late AuthController authController;
@@ -25,7 +31,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-
     authController = AuthController(AuthService());
   }
 
@@ -33,25 +38,60 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _usernameFocus.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
-    final username = _usernameController.text;
+  /// Devuelve true si todo es válido, false si hay algún error.
+  bool _validate() {
+    String? usernameErr;
+    String? passwordErr;
+
+    final username = _usernameController.text.trim();
     final password = _passwordController.text;
 
-    if (username.isEmpty || password.isEmpty) {
-      AppSnackbar.info(context, 'Completa todos los campos');
-      return;
+    if (username.isEmpty) {
+      usernameErr = 'El nombre de usuario es obligatorio';
+    } else if (username.length < 3) {
+      usernameErr = 'El usuario debe tener al menos 3 caracteres';
+    } else if (username.contains(' ')) {
+      usernameErr = 'El usuario no puede contener espacios';
     }
 
-    final success = await authController.login(username, password);
+    if (password.isEmpty) {
+      passwordErr = 'La contraseña es obligatoria';
+    } else if (password.length < 6) {
+      passwordErr = 'La contraseña debe tener al menos 6 caracteres';
+    }
+
+    setState(() {
+      _usernameError = usernameErr;
+      _passwordError = passwordErr;
+    });
+
+    // Mueve el foco al primer campo con error
+    if (usernameErr != null) {
+      _usernameFocus.requestFocus();
+    } else if (passwordErr != null) {
+      _passwordFocus.requestFocus();
+    }
+
+    return usernameErr == null && passwordErr == null;
+  }
+
+  Future<void> _login() async {
+    if (!_validate()) return;
+
+    final success = await authController.login(
+      _usernameController.text.trim(),
+      _passwordController.text,
+    );
 
     if (!mounted) return;
     setState(() {});
 
     if (success) {
-      // Registra el callback de sesión expirada apuntando a esta misma pantalla
       authController.authService.api.onSessionExpired = () async {
         await authController.authService.logout();
         if (mounted) {
@@ -63,13 +103,13 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
       };
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => TociTechApp()),
       );
     } else {
-      AppSnackbar.error(context, authController.errorMessage ?? 'Error al iniciar sesión');
+      AppSnackbar.error(
+          context, authController.errorMessage ?? 'Error al iniciar sesión');
     }
   }
 
@@ -115,8 +155,15 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 8),
                     _inputField(
                       controller: _usernameController,
+                      focusNode: _usernameFocus,
                       hint: "Nombre de usuario",
                       icon: Icons.person_outline,
+                      errorText: _usernameError,
+                      onChanged: (_) =>
+                          setState(() => _usernameError = null),
+                      textInputAction: TextInputAction.next,
+                      onSubmitted: (_) =>
+                          _passwordFocus.requestFocus(),
                     ),
 
                     const SizedBox(height: 20),
@@ -125,9 +172,16 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 8),
                     _inputField(
                       controller: _passwordController,
+                      focusNode: _passwordFocus,
                       hint: "Contraseña",
                       icon: Icons.lock_outline,
                       obscure: _obscurePassword,
+                      errorText: _passwordError,
+                      onChanged: (_) =>
+                          setState(() => _passwordError = null),
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) =>
+                          authController.isLoading ? null : _login(),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
@@ -136,9 +190,8 @@ class _LoginPageState extends State<LoginPage> {
                           color: AppColors.textSecondary,
                           size: 20,
                         ),
-                        onPressed: () => setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        }),
+                        onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
                       ),
                     ),
 
@@ -255,31 +308,68 @@ class _LoginPageState extends State<LoginPage> {
     required TextEditingController controller,
     required String hint,
     required IconData icon,
+    FocusNode? focusNode,
     bool obscure = false,
     Widget? suffixIcon,
+    String? errorText,
+    ValueChanged<String>? onChanged,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onSubmitted,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscure,
-        style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(
-            color: AppColors.textSecondary.withOpacity(0.5),
-            fontSize: 14,
+    final hasError = errorText != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: hasError
+                  ? Colors.redAccent
+                  : Colors.white.withOpacity(0.08),
+            ),
           ),
-          prefixIcon: Icon(icon, color: AppColors.textSecondary, size: 20),
-          suffixIcon: suffixIcon,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 16),
+          child: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            obscureText: obscure,
+            onChanged: onChanged,
+            textInputAction: textInputAction,
+            onSubmitted: onSubmitted,
+            style:
+                const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(
+                color: AppColors.textSecondary.withOpacity(0.5),
+                fontSize: 14,
+              ),
+              prefixIcon:
+                  Icon(icon, color: AppColors.textSecondary, size: 20),
+              suffixIcon: suffixIcon,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
         ),
-      ),
+        if (hasError) ...[
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              const Icon(Icons.error_outline_rounded,
+                  color: Colors.redAccent, size: 13),
+              const SizedBox(width: 4),
+              Text(
+                errorText,
+                style: const TextStyle(
+                    color: Colors.redAccent, fontSize: 12),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 }

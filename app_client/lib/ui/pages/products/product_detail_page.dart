@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/product_model.dart';
 import '../../../database/local/cart_local_service.dart';
+import '../../../database/local/session_local_service.dart';
 import '../../widgets/app_network_image.dart';
 import '../../widgets/app_snackbar.dart';
 
@@ -47,6 +48,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           child: FilledButton.icon(
             onPressed: hayStock
                 ? () async {
+                    final session = await SessionLocalService.getSession();
+                    if (!context.mounted) return;
+                    if (session == null) {
+                      AppSnackbar.info(context,
+                          'Debes iniciar sesión para agregar productos al carrito');
+                      return;
+                    }
                     await CartLocalService.addToCart(p);
                     if (context.mounted) {
                       AppSnackbar.success(context, '${p.name} agregado al carrito');
