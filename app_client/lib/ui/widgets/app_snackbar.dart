@@ -116,6 +116,10 @@ class AppSnackbar {
     }
 
     // Credenciales inválidas
+    if (msg.contains('invalid current password')) {
+      return 'La contrasena actual no es correcta.';
+    }
+
     if (msg.contains('invalid credentials') || msg.contains('credenciales')) {
       return 'Usuario o contraseña incorrectos.';
     }

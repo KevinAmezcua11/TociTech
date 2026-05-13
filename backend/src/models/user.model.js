@@ -38,6 +38,22 @@ async function getById(id) {
     };
 }
 
+async function getPrivateById(id) {
+    const userRef = db.collection("users").doc(id);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists) return null;
+
+    const data = userSnap.data();
+
+    return {
+        id: userSnap.id,
+        ...data,
+        createdAt: data.createdAt?.toDate(),
+        updatedAt: data.updatedAt?.toDate()
+    };
+}
+
 // Buscar usuario por username
 async function findByUsername(username) {
     const usernameClean = username.trim().toLowerCase();
@@ -131,6 +147,77 @@ async function updateUser(id, data) {
     return getById(id);
 }
 
+async function updateOwnProfile(id, data) {
+    const allowed = {};
+
+    if (typeof data.username === "string") {
+        const usernameClean = data.username.trim().toLowerCase();
+        if (!usernameClean || usernameClean.length < 3) throw new Error("Invalid username");
+
+        const existingUser = await findByUsername(usernameClean);
+        if (existingUser && existingUser.id !== id) return null;
+
+        allowed.username = usernameClean;
+    }
+
+    if (typeof data.names === "string") {
+        if (!data.names.trim()) throw new Error("Invalid names");
+        allowed.names = data.names.trim();
+    }
+
+    if (typeof data.lastnames === "string") {
+        if (!data.lastnames.trim()) throw new Error("Invalid lastnames");
+        allowed.lastnames = data.lastnames.trim();
+    }
+
+    if (typeof data.email === "string") {
+        const email = data.email.trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Invalid email");
+        allowed.email = email;
+    }
+
+    if (typeof data.phone === "string") {
+        if (!data.phone.trim()) throw new Error("Invalid phone");
+        allowed.phone = data.phone.trim();
+    }
+
+    if (Object.keys(allowed).length === 0) {
+        throw new Error("No valid fields");
+    }
+
+    const userRef = db.collection("users").doc(id);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists) return null;
+
+    await userRef.update({
+        ...allowed,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return getById(id);
+}
+
+async function changePassword(id, currentPassword, newPassword) {
+    if (!currentPassword?.trim()) throw new Error("Current password required");
+    if (!newPassword?.trim() || newPassword.length < 8) throw new Error("Invalid password");
+
+    const user = await getPrivateById(id);
+    if (!user) return null;
+
+    const match = await bcrypt.compare(currentPassword, user.password);
+    if (!match) throw new Error("Invalid current password");
+
+    const hashedPass = await bcrypt.hash(newPassword, 10);
+
+    await db.collection("users").doc(id).update({
+        password: hashedPass,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return true;
+}
+
 // Eliminar usuario
 async function deleteUser(id) {
     const userRef = db.collection("users").doc(id);
@@ -143,4 +230,13 @@ async function deleteUser(id) {
     return { id };
 }
 
-module.exports = { getAllUsers, getById, findByUsername, createUser, updateUser, deleteUser };
+module.exports = {
+    getAllUsers,
+    getById,
+    findByUsername,
+    createUser,
+    updateUser,
+    updateOwnProfile,
+    changePassword,
+    deleteUser
+};

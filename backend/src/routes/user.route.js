@@ -5,6 +5,10 @@ const roleAuth = require('../middleware/roleAuth');
 
 const router = express.Router();
 
+router.get("/me", authenticate, controller.getMe);
+router.put("/me", authenticate, controller.updateMe);
+router.put("/me/password", authenticate, controller.changeMyPassword);
+
 router.get("/", authenticate, roleAuth("admin"), controller.getAll);
 router.get("/:id", authenticate, roleAuth("admin"), controller.getById);
 router.put("/:id", authenticate, roleAuth("admin"), controller.updateUser);

@@ -29,6 +29,67 @@ async function getById(req, res) {
     }
 }
 
+async function getMe(req, res) {
+    try {
+        const user = await User.getById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json(user);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+async function updateMe(req, res) {
+    try {
+        const updated = await User.updateOwnProfile(req.user.id, req.body);
+
+        if (!updated) {
+            return res.status(400).json({ message: "Username already exists" });
+        }
+
+        res.json(updated);
+    } catch (err) {
+        console.error(err);
+
+        if (err.message.includes("Invalid") || err.message.includes("No valid")) {
+            return res.status(400).json({ message: err.message });
+        }
+
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+async function changeMyPassword(req, res) {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        const updated = await User.changePassword(
+            req.user.id,
+            currentPassword,
+            newPassword
+        );
+
+        if (!updated) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json({ message: "Password updated" });
+    } catch (err) {
+        console.error(err);
+
+        if (err.message.includes("password") || err.message.includes("Password")) {
+            return res.status(400).json({ message: err.message });
+        }
+
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
 // Actualizar usuario
 async function updateUser(req, res) {
     try {
@@ -68,4 +129,12 @@ async function deleteUser(req, res) {
     }
 }
 
-module.exports = { getAll, getById, updateUser, deleteUser };
+module.exports = {
+    getAll,
+    getById,
+    getMe,
+    updateMe,
+    changeMyPassword,
+    updateUser,
+    deleteUser
+};

@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:tocitech/ui/pages/main/mis_pedidos_page.dart';
+
 import '../../../database/local/session_local_service.dart';
+import '../../../models/order_model.dart';
+import '../../../models/user_model.dart';
+import '../../../services/api_service.dart';
+import '../../../services/order_service.dart';
+import '../../../services/user_profile_service.dart';
 import '../../../theme/app_theme.dart';
-import '../auth/login_page.dart';
 import '../../widgets/app_snackbar.dart';
+import '../auth/login_page.dart';
+import 'mis_pedidos_page.dart';
 
 class AjustesPage extends StatefulWidget {
   const AjustesPage({super.key});
@@ -14,477 +20,672 @@ class AjustesPage extends StatefulWidget {
 
 class _AjustesPageState extends State<AjustesPage> {
   String notificacionSeleccionada = 'ninguna';
-  String aparienciaSeleccionada   = 'oscuro';
+  String aparienciaSeleccionada = 'oscuro';
 
-  // Datos del usuario cargados de SQLite
-  String _username  = '';
-  String _nombres   = '';
-  String _email     = '';
+  late final UserProfileService _profileService;
+  late final OrderService _orderService;
+
+  User? _user;
+  List<Order> _orders = [];
+  bool _loading = true;
+  bool _savingProfile = false;
+  bool _changingPassword = false;
+  String? _error;
+
+  int get _comprasRealizadas =>
+      _orders.where((order) => order.type == 'product').length;
+
+  int get _reparacionesSolicitadas =>
+      _orders.where((order) => order.type == 'service').length;
 
   @override
   void initState() {
     super.initState();
-    _cargarDatosUsuario();
+    final api = ApiService();
+    _profileService = UserProfileService(api);
+    _orderService = OrderService(api);
+    _loadProfile();
   }
 
-  Future<void> _cargarDatosUsuario() async {
-    final session = await SessionLocalService.getSession();
-    if (session != null && mounted) {
+  Future<void> _loadProfile() async {
+    if (mounted) {
       setState(() {
-        _username = session['username'] as String? ?? '';
-        _nombres  = '${session['names'] ?? ''} ${session['lastnames'] ?? ''}'.trim();
-        _email    = session['email'] as String? ?? '';
+        _loading = true;
+        _error = null;
       });
+    }
+
+    try {
+      final results = await Future.wait([
+        _profileService.getMe(),
+        _orderService.getOrders(),
+      ]);
+
+      if (!mounted) return;
+
+      setState(() {
+        _user = results[0] as User;
+        _orders = results[1] as List<Order>;
+      });
+    } catch (e) {
+      await _loadLocalSessionFallback();
+      if (!mounted) return;
+      setState(() {
+        _error =
+            'No pudimos actualizar el perfil. Mostrando datos guardados en este dispositivo.';
+      });
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  // ── Diálogo genérico de edición con validación ──────────────────
-  Future<void> _mostrarDialogoEdicion({
-    required String titulo,
-    required String labelCampo,
-    required String valorActual,
-    String? hint,
-    bool obscure = false,
-    TextInputType keyboardType = TextInputType.text,
-    String? Function(String)? validator,
-    Future<void> Function(String)? onGuardar,
-  }) async {
-    final controller = TextEditingController(text: valorActual);
-    String? error;
+  Future<void> _loadLocalSessionFallback() async {
+    final session = await SessionLocalService.getSession();
+    if (session == null || !mounted) return;
 
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setDialogState) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF1E1E2A),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-              title: Text(
-                titulo,
-                style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(labelCampo,
-                      style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 12)),
-                  const SizedBox(height: 8),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: error != null
-                            ? Colors.redAccent
-                            : Colors.white.withOpacity(0.1),
-                      ),
-                    ),
-                    child: TextField(
-                      controller: controller,
-                      obscureText: obscure,
-                      keyboardType: keyboardType,
-                      style: const TextStyle(
-                          color: AppColors.textPrimary, fontSize: 14),
-                      onChanged: (_) =>
-                          setDialogState(() => error = null),
-                      decoration: InputDecoration(
-                        hintText: hint,
-                        hintStyle: TextStyle(
-                            color: AppColors.textSecondary.withOpacity(0.4),
-                            fontSize: 13),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 12),
-                      ),
-                    ),
-                  ),
-                  if (error != null) ...[
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Icon(Icons.error_outline_rounded,
-                            color: Colors.redAccent, size: 13),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(error!,
-                              style: const TextStyle(
-                                  color: Colors.redAccent, fontSize: 12)),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Cancelar',
-                      style:
-                          TextStyle(color: AppColors.textSecondary)),
-                ),
-                FilledButton(
-                  onPressed: () async {
-                    final valor = controller.text.trim();
-                    final err = validator?.call(valor);
-                    if (err != null) {
-                      setDialogState(() => error = err);
-                      return;
-                    }
-                    Navigator.pop(ctx);
-                    await onGuardar?.call(valor);
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                  child: const Text('Guardar'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-    controller.dispose();
-  }
-
-  // ── Diálogo cambio de contraseña (campos separados) ──────────────
-  Future<void> _mostrarDialogoCambiarPassword() async {
-    final actualCtrl  = TextEditingController();
-    final nuevaCtrl   = TextEditingController();
-    final confirmCtrl = TextEditingController();
-    String? errorActual, errorNueva, errorConfirm;
-    bool loading = false;
-
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(builder: (ctx, setS) {
-          return AlertDialog(
-            backgroundColor: const Color(0xFF1E1E2A),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20)),
-            title: const Text(
-              'Cambiar contraseña',
-              style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16),
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _dialogField(
-                    ctx: ctx,
-                    controller: actualCtrl,
-                    label: 'Contraseña actual',
-                    obscure: true,
-                    error: errorActual,
-                    onChanged: (_) => setS(() => errorActual = null),
-                  ),
-                  const SizedBox(height: 12),
-                  _dialogField(
-                    ctx: ctx,
-                    controller: nuevaCtrl,
-                    label: 'Nueva contraseña',
-                    hint: 'Mínimo 8 caracteres',
-                    obscure: true,
-                    error: errorNueva,
-                    onChanged: (_) => setS(() => errorNueva = null),
-                  ),
-                  const SizedBox(height: 12),
-                  _dialogField(
-                    ctx: ctx,
-                    controller: confirmCtrl,
-                    label: 'Confirmar contraseña',
-                    obscure: true,
-                    error: errorConfirm,
-                    onChanged: (_) => setS(() => errorConfirm = null),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancelar',
-                    style:
-                        TextStyle(color: AppColors.textSecondary)),
-              ),
-              FilledButton(
-                onPressed: loading
-                    ? null
-                    : () async {
-                        String? eActual, eNueva, eConfirm;
-                        if (actualCtrl.text.isEmpty)
-                          eActual = 'Ingresa tu contraseña actual';
-                        if (nuevaCtrl.text.length < 8)
-                          eNueva = 'Mínimo 8 caracteres';
-                        if (confirmCtrl.text != nuevaCtrl.text)
-                          eConfirm = 'Las contraseñas no coinciden';
-
-                        if (eActual != null ||
-                            eNueva != null ||
-                            eConfirm != null) {
-                          setS(() {
-                            errorActual  = eActual;
-                            errorNueva   = eNueva;
-                            errorConfirm = eConfirm;
-                          });
-                          return;
-                        }
-
-                        setS(() => loading = true);
-                        await Future.delayed(
-                            const Duration(milliseconds: 400));
-                        if (ctx.mounted) Navigator.pop(ctx);
-                        if (mounted) {
-                          AppSnackbar.success(
-                              context, 'Contraseña actualizada correctamente');
-                        }
-                      },
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-                child: loading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : const Text('Guardar'),
-              ),
-            ],
-          );
-        });
-      },
-    );
-
-    actualCtrl.dispose();
-    nuevaCtrl.dispose();
-    confirmCtrl.dispose();
-  }
-
-  // ── Campo reutilizable para diálogos ──────────────────────────────
-  Widget _dialogField({
-    required BuildContext ctx,
-    required TextEditingController controller,
-    required String label,
-    String? hint,
-    bool obscure = false,
-    String? error,
-    ValueChanged<String>? onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(
-                color: AppColors.textSecondary, fontSize: 12)),
-        const SizedBox(height: 6),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: error != null
-                  ? Colors.redAccent
-                  : Colors.white.withOpacity(0.1),
-            ),
-          ),
-          child: TextField(
-            controller: controller,
-            obscureText: obscure,
-            onChanged: onChanged,
-            style: const TextStyle(
-                color: AppColors.textPrimary, fontSize: 14),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: TextStyle(
-                  color: AppColors.textSecondary.withOpacity(0.4),
-                  fontSize: 13),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 12),
-            ),
-          ),
-        ),
-        if (error != null) ...[
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              const Icon(Icons.error_outline_rounded,
-                  color: Colors.redAccent, size: 12),
-              const SizedBox(width: 4),
-              Text(error,
-                  style: const TextStyle(
-                      color: Colors.redAccent, fontSize: 11)),
-            ],
-          ),
-        ],
-      ],
-    );
+    setState(() {
+      _user = User(
+        id: session['user_id'] as String? ?? '',
+        username: session['username'] as String? ?? '',
+        names: session['names'] as String? ?? '',
+        lastnames: session['lastnames'] as String? ?? '',
+        email: session['email'] as String? ?? '',
+        phone: session['phone'] as String? ?? '',
+        role: session['role'] as String? ?? 'client',
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = _user;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: RefreshIndicator(
+        color: AppColors.primary,
+        backgroundColor: AppColors.surface,
+        onRefresh: _loadProfile,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 26, 20, 120),
           children: [
-            Center(
-              child: Text(
-                'Ajustes',
+            const Text(
+              'Perfil',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Datos de cuenta, seguridad y actividad reciente.',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 22),
+            if (_error != null) ...[
+              _noticeCard(_error!),
+              const SizedBox(height: 16),
+            ],
+            _profileHeader(user),
+            const SizedBox(height: 18),
+            _activityStats(),
+            const SizedBox(height: 24),
+            _sectionTitle('Cuenta'),
+            const SizedBox(height: 12),
+            _settingsCard([
+              _settingsTile(
+                icon: Icons.edit_outlined,
+                title: 'Editar perfil',
+                subtitle: 'Nombre, correo, telefono y usuario',
+                onTap: user == null ? null : () => _showEditProfileSheet(user),
+              ),
+              _settingsTile(
+                icon: Icons.lock_outline_rounded,
+                title: 'Cambiar contrasena',
+                subtitle: 'Valida tu contrasena actual antes de guardar',
+                onTap: _showChangePasswordSheet,
+              ),
+              _settingsTile(
+                icon: Icons.receipt_long_outlined,
+                title: 'Mis pedidos',
+                subtitle: 'Compras y servicios solicitados',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MisPedidosPage()),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 24),
+            _sectionTitle('Preferencia de notificacion'),
+            const SizedBox(height: 12),
+            _settingsCard([
+              _radioNotificacion('reparaciones', 'Reparaciones'),
+              _radioNotificacion('compras', 'Compras'),
+              _radioNotificacion('ninguna', 'Ninguna'),
+            ]),
+            const SizedBox(height: 24),
+            _sectionTitle('Apariencia'),
+            const SizedBox(height: 12),
+            _appearanceSelector(),
+            const SizedBox(height: 28),
+            _logoutButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _noticeCard(String message) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded, color: AppColors.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                height: 1.35,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Reintentar',
+            onPressed: _loadProfile,
+            icon: const Icon(Icons.refresh_rounded),
+            color: AppColors.textPrimary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileHeader(User? user) {
+    final fullName = user == null
+        ? 'Cargando perfil...'
+        : '${user.names} ${user.lastnames}'.trim();
+    final initials = user == null
+        ? ''
+        : [
+            if (user.names.trim().isNotEmpty) user.names.trim()[0],
+            if (user.lastnames.trim().isNotEmpty) user.lastnames.trim()[0],
+          ].join().toUpperCase();
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 34,
+            backgroundColor: AppColors.primary.withValues(alpha: 0.16),
+            child: _loading && user == null
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: AppColors.primary,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(
+                    initials.isEmpty ? '?' : initials,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  fullName.isEmpty ? 'Sin nombre registrado' : fullName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  user == null ? 'Sin correo' : user.email,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _profileChip('@${user?.username ?? 'usuario'}'),
+                    _profileChip(user?.phone ?? 'Sin telefono'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+      ),
+    );
+  }
+
+  Widget _activityStats() {
+    return Row(
+      children: [
+        Expanded(
+          child: _metricCard(
+            icon: Icons.shopping_bag_outlined,
+            color: AppColors.primary,
+            value: _loading ? '...' : '$_comprasRealizadas',
+            label: 'Compras',
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _metricCard(
+            icon: Icons.handyman_outlined,
+            color: AppColors.blue,
+            value: _loading ? '...' : '$_reparacionesSolicitadas',
+            label: 'Reparaciones',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _metricCard({
+    required IconData icon,
+    required Color color,
+    required String value,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.16)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.13),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
-                  fontSize: 28,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
+                ),
+              ),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        color: AppColors.textPrimary,
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget _settingsCard(List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _settingsTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    VoidCallback? onTap,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(icon, color: AppColors.primary, size: 21),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: AppColors.textMuted,
+      ),
+    );
+  }
+
+  Widget _radioNotificacion(String valor, String texto) {
+    final selected = notificacionSeleccionada == valor;
+
+    return InkWell(
+      onTap: () => setState(() => notificacionSeleccionada = valor),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected ? AppColors.primary : AppColors.textMuted,
+                  width: 2,
+                ),
+              ),
+              child: Center(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  width: selected ? 10 : 0,
+                  height: selected ? 10 : 0,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(width: 12),
+            Text(texto, style: const TextStyle(color: AppColors.textPrimary)),
+          ],
+        ),
+      ),
+    );
+  }
 
-            const Text(
-              'Perfil y Seguridad',
-              style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
+  Widget _appearanceSelector() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _appearanceOption('oscuro', 'Oscuro')),
+          const SizedBox(width: 12),
+          Expanded(child: _appearanceOption('claro', 'Claro')),
+        ],
+      ),
+    );
+  }
+
+  Widget _appearanceOption(String value, String label) {
+    final selected = aparienciaSeleccionada == value;
+
+    return InkWell(
+      onTap: () => setState(() => aparienciaSeleccionada = value),
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.16)
+              : Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? AppColors.primary : Colors.transparent,
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              height: 58,
+              decoration: BoxDecoration(
+                color: value == 'oscuro'
+                    ? AppColors.background
+                    : const Color(0xFFE5E7EB),
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
-            const SizedBox(height: 25),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  radius: 45,
-                  backgroundColor: const Color(0xFF2A2A35),
-                  child: const Icon(Icons.person,
-                      size: 60, color: Colors.white70),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
+  Widget _logoutButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: _confirmarCierreSesion,
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.5)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+        label: const Text(
+          'Cerrar sesion',
+          style: TextStyle(
+            color: Colors.redAccent,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showEditProfileSheet(User user) async {
+    final formKey = GlobalKey<FormState>();
+    final usernameController = TextEditingController(text: user.username);
+    final namesController = TextEditingController(text: user.names);
+    final lastnamesController = TextEditingController(text: user.lastnames);
+    final emailController = TextEditingController(text: user.email);
+    final phoneController = TextEditingController(text: user.phone);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            final bottom = MediaQuery.of(sheetContext).viewInsets.bottom;
+
+            return Padding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, bottom + 20),
+              child: Form(
+                key: formKey,
+                child: SingleChildScrollView(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Estadísticas del usuario
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                              color: Colors.white.withOpacity(0.06)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (_nombres.isNotEmpty)
-                              Text(
-                                _nombres,
-                                style: const TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13),
-                              ),
-                            if (_email.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                _email,
-                                style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12),
-                              ),
-                            ],
-                          ],
+                      const Text(
+                        'Editar perfil',
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      if (_username.isNotEmpty)
-                        Text(
-                          '@$_username',
-                          style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      const SizedBox(height: 16),
-
-                      // Opciones de perfil con acción
-                      _opcionPerfil(
-                        'Cambiar nombre de usuario',
-                        Icons.person_outline,
-                        onTap: () => _mostrarDialogoEdicion(
-                          titulo: 'Cambiar nombre de usuario',
-                          labelCampo: 'Nuevo nombre de usuario',
-                          valorActual: _username,
-                          hint: 'Solo letras, números y _',
-                          validator: (v) {
-                            if (v.isEmpty)
-                              return 'El campo es obligatorio';
-                            if (v.length < 3) return 'Mínimo 3 caracteres';
-                            if (v.contains(' '))
-                              return 'No puede contener espacios';
-                            if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(v))
-                              return 'Solo letras, números y guion bajo';
-                            return null;
-                          },
-                          onGuardar: (v) async {
-                            setState(() => _username = v);
-                            AppSnackbar.success(
-                                context, 'Nombre de usuario actualizado');
-                          },
-                        ),
+                      const SizedBox(height: 18),
+                      _formField(
+                        usernameController,
+                        'Usuario',
+                        validator: _validateUsername,
                       ),
-                      _opcionPerfil(
-                        'Cambiar contraseña',
-                        Icons.lock_outline,
-                        onTap: _mostrarDialogoCambiarPassword,
+                      const SizedBox(height: 12),
+                      _formField(namesController, 'Nombre'),
+                      const SizedBox(height: 12),
+                      _formField(lastnamesController, 'Apellidos'),
+                      const SizedBox(height: 12),
+                      _formField(
+                        emailController,
+                        'Correo',
+                        keyboardType: TextInputType.emailAddress,
+                        validator: _validateEmail,
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
+                      _formField(
+                        phoneController,
+                        'Telefono',
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 18),
                       SizedBox(
-                        width: 140,
-                        height: 32,
-                        child: OutlinedButton.icon(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => MisPedidosPage()),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                                color: AppColors.textMuted),
+                        width: double.infinity,
+                        height: 50,
+                        child: FilledButton.icon(
+                          onPressed: _savingProfile
+                              ? null
+                              : () async {
+                                  if (!formKey.currentState!.validate()) {
+                                    return;
+                                  }
+
+                                  setSheetState(() => _savingProfile = true);
+
+                                  try {
+                                    final updated = await _profileService
+                                        .updateMe(
+                                          username: usernameController.text,
+                                          names: namesController.text,
+                                          lastnames: lastnamesController.text,
+                                          email: emailController.text,
+                                          phone: phoneController.text,
+                                        );
+
+                                    if (!mounted ||
+                                        !context.mounted ||
+                                        !sheetContext.mounted) {
+                                      return;
+                                    }
+
+                                    setState(() => _user = updated);
+                                    Navigator.pop(sheetContext);
+                                    AppSnackbar.success(
+                                      context,
+                                      'Perfil actualizado correctamente.',
+                                    );
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      AppSnackbar.error(context, e.toString());
+                                    }
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _savingProfile = false);
+                                    }
+                                  }
+                                },
+                          icon: _savingProfile
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.save_outlined),
+                          label: const Text('Guardar cambios'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(14)),
-                          ),
-                          icon: const Icon(Icons.more_horiz,
-                              color: AppColors.textPrimary,
-                              size: 20),
-                          label: const Text(
-                            'Mis pedidos',
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                         ),
@@ -492,192 +693,284 @@ class _AjustesPageState extends State<AjustesPage> {
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            );
+          },
+        );
+      },
+    );
 
-            const SizedBox(height: 50),
+    usernameController.dispose();
+    namesController.dispose();
+    lastnamesController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    if (mounted) setState(() => _savingProfile = false);
+  }
 
-            const Text(
-              'Preferencia de notificación',
-              style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            _radioNotificacion('reparaciones', 'Reparaciones'),
-            _radioNotificacion('compras', 'Compras'),
-            _radioNotificacion('ninguna', 'Ninguna'),
+  Future<void> _showChangePasswordSheet() async {
+    final formKey = GlobalKey<FormState>();
+    final currentController = TextEditingController();
+    final newController = TextEditingController();
+    final confirmController = TextEditingController();
 
-            const SizedBox(height: 50),
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            final bottom = MediaQuery.of(sheetContext).viewInsets.bottom;
 
-            const Text(
-              'Apariencia',
-              style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _selectorApariencia('oscuro', 'Oscuro'),
-                const SizedBox(width: 30),
-                _selectorApariencia('claro', 'Claro'),
-              ],
-            ),
+            return Padding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, bottom + 20),
+              child: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Cambiar contrasena',
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Por seguridad validamos tu contrasena actual.',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      _formField(
+                        currentController,
+                        'Contrasena actual',
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 12),
+                      _formField(
+                        newController,
+                        'Nueva contrasena',
+                        obscureText: true,
+                        validator: _validatePassword,
+                      ),
+                      const SizedBox(height: 12),
+                      _formField(
+                        confirmController,
+                        'Confirmar contrasena',
+                        obscureText: true,
+                        validator: (value) {
+                          if ((value ?? '') != newController.text) {
+                            return 'Las contrasenas no coinciden.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 18),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: FilledButton.icon(
+                          onPressed: _changingPassword
+                              ? null
+                              : () async {
+                                  if (!formKey.currentState!.validate()) {
+                                    return;
+                                  }
 
-            const SizedBox(height: 50),
+                                  setSheetState(() => _changingPassword = true);
 
-            Divider(color: Colors.white.withOpacity(0.08)),
-            const SizedBox(height: 20),
+                                  try {
+                                    await _profileService.changePassword(
+                                      currentPassword: currentController.text,
+                                      newPassword: newController.text,
+                                    );
 
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: OutlinedButton.icon(
-                onPressed: () => _confirmarCierreSesion(context),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(
-                      color: Colors.red.withOpacity(0.5)),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-                icon: const Icon(Icons.logout_rounded,
-                    color: Colors.redAccent, size: 20),
-                label: const Text(
-                  'Cerrar sesión',
-                  style: TextStyle(
-                    color: Colors.redAccent,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                                    if (!mounted ||
+                                        !context.mounted ||
+                                        !sheetContext.mounted) {
+                                      return;
+                                    }
+
+                                    Navigator.pop(sheetContext);
+                                    AppSnackbar.success(
+                                      context,
+                                      'Contrasena actualizada correctamente.',
+                                    );
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      AppSnackbar.error(context, e.toString());
+                                    }
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _changingPassword = false);
+                                    }
+                                  }
+                                },
+                          icon: _changingPassword
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.lock_reset_rounded),
+                          label: const Text('Actualizar contrasena'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
+            );
+          },
+        );
+      },
+    );
 
-            const SizedBox(height: 30),
-          ],
+    currentController.dispose();
+    newController.dispose();
+    confirmController.dispose();
+    if (mounted) setState(() => _changingPassword = false);
+  }
+
+  TextFormField _formField(
+    TextEditingController controller,
+    String label, {
+    TextInputType? keyboardType,
+    bool obscureText = false,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      style: const TextStyle(color: AppColors.textPrimary),
+      validator:
+          validator ??
+          (value) {
+            if (value == null || value.trim().isEmpty) {
+              return '$label es obligatorio.';
+            }
+            return null;
+          },
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: AppColors.textSecondary),
+        filled: true,
+        fillColor: AppColors.background,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primary),
         ),
       ),
     );
   }
 
-  void _confirmarCierreSesion(BuildContext context) {
-    showDialog(
+  String? _validateUsername(String? value) {
+    final text = (value ?? '').trim();
+    if (text.isEmpty) return 'El usuario es obligatorio.';
+    if (text.length < 3) return 'Minimo 3 caracteres.';
+    if (text.contains(' ')) return 'No puede contener espacios.';
+    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(text)) {
+      return 'Solo letras, numeros y guion bajo.';
+    }
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    final text = (value ?? '').trim();
+    if (text.isEmpty) return 'El correo es obligatorio.';
+    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(text)) {
+      return 'Ingresa un correo valido.';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    final text = value ?? '';
+    if (text.length < 8) return 'Minimo 8 caracteres.';
+    if (!RegExp(r'[A-Za-z]').hasMatch(text) || !RegExp(r'\d').hasMatch(text)) {
+      return 'Usa letras y numeros.';
+    }
+    return null;
+  }
+
+  void _confirmarCierreSesion() {
+    showDialog<void>(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2A),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
-          '¿Cerrar sesión?',
+          'Cerrar sesion',
           textAlign: TextAlign.center,
           style: TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.bold),
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: const Text(
+          'Tendras que iniciar sesion nuevamente para consultar tus datos.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar',
-                style:
-                    TextStyle(color: AppColors.textSecondary)),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
+            onPressed: () async {
+              await SessionLocalService.clearSession();
+              ApiService().token = null;
+
+              if (!mounted || !context.mounted || !dialogContext.mounted) {
+                return;
+              }
+
+              Navigator.pop(dialogContext);
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(
-                    builder: (_) => const LoginPage()),
+                MaterialPageRoute(builder: (_) => const LoginPage()),
                 (route) => false,
               );
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.redAccent,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('Cerrar sesión',
-                style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _opcionPerfil(String texto, IconData icon,
-      {VoidCallback? onTap}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding:
-              const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          child: Row(
-            children: [
-              Icon(icon,
-                  color: AppColors.textSecondary, size: 16),
-              const SizedBox(width: 8),
-              Text(texto,
-                  style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14)),
-              const Spacer(),
-              if (onTap != null)
-                const Icon(Icons.chevron_right_rounded,
-                    color: AppColors.textMuted, size: 18),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _radioNotificacion(String valor, String texto) {
-    return RadioListTile(
-      value: valor,
-      groupValue: notificacionSeleccionada,
-      activeColor: AppColors.primary,
-      onChanged: (value) =>
-          setState(() => notificacionSeleccionada = value.toString()),
-      title: Text(texto,
-          style: const TextStyle(color: AppColors.textPrimary)),
-    );
-  }
-
-  Widget _selectorApariencia(String valor, String texto) {
-    final bool sel = aparienciaSeleccionada == valor;
-    return GestureDetector(
-      onTap: () => setState(() => aparienciaSeleccionada = valor),
-      child: Column(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            height: 100,
-            width: 100,
-            decoration: BoxDecoration(
-              color: valor == 'oscuro'
-                  ? AppColors.background
-                  : const Color(0xFFBDBDEB),
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(
-                color: sel ? AppColors.blue : Colors.transparent,
-                width: 3,
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
+            child: const Text(
+              'Cerrar sesion',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
-          const SizedBox(height: 8),
-          Text(texto,
-              style: const TextStyle(
-                  color: AppColors.textPrimary)),
         ],
       ),
     );
   }
 }
-
