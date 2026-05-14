@@ -5,7 +5,9 @@ import '../../../theme/app_theme.dart';
 import 'notificaciones_page.dart' show NotificationCard;
 
 class HistorialNotificacionesPage extends StatefulWidget {
-  const HistorialNotificacionesPage({super.key});
+  const HistorialNotificacionesPage({super.key, required this.userId});
+
+  final String userId;
 
   @override
   State<HistorialNotificacionesPage> createState() =>
@@ -25,7 +27,7 @@ class _HistorialNotificacionesPageState
 
   Future<void> _load() async {
     if (mounted) setState(() => _loading = true);
-    final data = await NotificationLocalService.getReadNotifications();
+    final data = await NotificationLocalService.getReadNotifications(widget.userId);
     if (!mounted) return;
     setState(() {
       _read = data;

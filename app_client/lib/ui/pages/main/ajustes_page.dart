@@ -73,7 +73,10 @@ class _AjustesPageState extends State<AjustesPage> {
         _orders = results[1] as List<Order>;
         _photoPath = photo;
       });
-      await OrderNotificationSyncService.syncPurchaseNotifications(_orders);
+      await OrderNotificationSyncService.syncPurchaseNotifications(
+        _orders,
+        userId: loadedUser.id,
+      );
     } catch (e) {
       await _loadLocalSessionFallback();
       if (!mounted) return;

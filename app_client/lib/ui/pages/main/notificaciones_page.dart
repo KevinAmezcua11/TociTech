@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../database/local/notification_local_service.dart';
+import '../../../database/local/session_local_service.dart';
 import '../../../services/api_service.dart';
 import '../../../services/order_notification_sync_service.dart';
 import '../../../services/order_service.dart';
@@ -21,6 +22,7 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
   List<Map<String, dynamic>> _unread = [];
   bool _loading = true;
   String? _error;
+  String? _userId;
 
   @override
   void initState() {
@@ -31,14 +33,25 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
   Future<void> _loadNotifications() async {
     if (mounted) setState(() { _loading = true; _error = null; });
 
+    final session = await SessionLocalService.getSession();
+    _userId = session?['user_id'] as String?;
+
+    if (_userId == null) {
+      if (mounted) setState(() => _loading = false);
+      return;
+    }
+
     try {
       final orders = await _orderService.getOrders();
-      await OrderNotificationSyncService.syncPurchaseNotifications(orders);
+      await OrderNotificationSyncService.syncPurchaseNotifications(
+        orders,
+        userId: _userId!,
+      );
     } catch (_) {
       _error = 'No pudimos actualizar tus notificaciones. Mostrando eventos guardados.';
     }
 
-    final unread = await NotificationLocalService.getUnreadNotifications();
+    final unread = await NotificationLocalService.getUnreadNotifications(_userId!);
 
     if (!mounted) return;
     setState(() {
@@ -48,7 +61,8 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
   }
 
   Future<void> _markAllRead() async {
-    await NotificationLocalService.markAllNotificationsRead();
+    if (_userId == null) return;
+    await NotificationLocalService.markAllNotificationsRead(_userId!);
     await _loadNotifications();
     if (mounted) AppSnackbar.success(context, 'Notificaciones marcadas como leídas.');
   }
@@ -86,7 +100,7 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const HistorialNotificacionesPage(),
+                builder: (_) => HistorialNotificacionesPage(userId: _userId ?? ''),
               ),
             ),
             icon: const Icon(Icons.history_rounded),

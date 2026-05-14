@@ -4,12 +4,16 @@ import '../models/order_model.dart';
 class OrderNotificationSyncService {
   const OrderNotificationSyncService._();
 
-  static Future<void> syncPurchaseNotifications(List<Order> orders) async {
+  static Future<void> syncPurchaseNotifications(
+    List<Order> orders, {
+    required String userId,
+  }) async {
     final productOrders = orders.where((order) => order.type == 'product');
 
     for (final order in productOrders) {
       if (_isApproved(order)) {
         await NotificationLocalService.saveNotification(
+          userId: userId,
           id: 'order-${order.id}-approved',
           title: 'Compra aprobada',
           message:
@@ -25,6 +29,7 @@ class OrderNotificationSyncService {
 
       if (_isCancelled(order)) {
         await NotificationLocalService.saveNotification(
+          userId: userId,
           id: 'order-${order.id}-cancelled',
           title: 'Compra cancelada',
           message:

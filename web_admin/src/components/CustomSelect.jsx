@@ -17,9 +17,17 @@ export default function CustomSelect({
     const calcPosition = () => {
         if (triggerRef.current) {
             const rect = triggerRef.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+            const estimatedHeight = Math.min(options.length * 44 + 12, 256);
+            const openUpward = spaceBelow < estimatedHeight && spaceAbove > spaceBelow;
+
             setDropdownStyle({
                 position: "fixed",
-                top: rect.bottom + 6,
+                ...(openUpward
+                    ? { bottom: window.innerHeight - rect.top + 6, maxHeight: Math.min(spaceAbove - 8, 256) }
+                    : { top: rect.bottom + 6, maxHeight: Math.min(spaceBelow - 8, 256) }
+                ),
                 left: rect.left,
                 width: rect.width,
                 zIndex: 9999,
@@ -86,7 +94,7 @@ export default function CustomSelect({
                     style={dropdownStyle}
                     className="bg-[#1a1d2e] border border-white/15 rounded-xl shadow-2xl overflow-hidden"
                 >
-                    <ul className="py-1.5 max-h-64 overflow-y-auto">
+                    <ul className="py-1.5 overflow-y-auto" style={{ maxHeight: dropdownStyle.maxHeight ?? 256 }}>
                         {options.map((opt) => {
                             const isSelected = opt.value === value;
                             return (

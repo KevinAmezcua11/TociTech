@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tocitech/app_navigator.dart';
 import 'package:tocitech/controllers/auth_controller.dart';
 import 'package:tocitech/services/auth_service.dart';
 import 'package:tocitech/ui/pages/main/home_page.dart';
@@ -96,14 +97,10 @@ class _LoginPageState extends State<LoginPage> {
     if (success) {
       authController.authService.api.onSessionExpired = () async {
         await authController.authService.logout();
-        if (mounted) {
-          AppSnackbar.sessionExpired(context);
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const LoginPage()),
-            (route) => false,
-          );
-        }
+        appNavigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+          (route) => false,
+        );
       };
       Navigator.pushReplacement(
         context,

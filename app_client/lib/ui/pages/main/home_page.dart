@@ -35,8 +35,8 @@ class _TociTechAppState extends State<TociTechApp> {
   List<ServiceModel> _featuredServices = [];
 
   late final HomeSummaryService _homeSummaryService;
-  late final ServiceService _serviceService;
   late final ProductService _productService;
+  late final ServiceService _serviceService;
 
   final List _titulosAppBar = ["Inicio", "Productos", "Servicios", "Perfil"];
 
@@ -45,77 +45,61 @@ class _TociTechAppState extends State<TociTechApp> {
     super.initState();
     final api = ApiService();
     _homeSummaryService = HomeSummaryService(api);
-    _serviceService = ServiceService(api);
-    _productService = ProductService(api);
+    _productService     = ProductService(api);
+    _serviceService     = ServiceService(api);
     CartLocalService.refreshCount();
     _loadHomeData();
   }
 
   Future<void> _loadHomeData() async {
-    if (mounted) {
-      setState(() {
-        _homeLoading = true;
-        _homeError = null;
-      });
-    }
+    if (mounted) setState(() { _homeLoading = true; _homeError = null; });
 
     try {
+      // Intentar cargar resumen y destacados (más vendidos) en paralelo
       final results = await Future.wait([
         _homeSummaryService.getSummary(),
-        _serviceService.getServices(),
-        _productService.getProducts(),
+        _homeSummaryService.getFeatured(),
       ]);
 
-      final summary = results[0] as HomeSummary;
-      final services = (results[1] as List<ServiceModel>)
-          .where((service) => service.isActive)
-          .toList();
-      final products = (results[2] as List<Product>)
-          .where((product) => product.isAvailable)
-          .toList();
+      final summary  = results[0] as HomeSummary;
+      final featured = results[1] as HomeFeatured;
 
       if (!mounted) return;
-
       setState(() {
         _homeSummary = summary.copyWith(
-          services: summary.services > 0 ? summary.services : services.length,
-          products: summary.products > 0 ? summary.products : products.length,
+          services: summary.services > 0 ? summary.services : featured.services.length,
+          products: summary.products > 0 ? summary.products : featured.products.length,
         );
-        _featuredProducts = products.take(3).toList();
-        _featuredServices = services.take(3).toList();
+        _featuredProducts = featured.products;
+        _featuredServices = featured.services;
       });
-    } catch (e) {
+    } catch (_) {
+      // Fallback: el endpoint /home/featured puede no existir aún en el backend.
+      // Cargar todos los productos/servicios y tomar los primeros 3.
       try {
         final results = await Future.wait([
-          _serviceService.getServices(),
+          _homeSummaryService.getSummary(),
           _productService.getProducts(),
+          _serviceService.getServices(),
         ]);
 
-        final services = (results[0] as List<ServiceModel>)
-            .where((service) => service.isActive)
-            .toList();
-        final products = (results[1] as List<Product>)
-            .where((product) => product.isAvailable)
-            .toList();
+        final summary  = results[0] as HomeSummary;
+        final products = (results[1] as List<Product>).where((p) => p.isAvailable).toList();
+        final services = (results[2] as List<ServiceModel>).where((s) => s.isActive).toList();
 
         if (!mounted) return;
-
         setState(() {
-          _homeSummary = HomeSummary(
-            clients: _homeSummary?.clients ?? 0,
-            services: services.length,
-            products: products.length,
+          _homeSummary = summary.copyWith(
+            products: summary.products > 0 ? summary.products : products.length,
+            services: summary.services > 0 ? summary.services : services.length,
           );
           _featuredProducts = products.take(3).toList();
           _featuredServices = services.take(3).toList();
-          _homeError =
-              'Mostrando datos disponibles. No se pudo actualizar el resumen completo.';
         });
       } catch (_) {
         if (!mounted) return;
         setState(() {
-          _homeError =
-              'No pudimos actualizar el Home. Revisa tu conexion e intenta de nuevo.';
+          _homeError = 'No pudimos actualizar el Home. Revisa tu conexión e intenta de nuevo.';
         });
       }
     } finally {
@@ -623,7 +607,7 @@ class _TociTechAppState extends State<TociTechApp> {
         child: _HomeEmptyState(
           icon: Icons.inventory_2_outlined,
           title: 'Sin productos disponibles',
-          message: 'Cuando agregues productos desde el panel admin apareceran aqui.',
+          message: 'Por el momento no hay productos disponibles. Vuelve pronto.',
         ),
       );
     }
@@ -675,8 +659,7 @@ class _TociTechAppState extends State<TociTechApp> {
         child: _HomeEmptyState(
           icon: Icons.handyman_outlined,
           title: 'Sin servicios activos',
-          message:
-              'Cuando agregues servicios desde el panel admin apareceran aqui.',
+          message: 'Por el momento no hay servicios disponibles. Vuelve pronto.',
         ),
       );
     }

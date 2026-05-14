@@ -2,11 +2,14 @@ const db = require('../config/firebase');
 
 async function getNotifications(req, res) {
     try {
-        const snap = await db.collection('notifications')
-            .orderBy('createdAt', 'desc')
-            .limit(40)
-            .get();
+        const isAdmin = req.user.role === 'admin';
+        let query = db.collection('notifications').orderBy('createdAt', 'desc').limit(40);
 
+        if (!isAdmin) {
+            query = query.where('customerId', '==', req.user.id);
+        }
+
+        const snap = await query.get();
         const list = snap.docs.map(d => ({
             id: d.id,
             ...d.data(),
@@ -26,6 +29,12 @@ async function markAsRead(req, res) {
         const snap = await ref.get();
         if (!snap.exists) return res.status(404).json({ message: 'Notificación no encontrada' });
 
+        const data = snap.data();
+        const isAdmin = req.user.role === 'admin';
+        if (!isAdmin && data.customerId !== req.user.id) {
+            return res.status(403).json({ message: 'Sin permiso' });
+        }
+
         await ref.update({ leido: true });
         res.json({ ok: true });
     } catch (err) {
@@ -36,9 +45,14 @@ async function markAsRead(req, res) {
 
 async function markAllAsRead(req, res) {
     try {
-        const snap = await db.collection('notifications')
-            .where('leido', '==', false)
-            .get();
+        const isAdmin = req.user.role === 'admin';
+        let query = db.collection('notifications').where('leido', '==', false);
+
+        if (!isAdmin) {
+            query = query.where('customerId', '==', req.user.id);
+        }
+
+        const snap = await query.get();
 
         if (!snap.empty) {
             const batch = db.batch();

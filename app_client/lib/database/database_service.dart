@@ -13,7 +13,7 @@ class DatabaseService {
     final path = join(await getDatabasesPath(), 'tocitech.db');
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onConfigure: _onConfigure,
       onCreate:    _onCreate,
       onUpgrade:   _onUpgrade,
@@ -78,6 +78,7 @@ class DatabaseService {
     await db.execute('''
       CREATE TABLE notificaciones (
         id         TEXT PRIMARY KEY,
+        user_id    TEXT NOT NULL DEFAULT '',
         title      TEXT,
         message    TEXT,
         type       TEXT,
@@ -117,6 +118,9 @@ class DatabaseService {
       'CREATE INDEX idx_notificaciones_leida ON notificaciones (leida)',
     );
     await db.execute(
+      'CREATE INDEX idx_notificaciones_user_id ON notificaciones (user_id)',
+    );
+    await db.execute(
       'CREATE INDEX idx_carrito_product_id ON carrito (product_id)',
     );
   }
@@ -130,6 +134,14 @@ class DatabaseService {
       await db.execute('ALTER TABLE carrito ADD COLUMN user_id TEXT');
       await db.execute(
         'CREATE INDEX IF NOT EXISTS idx_carrito_user_id ON carrito (user_id)',
+      );
+    }
+    if (oldVersion < 3) {
+      await db.execute(
+        "ALTER TABLE notificaciones ADD COLUMN user_id TEXT NOT NULL DEFAULT ''",
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_notificaciones_user_id ON notificaciones (user_id)',
       );
     }
   }
