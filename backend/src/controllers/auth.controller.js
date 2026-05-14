@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user.model');
+const PasswordReset = require('../models/password-reset.model');
+const { sendPasswordResetEmail } = require('../config/email.service');
 
 if (!process.env.JWT_SECRET) {
     throw new Error("JWT_SECRET not defined");
@@ -134,4 +136,74 @@ async function login(req, res) {
     }   
 }
 
-module.exports = { registerClient, registerAdmin, login };
+async function forgotPassword(req, res) {
+    const { email } = req.body;
+
+    if (!email || !isValidEmail(email)) {
+        return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    try {
+        const user = await User.findByEmail(email.trim().toLowerCase());
+
+        // Respuesta genérica siempre para no revelar si el email existe
+        if (!user) {
+            return res.status(200).json({ message: "If that email is registered, you will receive a reset code" });
+        }
+
+        const code = await PasswordReset.createResetToken(user.id);
+
+        await sendPasswordResetEmail({
+            to: user.email,
+            names: user.names,
+            code
+        });
+
+        return res.status(200).json({ message: "If that email is registered, you will receive a reset code" });
+
+    } catch (err) {
+        console.error('[forgotPassword]', err);
+        return res.status(500).json({ message: "Server error" });
+    }
+}
+
+async function resetPassword(req, res) {
+    const { email, code, newPassword } = req.body;
+
+    if (!email || !isValidEmail(email)) {
+        return res.status(400).json({ message: "Invalid email" });
+    }
+
+    if (!code || String(code).length !== 6) {
+        return res.status(400).json({ message: "Invalid code" });
+    }
+
+    if (!newPassword || newPassword.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters" });
+    }
+
+    try {
+        const user = await User.findByEmail(email.trim().toLowerCase());
+
+        if (!user) {
+            return res.status(400).json({ message: "Invalid or expired code" });
+        }
+
+        const valid = await PasswordReset.verifyCode(user.id, String(code));
+
+        if (!valid) {
+            return res.status(400).json({ message: "Invalid or expired code" });
+        }
+
+        await User.resetPasswordDirect(user.id, newPassword);
+        await PasswordReset.deleteByUserId(user.id);
+
+        return res.status(200).json({ message: "Password updated successfully" });
+
+    } catch (err) {
+        console.error('[resetPassword]', err);
+        return res.status(500).json({ message: "Server error" });
+    }
+}
+
+module.exports = { registerClient, registerAdmin, login, forgotPassword, resetPassword };

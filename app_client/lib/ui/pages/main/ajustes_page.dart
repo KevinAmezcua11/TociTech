@@ -26,8 +26,7 @@ class _AjustesPageState extends State<AjustesPage> {
   User? _user;
   List<Order> _orders = [];
   bool _loading = true;
-  bool _savingProfile = false;
-  bool _changingPassword = false;
+
   String? _error;
 
   int get _comprasRealizadas =>
@@ -109,20 +108,6 @@ class _AjustesPageState extends State<AjustesPage> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20, 26, 20, 120),
           children: [
-            const Text(
-              'Perfil',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Datos de cuenta, seguridad y actividad reciente.',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-            ),
-            const SizedBox(height: 22),
             if (_error != null) ...[
               _noticeCard(_error!),
               const SizedBox(height: 16),
@@ -139,12 +124,6 @@ class _AjustesPageState extends State<AjustesPage> {
                 title: 'Editar perfil',
                 subtitle: 'Nombre, correo, telefono y usuario',
                 onTap: user == null ? null : () => _showEditProfileSheet(user),
-              ),
-              _settingsTile(
-                icon: Icons.lock_outline_rounded,
-                title: 'Cambiar contraseña',
-                subtitle: 'Valida tu contraseña actual antes de guardar',
-                onTap: _showChangePasswordSheet,
               ),
               _settingsTile(
                 icon: Icons.receipt_long_outlined,
@@ -452,306 +431,279 @@ class _AjustesPageState extends State<AjustesPage> {
   }
 
   Future<void> _showEditProfileSheet(User user) async {
-    final formKey = GlobalKey<FormState>();
-    final usernameController = TextEditingController(text: user.username);
-    final namesController = TextEditingController(text: user.names);
-    final lastnamesController = TextEditingController(text: user.lastnames);
-    final emailController = TextEditingController(text: user.email);
-    final phoneController = TextEditingController(text: user.phone);
-
-    await showModalBottomSheet<void>(
+    final result = await showModalBottomSheet<User?>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (sheetContext, setSheetState) {
-            final bottom = MediaQuery.of(sheetContext).viewInsets.bottom;
-
-            return Padding(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, bottom + 20),
-              child: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Editar perfil',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      _formField(
-                        usernameController,
-                        'Usuario',
-                        validator: _validateUsername,
-                      ),
-                      const SizedBox(height: 12),
-                      _formField(namesController, 'Nombre'),
-                      const SizedBox(height: 12),
-                      _formField(lastnamesController, 'Apellidos'),
-                      const SizedBox(height: 12),
-                      _formField(
-                        emailController,
-                        'Correo',
-                        keyboardType: TextInputType.emailAddress,
-                        validator: _validateEmail,
-                      ),
-                      const SizedBox(height: 12),
-                      _formField(
-                        phoneController,
-                        'Telefono',
-                        keyboardType: TextInputType.phone,
-                      ),
-                      const SizedBox(height: 18),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: FilledButton.icon(
-                          onPressed: _savingProfile
-                              ? null
-                              : () async {
-                                  if (!formKey.currentState!.validate()) {
-                                    return;
-                                  }
-
-                                  setSheetState(() => _savingProfile = true);
-
-                                  try {
-                                    final updated = await _profileService
-                                        .updateMe(
-                                          username: usernameController.text,
-                                          names: namesController.text,
-                                          lastnames: lastnamesController.text,
-                                          email: emailController.text,
-                                          phone: phoneController.text,
-                                        );
-
-                                    if (!mounted ||
-                                        !context.mounted ||
-                                        !sheetContext.mounted) {
-                                      return;
-                                    }
-
-                                    setState(() => _user = updated);
-                                    Navigator.pop(sheetContext);
-                                    AppSnackbar.success(
-                                      context,
-                                      'Perfil actualizado correctamente.',
-                                    );
-                                  } catch (e) {
-                                    if (context.mounted) {
-                                      AppSnackbar.error(context, e.toString());
-                                    }
-                                  } finally {
-                                    if (mounted) {
-                                      setState(() => _savingProfile = false);
-                                    }
-                                  }
-                                },
-                          icon: _savingProfile
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.save_outlined),
-                          label: const Text('Guardar cambios'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
+      builder: (_) => _EditProfileSheet(user: user),
     );
 
-    usernameController.dispose();
-    namesController.dispose();
-    lastnamesController.dispose();
-    emailController.dispose();
-    phoneController.dispose();
-    if (mounted) setState(() => _savingProfile = false);
+    if (result == null || !mounted) return;
+
+    try {
+      final updated = await _profileService.updateMe(
+        username: result.username,
+        names: result.names,
+        lastnames: result.lastnames,
+        email: result.email,
+        phone: result.phone,
+      );
+      if (!mounted) return;
+      setState(() => _user = updated);
+      AppSnackbar.success(context, 'Perfil actualizado correctamente.');
+    } catch (e) {
+      if (!mounted) return;
+      AppSnackbar.error(context, e.toString());
+    }
   }
 
-  Future<void> _showChangePasswordSheet() async {
-    final formKey = GlobalKey<FormState>();
-    final currentController = TextEditingController();
-    final newController = TextEditingController();
-    final confirmController = TextEditingController();
 
-    await showModalBottomSheet<void>(
+  void _confirmarCierreSesion() {
+    showDialog<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          '¿Salir de tu\ncuenta?',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextButton(
+                onPressed: () async {
+                  await SessionLocalService.clearSession();
+                  ApiService().token = null;
+
+                  if (!mounted || !context.mounted || !dialogContext.mounted) {
+                    return;
+                  }
+
+                  Navigator.pop(dialogContext);
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginPage()),
+                    (route) => false,
+                  );
+                },
+                child: const Text(
+                  'Salir',
+                  style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 17),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text(
+                  'Cancelar',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (sheetContext, setSheetState) {
-            final bottom = MediaQuery.of(sheetContext).viewInsets.bottom;
+    );
+  }
+}
 
-            return Padding(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, bottom + 20),
-              child: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Cambiar contraseña',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Por seguridad validamos tu contraseña actual.',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      _formField(
-                        currentController,
-                        'Contraseña actual',
-                        obscureText: true,
-                      ),
-                      const SizedBox(height: 12),
-                      _formField(
-                        newController,
-                        'Nueva contraseña',
-                        obscureText: true,
-                        validator: _validatePassword,
-                      ),
-                      const SizedBox(height: 12),
-                      _formField(
-                        confirmController,
-                        'Confirmar contraseña',
-                        obscureText: true,
-                        validator: (value) {
-                          if ((value ?? '') != newController.text) {
-                            return 'Las contraseñas no coinciden.';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 18),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: FilledButton.icon(
-                          onPressed: _changingPassword
-                              ? null
-                              : () async {
-                                  if (!formKey.currentState!.validate()) {
-                                    return;
-                                  }
+// ── Edit-profile sheet ────────────────────────────────────────────────────────
 
-                                  setSheetState(() => _changingPassword = true);
+class _EditProfileSheet extends StatefulWidget {
+  const _EditProfileSheet({required this.user});
 
-                                  try {
-                                    await _profileService.changePassword(
-                                      currentPassword: currentController.text,
-                                      newPassword: newController.text,
-                                    );
+  final User user;
 
-                                    if (!mounted ||
-                                        !context.mounted ||
-                                        !sheetContext.mounted) {
-                                      return;
-                                    }
+  @override
+  State<_EditProfileSheet> createState() => _EditProfileSheetState();
+}
 
-                                    Navigator.pop(sheetContext);
-                                    AppSnackbar.success(
-                                      context,
-                                      'Contraseña actualizada correctamente.',
-                                    );
-                                  } catch (e) {
-                                    if (context.mounted) {
-                                      AppSnackbar.error(context, e.toString());
-                                    }
-                                  } finally {
-                                    if (mounted) {
-                                      setState(() => _changingPassword = false);
-                                    }
-                                  }
-                                },
-                          icon: _changingPassword
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.lock_reset_rounded),
-                          label: const Text('Actualizar contraseña'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+class _EditProfileSheetState extends State<_EditProfileSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _usernameCtrl;
+  late final TextEditingController _namesCtrl;
+  late final TextEditingController _lastnamesCtrl;
+  late final TextEditingController _emailCtrl;
+  late final TextEditingController _phoneCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameCtrl  = TextEditingController(text: widget.user.username);
+    _namesCtrl     = TextEditingController(text: widget.user.names);
+    _lastnamesCtrl = TextEditingController(text: widget.user.lastnames);
+    _emailCtrl     = TextEditingController(text: widget.user.email);
+    _phoneCtrl     = TextEditingController(text: widget.user.phone);
+  }
+
+  @override
+  void dispose() {
+    _usernameCtrl.dispose();
+    _namesCtrl.dispose();
+    _lastnamesCtrl.dispose();
+    _emailCtrl.dispose();
+    _phoneCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          '¿Guardar cambios?',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 17,
+          ),
+        ),
+        content: const Text(
+          'Se actualizarán los datos de tu perfil.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Confirmar'),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text(
+                  'Cancelar',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || confirm != true) return;
+
+    Navigator.pop(
+      context,
+      User(
+        id:        widget.user.id,
+        username:  _usernameCtrl.text.trim(),
+        names:     _namesCtrl.text.trim(),
+        lastnames: _lastnamesCtrl.text.trim(),
+        email:     _emailCtrl.text.trim(),
+        phone:     _phoneCtrl.text.trim(),
+        role:      widget.user.role,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, bottom + 20),
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Editar perfil',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded,
+                        color: AppColors.textSecondary),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _field(_usernameCtrl,  'Usuario',   validator: _validateUsername),
+              const SizedBox(height: 12),
+              _field(_namesCtrl,     'Nombre'),
+              const SizedBox(height: 12),
+              _field(_lastnamesCtrl, 'Apellidos'),
+              const SizedBox(height: 12),
+              _field(_emailCtrl,     'Correo',
+                  keyboardType: TextInputType.emailAddress,
+                  validator: _validateEmail),
+              const SizedBox(height: 12),
+              _field(_phoneCtrl,     'Telefono',
+                  keyboardType: TextInputType.phone),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: FilledButton.icon(
+                  onPressed: _save,
+                  icon: const Icon(Icons.save_outlined),
+                  label: const Text('Guardar cambios'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
-            );
-          },
-        );
-      },
+            ],
+          ),
+        ),
+      ),
     );
-
-    currentController.dispose();
-    newController.dispose();
-    confirmController.dispose();
-    if (mounted) setState(() => _changingPassword = false);
   }
 
-  TextFormField _formField(
+  TextFormField _field(
     TextEditingController controller,
     String label, {
     TextInputType? keyboardType,
-    bool obscureText = false,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      obscureText: obscureText,
       style: const TextStyle(color: AppColors.textPrimary),
-      validator:
-          validator ??
+      validator: validator ??
           (value) {
             if (value == null || value.trim().isEmpty) {
               return '$label es obligatorio.';
@@ -790,74 +742,5 @@ class _AjustesPageState extends State<AjustesPage> {
       return 'Ingresa un correo valido.';
     }
     return null;
-  }
-
-  String? _validatePassword(String? value) {
-    final text = value ?? '';
-    if (text.length < 8) return 'Minimo 8 caracteres.';
-    if (!RegExp(r'[A-Za-zñÑ]').hasMatch(text) ||
-        !RegExp(r'\d').hasMatch(text)) {
-      return 'Usa letras y numeros.';
-    }
-    return null;
-  }
-
-  void _confirmarCierreSesion() {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Cerrar sesion',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: const Text(
-          'Tendras que iniciar sesion nuevamente para consultar tus datos.',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-          ),
-          FilledButton(
-            onPressed: () async {
-              await SessionLocalService.clearSession();
-              ApiService().token = null;
-
-              if (!mounted || !context.mounted || !dialogContext.mounted) {
-                return;
-              }
-
-              Navigator.pop(dialogContext);
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-                (route) => false,
-              );
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text(
-              'Cerrar sesion',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

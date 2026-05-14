@@ -1,6 +1,7 @@
 const sgMail = require('@sendgrid/mail');
 const { getProductEmailContent } = require('../templates/product-payment-success');
 const { getServiceEmailContent } = require('../templates/service-request');
+const { getPasswordResetEmailContent } = require('../templates/password-reset');
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -46,4 +47,15 @@ async function sendServiceRequestEmail(order) {
     }
 }
 
-module.exports = { sendProductPurchaseEmail, sendServiceRequestEmail };
+async function sendPasswordResetEmail({ to, names, code }) {
+    try {
+        const { subject, html, text } = getPasswordResetEmailContent({ names, code });
+        await sendEmail({ to, subject, html, text });
+        console.log(`[Email] Código de recuperación enviado a ${to}`);
+    } catch (err) {
+        console.error('[Email] Error al enviar correo de recuperación:', err.message);
+        throw err;
+    }
+}
+
+module.exports = { sendProductPurchaseEmail, sendServiceRequestEmail, sendPasswordResetEmail };

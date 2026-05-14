@@ -15,7 +15,6 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
-  bool _aceptaTerminos = false;
   bool _loading = false;
 
   late AuthController authController;
@@ -170,11 +169,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _register() async {
     if (!_validateAll()) return;
-
-    if (!_aceptaTerminos) {
-      AppSnackbar.info(context, 'Debes aceptar los términos y condiciones');
-      return;
-    }
 
     try {
       setState(() => _loading = true);
@@ -419,23 +413,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 20),
 
-                    /// CHECKBOX
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: _aceptaTerminos,
-                          onChanged: (val) => setState(() => _aceptaTerminos = val!),
-                          activeColor: AppColors.primary,
-                        ),
-                        const Expanded(
-                          child: Text(
-                            "Acepto los términos y condiciones",
-                            style: TextStyle(color: AppColors.textSecondary),
-                          ),
-                        ),
-                      ],
-                    ),
-
                     const SizedBox(height: 28),
 
                     /// BOTÓN
@@ -443,7 +420,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       width: double.infinity,
                       height: 52,
                       child: FilledButton(
-                        onPressed: (_aceptaTerminos && !_loading) ? _register : null,
+                        onPressed: _loading ? null : _register,
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           shape: RoundedRectangleBorder(

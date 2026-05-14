@@ -5,6 +5,7 @@ import 'package:tocitech/ui/pages/main/home_page.dart';
 import '../../../theme/app_theme.dart';
 import '../../widgets/app_snackbar.dart';
 import 'register_page.dart';
+import 'forgot_password_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -195,7 +196,29 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 12),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ForgotPasswordPage(),
+                          ),
+                        ),
+                        child: const Text(
+                          '¿Olvidaste tu contraseña?',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
 
                     SizedBox(
                       width: double.infinity,
@@ -275,7 +298,7 @@ class _LoginPageState extends State<LoginPage> {
         children: [
           CircleAvatar(
             radius: 36,
-            backgroundColor: AppColors.primary.withOpacity(0.15),
+            backgroundColor: AppColors.primary.withValues(alpha: 0.15),
             child: Image.asset("assets/Logo-img.png", height: 44),
           ),
           const SizedBox(height: 12),
@@ -328,7 +351,7 @@ class _LoginPageState extends State<LoginPage> {
             border: Border.all(
               color: hasError
                   ? Colors.redAccent
-                  : Colors.white.withOpacity(0.08),
+                  : Colors.white.withValues(alpha: 0.08),
             ),
           ),
           child: TextField(
@@ -343,7 +366,7 @@ class _LoginPageState extends State<LoginPage> {
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: TextStyle(
-                color: AppColors.textSecondary.withOpacity(0.5),
+                color: AppColors.textSecondary.withValues(alpha: 0.5),
                 fontSize: 14,
               ),
               prefixIcon:

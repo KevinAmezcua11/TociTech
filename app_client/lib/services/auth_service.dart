@@ -54,6 +54,23 @@ class AuthService {
     return User.fromJson(response);
   }
 
+  // ─── Recuperación de contraseña ─────────────────────────────────────────
+  Future<void> forgotPassword(String email) async {
+    await api.post('/auth/forgot-password', {"email": email.trim().toLowerCase()});
+  }
+
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    await api.post('/auth/reset-password', {
+      "email": email.trim().toLowerCase(),
+      "code": code.trim(),
+      "newPassword": newPassword,
+    });
+  }
+
   // ─── Restaurar sesión guardada ───────────────────────────────────────────
   Future<Map<String, dynamic>?> getSavedSession() async {
     final session = await SessionLocalService.getSession();

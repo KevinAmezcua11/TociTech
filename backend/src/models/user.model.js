@@ -54,6 +54,28 @@ async function getPrivateById(id) {
     };
 }
 
+// Buscar usuario por email
+async function findByEmail(email) {
+    const emailClean = email.trim().toLowerCase();
+
+    const snapshot = await db
+        .collection("users")
+        .where("email", "==", emailClean)
+        .get();
+
+    if (snapshot.empty) return null;
+
+    const docData = snapshot.docs[0];
+    const data = docData.data();
+
+    return {
+        id: docData.id,
+        ...data,
+        createdAt: data.createdAt?.toDate(),
+        updatedAt: data.updatedAt?.toDate()
+    };
+}
+
 // Buscar usuario por username
 async function findByUsername(username) {
     const usernameClean = username.trim().toLowerCase();
@@ -198,6 +220,19 @@ async function updateOwnProfile(id, data) {
     return getById(id);
 }
 
+async function resetPasswordDirect(id, newPassword) {
+    if (!newPassword?.trim() || newPassword.length < 8) throw new Error("Invalid password");
+
+    const hashedPass = await bcrypt.hash(newPassword, 10);
+
+    await db.collection("users").doc(id).update({
+        password: hashedPass,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return true;
+}
+
 async function changePassword(id, currentPassword, newPassword) {
     if (!currentPassword?.trim()) throw new Error("Current password required");
     if (!newPassword?.trim() || newPassword.length < 8) throw new Error("Invalid password");
@@ -234,9 +269,11 @@ module.exports = {
     getAllUsers,
     getById,
     findByUsername,
+    findByEmail,
     createUser,
     updateUser,
     updateOwnProfile,
     changePassword,
+    resetPasswordDirect,
     deleteUser
 };

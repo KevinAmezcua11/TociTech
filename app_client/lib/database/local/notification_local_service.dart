@@ -31,6 +31,18 @@ class NotificationLocalService {
     return db.query('notificaciones', orderBy: 'created_at DESC');
   }
 
+  static Future<List<Map<String, dynamic>>> getUnreadNotifications() async {
+    final db = await DatabaseService.database;
+    return db.query('notificaciones',
+        where: 'leida = 0', orderBy: 'created_at DESC');
+  }
+
+  static Future<List<Map<String, dynamic>>> getReadNotifications() async {
+    final db = await DatabaseService.database;
+    return db.query('notificaciones',
+        where: 'leida = 1', orderBy: 'created_at DESC');
+  }
+
   static Future<int> getUnreadCount() async {
     final db     = await DatabaseService.database;
     final result = await db.rawQuery(

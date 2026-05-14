@@ -137,7 +137,7 @@ class _ServiciosPageState extends State<ServiciosPage> {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 96),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
       child: Column(
         children: [
           for (int i = 0; i < _services.length; i++) ...[

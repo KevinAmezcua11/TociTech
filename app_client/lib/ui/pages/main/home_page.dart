@@ -8,14 +8,15 @@ import '../../../services/home_summary_service.dart';
 import '../../../services/product_service.dart';
 import '../../../services/service_service.dart';
 import '../../../theme/app_theme.dart';
+import '../../widgets/product_card.dart';
 import '../../widgets/service_card.dart';
 import '../cart/cart_page.dart';
+import '../products/product_detail_page.dart';
 import '../services/service_detail_page.dart';
 import 'ajustes_page.dart';
 import 'notificaciones_page.dart';
 import '../products/products_page.dart';
 import 'busqueda_page.dart';
-import '../ai/ai_chat_page.dart';
 
 
 class TociTechApp extends StatefulWidget {
@@ -31,8 +32,8 @@ class _TociTechAppState extends State<TociTechApp> {
   bool _homeLoading = true;
   String? _homeError;
   HomeSummary? _homeSummary;
+  List<Product> _featuredProducts = [];
   List<ServiceModel> _featuredServices = [];
-  List<Product> _availableProducts = [];
 
   late final HomeSummaryService _homeSummaryService;
   late final ServiceService _serviceService;
@@ -86,8 +87,8 @@ class _TociTechAppState extends State<TociTechApp> {
           services: summary.services > 0 ? summary.services : services.length,
           products: summary.products > 0 ? summary.products : products.length,
         );
+        _featuredProducts = products.take(3).toList();
         _featuredServices = services.take(3).toList();
-        _availableProducts = products;
       });
     } catch (e) {
       try {
@@ -111,8 +112,8 @@ class _TociTechAppState extends State<TociTechApp> {
             services: services.length,
             products: products.length,
           );
+          _featuredProducts = products.take(3).toList();
           _featuredServices = services.take(3).toList();
-          _availableProducts = products;
           _homeError =
               'Mostrando datos disponibles. No se pudo actualizar el resumen completo.';
         });
@@ -279,7 +280,7 @@ class _TociTechAppState extends State<TociTechApp> {
       onRefresh: _loadHomeData,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 120),
+        padding: const EdgeInsets.only(bottom: 24),
         children: [
           _searchBar(),
           const SizedBox(height: 20),
@@ -292,18 +293,18 @@ class _TociTechAppState extends State<TociTechApp> {
           _estadisticasSection(),
           const SizedBox(height: 34),
           _sectionTitle(
+            "Productos destacados",
+            "Los mejores productos disponibles ahora",
+          ),
+          const SizedBox(height: 18),
+          _productosHorizontal(),
+          const SizedBox(height: 34),
+          _sectionTitle(
             "Servicios destacados",
-            "Opciones reales disponibles en el catalogo",
+            "Los servicios más solicitados por nuestros clientes",
           ),
           const SizedBox(height: 18),
           _serviciosHorizontal(),
-          const SizedBox(height: 34),
-          _sectionTitle(
-            "Catalogo activo",
-            "Datos sincronizados con la informacion actual",
-          ),
-          const SizedBox(height: 18),
-          _catalogSummarySection(),
           const SizedBox(height: 34),
           _sectionTitle("Horarios", "Estamos listos para ayudarte"),
           const SizedBox(height: 18),
@@ -502,13 +503,6 @@ class _TociTechAppState extends State<TociTechApp> {
           Row(
             children: [
               _statCard(
-                Icons.people_alt_rounded,
-                _homeLoading ? '...' : _formatCount(summary?.clients ?? 0),
-                "Clientes",
-                AppColors.primary,
-              ),
-              const SizedBox(width: 12),
-              _statCard(
                 Icons.build_circle_rounded,
                 _homeLoading ? '...' : _formatCount(summary?.services ?? 0),
                 "Servicios",
@@ -531,42 +525,56 @@ class _TociTechAppState extends State<TociTechApp> {
   Widget _statCard(IconData icon, String value, String label, Color color) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: color.withValues(alpha: 0.16)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+          gradient: LinearGradient(
+            colors: [
+              color.withValues(alpha: 0.07),
+              AppColors.surface,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
-        child: Column(
+        child: Row(
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.13),
+                color: color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(icon, color: color, size: 21),
+              child: Icon(icon, color: color, size: 22),
             ),
-            const SizedBox(height: 10),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -599,10 +607,62 @@ class _TociTechAppState extends State<TociTechApp> {
     );
   }
 
+  Widget _productosHorizontal() {
+    if (_homeLoading && _featuredProducts.isEmpty) {
+      return SizedBox(
+        height: 310,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: 3,
+          separatorBuilder: (_, _) => const SizedBox(width: 14),
+          itemBuilder: (_, _) => const _ProductSkeletonCard(),
+        ),
+      );
+    }
+
+    if (_featuredProducts.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: _HomeEmptyState(
+          icon: Icons.inventory_2_outlined,
+          title: 'Sin productos disponibles',
+          message: 'Cuando agregues productos desde el panel admin apareceran aqui.',
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 310,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: _featuredProducts.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 14),
+        itemBuilder: (context, index) {
+          final p = _featuredProducts[index];
+          return SizedBox(
+            width: 160,
+            height: 310,
+            child: ProductCard(
+              product: p,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ProductDetailPage(product: p),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _serviciosHorizontal() {
     if (_homeLoading && _featuredServices.isEmpty) {
       return SizedBox(
-        height: 178,
+        height: 310,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -626,7 +686,7 @@ class _TociTechAppState extends State<TociTechApp> {
     }
 
     return SizedBox(
-      height: 320,
+      height: 310,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -637,12 +697,15 @@ class _TociTechAppState extends State<TociTechApp> {
 
           return SizedBox(
             width: 260,
-            child: ServiceCard(
-              service: s,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ServiceDetailPage(service: s),
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: ServiceCard(
+                service: s,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ServiceDetailPage(service: s),
+                  ),
                 ),
               ),
             ),
@@ -652,46 +715,6 @@ class _TociTechAppState extends State<TociTechApp> {
     );
   }
 
-  Widget _catalogSummarySection() {
-    if (_homeLoading &&
-        _availableProducts.isEmpty &&
-        _featuredServices.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: _CatalogPulseCard(),
-      );
-    }
-
-    final services = _featuredServices.length;
-    final products = _availableProducts.length;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Expanded(
-            child: _CatalogInfoCard(
-              icon: Icons.handyman_rounded,
-              color: AppColors.blue,
-              title: '$services destacado${services == 1 ? '' : 's'}',
-              subtitle: 'Servicios listos para solicitar',
-              onTap: () => setState(() => _index = 2),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: _CatalogInfoCard(
-              icon: Icons.shopping_bag_rounded,
-              color: AppColors.green,
-              title: '$products disponible${products == 1 ? '' : 's'}',
-              subtitle: 'Productos con stock activo',
-              onTap: () => setState(() => _index = 1),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _horariosSection() {
     return Padding(
@@ -702,48 +725,55 @@ class _TociTechAppState extends State<TociTechApp> {
             Icons.calendar_today_rounded,
             "Lunes a Viernes",
             "9:00 AM - 7:00 PM",
+            AppColors.primary,
           ),
           const SizedBox(height: 14),
-          _scheduleTile(Icons.weekend_rounded, "Sábados", "9:00 AM - 2:00 PM"),
+          _scheduleTile(Icons.weekend_rounded, "Sábados", "9:00 AM - 2:00 PM", AppColors.green),
           const SizedBox(height: 14),
-          _scheduleTile(Icons.nights_stay_rounded, "Domingos", "Cerrado"),
+          _scheduleTile(Icons.nights_stay_rounded, "Domingos", "Cerrado", Colors.orange),
         ],
       ),
     );
   }
 
-  Widget _scheduleTile(IconData icon, String title, String time) {
+  Widget _scheduleTile(IconData icon, String title, String time, Color color) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: AppColors.primary),
+            child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                    fontSize: 13,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(time, style: TextStyle(color: AppColors.textSecondary)),
+                const SizedBox(height: 2),
+                Text(
+                  time,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
           ),
@@ -759,6 +789,56 @@ class _TociTechAppState extends State<TociTechApp> {
     }
 
     return value.toString();
+  }
+}
+
+class _ProductSkeletonCard extends StatelessWidget {
+  const _ProductSkeletonCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 160,
+      height: 310,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _block(height: 150, radius: 22, bottomRadius: 0),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _block(height: 14),
+                const SizedBox(height: 6),
+                _block(width: 90, height: 10),
+                const SizedBox(height: 14),
+                _block(width: 80, height: 14),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _block({double? width, required double height, double radius = 10, double bottomRadius = 10}) {
+    return Container(
+      width: width ?? double.infinity,
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(radius),
+          bottom: Radius.circular(bottomRadius),
+        ),
+      ),
+    );
   }
 }
 
@@ -855,97 +935,3 @@ class _HomeEmptyState extends StatelessWidget {
   }
 }
 
-class _CatalogPulseCard extends StatelessWidget {
-  const _CatalogPulseCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 112,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
-      child: const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.primary,
-          strokeWidth: 2,
-        ),
-      ),
-    );
-  }
-}
-
-class _CatalogInfoCard extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _CatalogInfoCard({
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 132),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: color.withValues(alpha: 0.16)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.13),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: color, size: 21),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                  height: 1.2,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                subtitle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                  height: 1.35,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
