@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tocitech/ui/pages/services/servicios_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../database/local/cart_local_service.dart';
 import '../../../models/product_model.dart';
 import '../../../models/service_model.dart';
@@ -289,6 +290,8 @@ class _TociTechAppState extends State<TociTechApp> {
           _sectionTitle("Horarios", "Estamos listos para ayudarte"),
           const SizedBox(height: 18),
           _horariosSection(),
+          const SizedBox(height: 34),
+          _instagramSection(),
         ],
       ),
     );
@@ -430,44 +433,6 @@ class _TociTechAppState extends State<TociTechApp> {
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 28),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () => setState(() => _index = 1),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  iconAlignment: IconAlignment.start,
-                  icon: const Icon(Icons.devices_rounded, size: 18),
-                  label: const Text("Productos"),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => setState(() => _index = 2),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.white),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  iconAlignment: IconAlignment.start,
-                  icon: const Icon(Icons.build_rounded, size: 18),
-                  label: const Text("Servicios"),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -483,17 +448,19 @@ class _TociTechAppState extends State<TociTechApp> {
           Row(
             children: [
               _statCard(
-                Icons.build_circle_rounded,
-                _homeLoading ? '...' : _formatCount(summary?.services ?? 0),
-                "Servicios",
-                AppColors.blue,
-              ),
-              const SizedBox(width: 12),
-              _statCard(
                 Icons.inventory_2_outlined,
                 _homeLoading ? '...' : _formatCount(summary?.products ?? 0),
                 "Productos",
                 AppColors.green,
+                onTap: () => setState(() => _index = 1),
+              ),
+              const SizedBox(width: 12),
+              _statCard(
+                Icons.build_circle_rounded,
+                _homeLoading ? '...' : _formatCount(summary?.services ?? 0),
+                "Servicios",
+                AppColors.blue,
+                onTap: () => setState(() => _index = 2),
               ),
             ],
           ),
@@ -502,62 +469,71 @@ class _TociTechAppState extends State<TociTechApp> {
     );
   }
 
-  Widget _statCard(IconData icon, String value, String label, Color color) {
+  Widget _statCard(IconData icon, String value, String label, Color color, {VoidCallback? onTap}) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-          gradient: LinearGradient(
-            colors: [
-              color.withValues(alpha: 0.07),
-              AppColors.surface,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                    ),
-                  ),
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: color.withValues(alpha: 0.2)),
+              gradient: LinearGradient(
+                colors: [
+                  color.withValues(alpha: 0.07),
+                  AppColors.surface,
                 ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
-          ],
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        value,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: color,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                        ),
+                      ),
+                      Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded, color: color.withValues(alpha: 0.6), size: 14),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -757,6 +733,64 @@ class _TociTechAppState extends State<TociTechApp> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _instagramSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () => launchUrl(
+            Uri.parse('https://www.instagram.com/toci.tech/'),
+            mode: LaunchMode.externalApplication,
+          ),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF833AB4), Color(0xFFE1306C), Color(0xFFF77737)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Row(
+              children: [
+                Image.asset('assets/instagram.png', width: 32, height: 32),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Síguenos en Instagram',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        '@toci.tech',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white70, size: 16),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
