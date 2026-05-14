@@ -28,7 +28,6 @@ async function findByUserId(userId) {
     const snapshot = await db
         .collection(COLLECTION)
         .where("userId", "==", userId)
-        .orderBy("createdAt", "desc")
         .limit(1)
         .get();
 

@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../database/local/session_local_service.dart';
+import '../../../database/local/photo_local_service.dart';
 import '../../../models/order_model.dart';
 import '../../../models/user_model.dart';
 import '../../../services/api_service.dart';
@@ -26,6 +30,7 @@ class _AjustesPageState extends State<AjustesPage> {
   User? _user;
   List<Order> _orders = [];
   bool _loading = true;
+  String? _photoPath;
 
   String? _error;
 
@@ -60,9 +65,13 @@ class _AjustesPageState extends State<AjustesPage> {
 
       if (!mounted) return;
 
+      final loadedUser = results[0] as User;
+      final photo = await PhotoLocalService.getPhotoPath(loadedUser.id);
+      if (!mounted) return;
       setState(() {
-        _user = results[0] as User;
+        _user = loadedUser;
         _orders = results[1] as List<Order>;
+        _photoPath = photo;
       });
       await OrderNotificationSyncService.syncPurchaseNotifications(_orders);
     } catch (e) {
@@ -196,26 +205,51 @@ class _AjustesPageState extends State<AjustesPage> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 34,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.16),
-            child: _loading && user == null
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
+          GestureDetector(
+            onTap: user == null ? null : _pickPhoto,
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 34,
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.16),
+                  backgroundImage: _photoPath != null
+                      ? FileImage(File(_photoPath!))
+                      : null,
+                  child: _photoPath != null
+                      ? null
+                      : _loading && user == null
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              initials.isEmpty ? '?' : initials,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
                       color: AppColors.primary,
-                      strokeWidth: 2,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.surface, width: 1.5),
                     ),
-                  )
-                : Text(
-                    initials.isEmpty ? '?' : initials,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 11),
                   ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -461,6 +495,25 @@ class _AjustesPageState extends State<AjustesPage> {
   }
 
 
+  Future<void> _pickPhoto() async {
+    final user = _user;
+    if (user == null) return;
+
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+    if (picked == null || !mounted) return;
+
+    final saved = await PhotoLocalService.savePhoto(user.id, picked.path);
+    if (!mounted) return;
+    setState(() => _photoPath = saved);
+    AppSnackbar.success(context, 'Foto de perfil actualizada correctamente.');
+  }
+
   void _confirmarCierreSesion() {
     showDialog<void>(
       context: context,
@@ -658,18 +711,43 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                 ],
               ),
               const SizedBox(height: 18),
-              _field(_usernameCtrl,  'Usuario',   validator: _validateUsername),
+              _field(_usernameCtrl, 'Usuario',
+                  validator: _validateUsername,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
+                    LengthLimitingTextInputFormatter(20),
+                  ]),
               const SizedBox(height: 12),
-              _field(_namesCtrl,     'Nombre'),
+              _field(_namesCtrl, 'Nombre',
+                  validator: _validateNames,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]')),
+                    LengthLimitingTextInputFormatter(50),
+                  ]),
               const SizedBox(height: 12),
-              _field(_lastnamesCtrl, 'Apellidos'),
+              _field(_lastnamesCtrl, 'Apellidos',
+                  validator: _validateLastnames,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]')),
+                    LengthLimitingTextInputFormatter(50),
+                  ]),
               const SizedBox(height: 12),
-              _field(_emailCtrl,     'Correo',
+              _field(_emailCtrl, 'Correo',
                   keyboardType: TextInputType.emailAddress,
-                  validator: _validateEmail),
+                  validator: _validateEmail,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(100),
+                  ]),
               const SizedBox(height: 12),
-              _field(_phoneCtrl,     'Telefono',
-                  keyboardType: TextInputType.phone),
+              _field(_phoneCtrl, 'Telefono',
+                  keyboardType: TextInputType.phone,
+                  validator: _validatePhone,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
+                  ]),
               const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
@@ -698,10 +776,12 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     String label, {
     TextInputType? keyboardType,
     String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       style: const TextStyle(color: AppColors.textPrimary),
       validator: validator ??
           (value) {
@@ -728,6 +808,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     final text = (value ?? '').trim();
     if (text.isEmpty) return 'El usuario es obligatorio.';
     if (text.length < 3) return 'Minimo 3 caracteres.';
+    if (text.length > 20) return 'Maximo 20 caracteres.';
     if (text.contains(' ')) return 'No puede contener espacios.';
     if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(text)) {
       return 'Solo letras, numeros y guion bajo.';
@@ -735,10 +816,34 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     return null;
   }
 
+  String? _validateNames(String? value) {
+    final text = (value ?? '').trim();
+    if (text.isEmpty) return 'El nombre es obligatorio.';
+    if (text.length < 2) return 'Nombre demasiado corto.';
+    if (RegExp(r'[0-9]').hasMatch(text)) return 'No puede contener numeros.';
+    return null;
+  }
+
+  String? _validateLastnames(String? value) {
+    final text = (value ?? '').trim();
+    if (text.isEmpty) return 'Los apellidos son obligatorios.';
+    if (text.length < 2) return 'Apellidos demasiado cortos.';
+    if (RegExp(r'[0-9]').hasMatch(text)) return 'No puede contener numeros.';
+    return null;
+  }
+
+  String? _validatePhone(String? value) {
+    final text = (value ?? '').trim();
+    if (text.isEmpty) return 'El telefono es obligatorio.';
+    if (text.length != 10) return 'Debe tener exactamente 10 digitos.';
+    return null;
+  }
+
   String? _validateEmail(String? value) {
     final text = (value ?? '').trim();
     if (text.isEmpty) return 'El correo es obligatorio.';
-    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(text)) {
+    if (!RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
+        .hasMatch(text)) {
       return 'Ingresa un correo valido.';
     }
     return null;

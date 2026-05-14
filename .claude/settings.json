@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(head -50)",
+      "PowerShell(head -100)",
+      "Bash(dir \"c:\\\\flutter_projects\\\\tocitech\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\flutter_projects\\\\tocitech\\\\backend\" -Recurse -Directory)",
+      "Bash(ls -la /mnt/c/flutter_projects/tocitech/backend/ | head -30)",
+      "Read(//mnt/c/flutter_projects/tocitech/**)",
+      "Bash(git -C \"c:\\\\flutter_projects\\\\tocitech\" status)",
+      "Bash(git -C \"c:\\\\flutter_projects\\\\tocitech\" log --oneline -5)",
+      "Bash(dir \"c:\\\\flutter_projects\\\\tocitech\\\\app_client\\\\lib\\\\ui\\\\pages\\\\main\")",
+      "Bash(flutter pub *)"
+    ]
+  }
+}

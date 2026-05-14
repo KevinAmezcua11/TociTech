@@ -28,7 +28,6 @@ class TociTechApp extends StatefulWidget {
 
 class _TociTechAppState extends State<TociTechApp> {
   int _index = 0;
-  int _cartCount = 0;
   bool _homeLoading = true;
   String? _homeError;
   HomeSummary? _homeSummary;
@@ -48,13 +47,8 @@ class _TociTechAppState extends State<TociTechApp> {
     _homeSummaryService = HomeSummaryService(api);
     _serviceService = ServiceService(api);
     _productService = ProductService(api);
-    _loadCartCount();
+    CartLocalService.refreshCount();
     _loadHomeData();
-  }
-
-  Future<void> _loadCartCount() async {
-    final count = await CartLocalService.getCartItemCount();
-    if (mounted) setState(() => _cartCount = count);
   }
 
   Future<void> _loadHomeData() async {
@@ -164,48 +158,50 @@ class _TociTechAppState extends State<TociTechApp> {
               ),
             ),
           ),
-          Stack(
-            children: [
-              Container(
-                margin: const EdgeInsets.only(right: 6),
-                child: IconButton(
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const CartPage()),
-                    );
-                    _loadCartCount();
-                  },
-                  icon: const Icon(
-                    Icons.shopping_cart_outlined,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-              if (_cartCount > 0)
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        _cartCount > 99 ? '99+' : '$_cartCount',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                        ),
+          ValueListenableBuilder<int>(
+            valueListenable: CartLocalService.countNotifier,
+            builder: (_, count, _) {
+              return Stack(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(right: 6),
+                    child: IconButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const CartPage()),
+                      ),
+                      icon: const Icon(
+                        Icons.shopping_cart_outlined,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
-                ),
-            ],
+                  if (count > 0)
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            count > 99 ? '99+' : '$count',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -638,7 +634,7 @@ class _TociTechAppState extends State<TociTechApp> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: _featuredProducts.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 14),
+        separatorBuilder: (_, _) => const SizedBox(width: 14),
         itemBuilder: (context, index) {
           final p = _featuredProducts[index];
           return SizedBox(

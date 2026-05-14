@@ -40,7 +40,7 @@ class AuthController {
       isLoading = true;
       errorMessage = null;
 
-      await authService.register(
+      final user = await authService.register(
         username: username,
         password: password,
         names: names,
@@ -49,6 +49,7 @@ class AuthController {
         phone: phone,
       );
 
+      currentUser = user;
       return true;
     } catch (e) {
       errorMessage = e.toString().replaceAll('Exception: ', '');

@@ -13,7 +13,7 @@ class DatabaseService {
     final path = join(await getDatabasesPath(), 'tocitech.db');
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onConfigure: _onConfigure,
       onCreate:    _onCreate,
       onUpgrade:   _onUpgrade,
@@ -65,6 +65,7 @@ class DatabaseService {
     await db.execute('''
       CREATE TABLE carrito (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id       TEXT NOT NULL,
         product_id    TEXT NOT NULL,
         product_name  TEXT,
         product_price REAL,
@@ -125,16 +126,11 @@ class DatabaseService {
     int oldVersion,
     int newVersion,
   ) async {
-    // Ejecutar migraciones incrementales por versión.
-    // if (oldVersion < 2) {
-    //   await db.execute(
-    //     'ALTER TABLE productos_cache ADD COLUMN rating REAL',
-    //   );
-    // }
-    // if (oldVersion < 3) {
-    //   await db.execute(
-    //     'ALTER TABLE session ADD COLUMN refresh_token TEXT',
-    //   );
-    // }
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE carrito ADD COLUMN user_id TEXT');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_carrito_user_id ON carrito (user_id)',
+      );
+    }
   }
 }

@@ -1,8 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'login_page.dart';
 import 'package:tocitech/theme/app_theme.dart';
 import '../../../services/auth_service.dart';
 import '../../../controllers/auth_controller.dart';
+import '../../../database/local/photo_local_service.dart';
 import '../../widgets/app_snackbar.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -16,6 +20,8 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _loading = false;
+
+  String? _photoPath;
 
   late AuthController authController;
 
@@ -133,10 +139,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (phone.isEmpty) {
       phoneErr = 'El teléfono es obligatorio';
-    } else if (!RegExp(r'^\d+$').hasMatch(phone)) {
-      phoneErr = 'Solo se permiten números';
-    } else if (phone.length < 10 || phone.length > 15) {
-      phoneErr = 'Debe tener entre 10 y 15 dígitos';
+    } else if (phone.length != 10) {
+      phoneErr = 'Debe tener exactamente 10 dígitos';
     }
 
     if (password.isEmpty) {
@@ -188,6 +192,12 @@ class _RegisterPageState extends State<RegisterPage> {
         return;
       }
 
+      final userId = authController.currentUser?.id;
+      if (userId != null && _photoPath != null) {
+        await PhotoLocalService.savePhoto(userId, _photoPath!);
+      }
+
+      if (!mounted) return;
       AppSnackbar.success(context, 'Cuenta creada correctamente');
       Navigator.pushReplacement(
         context,
@@ -201,6 +211,18 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _showError(String msg) {
     AppSnackbar.error(context, msg);
+  }
+
+  Future<void> _pickPhoto() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+    if (picked == null) return;
+    setState(() => _photoPath = picked.path);
   }
 
   @override
@@ -235,27 +257,35 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     /// Avatar
                     Center(
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 44,
-                            backgroundColor: AppColors.surface,
-                            child: const Icon(Icons.person, size: 50, color: AppColors.textSecondary),
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: AppColors.background, width: 2),
-                              ),
-                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
+                      child: GestureDetector(
+                        onTap: _pickPhoto,
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 44,
+                              backgroundColor: AppColors.surface,
+                              backgroundImage: _photoPath != null
+                                  ? FileImage(File(_photoPath!))
+                                  : null,
+                              child: _photoPath == null
+                                  ? const Icon(Icons.person, size: 50, color: AppColors.textSecondary)
+                                  : null,
                             ),
-                          ),
-                        ],
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: AppColors.background, width: 2),
+                                ),
+                                child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 
@@ -271,6 +301,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       errorText: _usernameError,
                       onChanged: (_) => setState(() => _usernameError = null),
                       textInputAction: TextInputAction.next,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
+                        LengthLimitingTextInputFormatter(20),
+                      ],
                     ),
 
                     const SizedBox(height: 18),
@@ -285,6 +319,11 @@ class _RegisterPageState extends State<RegisterPage> {
                       errorText: _namesError,
                       onChanged: (_) => setState(() => _namesError = null),
                       textInputAction: TextInputAction.next,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]')),
+                        LengthLimitingTextInputFormatter(50),
+                      ],
                     ),
 
                     const SizedBox(height: 18),
@@ -300,6 +339,11 @@ class _RegisterPageState extends State<RegisterPage> {
                       onChanged: (_) =>
                           setState(() => _lastnamesError = null),
                       textInputAction: TextInputAction.next,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]')),
+                        LengthLimitingTextInputFormatter(50),
+                      ],
                     ),
 
                     const SizedBox(height: 18),
@@ -315,6 +359,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       keyboardType: TextInputType.emailAddress,
                       onChanged: (_) => setState(() => _emailError = null),
                       textInputAction: TextInputAction.next,
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(100),
+                      ],
                     ),
 
                     const SizedBox(height: 18),
@@ -330,6 +377,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       keyboardType: TextInputType.phone,
                       onChanged: (_) => setState(() => _phoneError = null),
                       textInputAction: TextInputAction.next,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
                     ),
 
                     const SizedBox(height: 18),
@@ -345,6 +396,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       errorText: _passwordError,
                       onChanged: (_) => setState(() => _passwordError = null),
                       textInputAction: TextInputAction.next,
+                      inputFormatters: [LengthLimitingTextInputFormatter(72)],
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
@@ -367,7 +419,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               child: LinearProgressIndicator(
                                 value: _passwordStrength / 4,
                                 backgroundColor:
-                                    Colors.white.withOpacity(0.08),
+                                    Colors.white.withValues(alpha: 0.08),
                                 color: _strengthColor,
                                 minHeight: 5,
                               ),
@@ -399,6 +451,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       onChanged: (_) =>
                           setState(() => _confirmError = null),
                       textInputAction: TextInputAction.done,
+                      inputFormatters: [LengthLimitingTextInputFormatter(72)],
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscureConfirm
@@ -517,6 +570,7 @@ class _RegisterPageState extends State<RegisterPage> {
     ValueChanged<String>? onChanged,
     TextInputAction? textInputAction,
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     final hasError = errorText != null;
     return Column(
@@ -530,7 +584,7 @@ class _RegisterPageState extends State<RegisterPage> {
             border: Border.all(
               color: hasError
                   ? Colors.redAccent
-                  : Colors.white.withOpacity(0.08),
+                  : Colors.white.withValues(alpha: 0.08),
             ),
           ),
           child: TextField(
@@ -539,6 +593,7 @@ class _RegisterPageState extends State<RegisterPage> {
             onChanged: onChanged,
             textInputAction: textInputAction,
             keyboardType: keyboardType,
+            inputFormatters: inputFormatters,
             textAlignVertical: TextAlignVertical.center,
             style:
                 const TextStyle(color: AppColors.textPrimary),

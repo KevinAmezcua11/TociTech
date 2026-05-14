@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tocitech/controllers/auth_controller.dart';
 import 'package:tocitech/services/auth_service.dart';
 import 'package:tocitech/ui/pages/main/home_page.dart';
@@ -165,6 +166,11 @@ class _LoginPageState extends State<LoginPage> {
                       textInputAction: TextInputAction.next,
                       onSubmitted: (_) =>
                           _passwordFocus.requestFocus(),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'[a-zA-Z0-9_]')),
+                        LengthLimitingTextInputFormatter(20),
+                      ],
                     ),
 
                     const SizedBox(height: 20),
@@ -183,6 +189,9 @@ class _LoginPageState extends State<LoginPage> {
                       textInputAction: TextInputAction.done,
                       onSubmitted: (_) =>
                           authController.isLoading ? null : _login(),
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(72),
+                      ],
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
@@ -338,6 +347,7 @@ class _LoginPageState extends State<LoginPage> {
     ValueChanged<String>? onChanged,
     TextInputAction? textInputAction,
     ValueChanged<String>? onSubmitted,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     final hasError = errorText != null;
     return Column(
@@ -361,6 +371,7 @@ class _LoginPageState extends State<LoginPage> {
             onChanged: onChanged,
             textInputAction: textInputAction,
             onSubmitted: onSubmitted,
+            inputFormatters: inputFormatters,
             style:
                 const TextStyle(color: AppColors.textPrimary, fontSize: 14),
             decoration: InputDecoration(
